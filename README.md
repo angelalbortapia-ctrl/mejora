@@ -4,7 +4,7 @@ PWA de mejora continua en español: plan del día, hábitos, gimnasia cerebral, 
 
 ## Demo en vivo
 
-**https://angelalbortapia-ctrl.github.io/mejora/**
+**[https://angelalbortapia-ctrl.github.io/mejora/](https://angelalbortapia-ctrl.github.io/mejora/)**
 
 ## Desarrollo local
 
