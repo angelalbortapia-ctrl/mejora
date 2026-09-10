@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#050608" />
+  <script>
+    try {
+      const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
+      if (s && s.darkMode === false) document.documentElement.classList.remove('dark')
+    } catch (_) {}
+  </script>
+  <title>Mejora — Tu espacio de crecimiento</title>
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/utilities.css" />
+  <link rel="stylesheet" href="styles.css?v=21" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <a href="#/" class="sidebar-brand no-underline">
+          <span class="logo-mark">✦</span>
+          <span class="font-display logo-text">Mejora</span>
+        </a>
+        <button type="button" id="sidebar-close" class="sidebar-close btn-ghost" aria-label="Cerrar menú">✕</button>
+      </div>
+      <nav id="sidebar-nav" class="sidebar-nav" aria-label="Navegación principal"></nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-stats">
+          <div class="sidebar-stats-row">
+            <span id="sidebar-streak" class="sidebar-stat">—</span>
+            <span id="sidebar-level" class="sidebar-stat">Nv.1</span>
+          </div>
+          <div class="progress-track sidebar-plan-track">
+            <div id="sidebar-plan" class="progress-fill h-full" style="width:0%"></div>
+          </div>
+          <p class="sidebar-stats-caption">Plan del día</p>
+        </div>
+        <a href="#/ajustes" data-path="/ajustes" class="sidebar-link sidebar-link-settings no-underline">
+          <span class="sidebar-link-icon">⚙️</span>
+          <span class="sidebar-link-label">Ajustes</span>
+        </a>
+      </div>
+    </aside>
+
+    <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <div class="app-main">
+      <header class="app-banner" id="app-banner">
+        <div class="banner-glow" aria-hidden="true"></div>
+        <div class="banner-inner">
+          <div class="banner-start">
+            <button type="button" id="sidebar-toggle" class="banner-menu btn-ghost" aria-label="Abrir menú">
+              <span class="banner-menu-icon"></span>
+            </button>
+            <div class="banner-titles">
+              <nav class="banner-breadcrumb" aria-label="Ubicación">
+                <span id="banner-section" class="banner-crumb">Hoy</span>
+                <span class="banner-crumb-sep" aria-hidden="true">/</span>
+                <span id="banner-page" class="banner-crumb banner-crumb-current">Inicio</span>
+              </nav>
+              <h1 id="page-title" class="banner-title font-display">Inicio</h1>
+              <p id="page-subtitle" class="banner-subtitle">Resumen del día</p>
+            </div>
+          </div>
+
+          <div class="banner-metrics">
+            <div class="banner-metric banner-metric-plan">
+              <div class="banner-metric-head">
+                <span class="banner-metric-label">Plan del día</span>
+                <span class="banner-metric-value" id="banner-plan-text">0/4</span>
+              </div>
+              <div class="banner-metric-track">
+                <div id="banner-plan-bar" class="banner-metric-fill" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="banner-metric banner-metric-streak">
+              <span class="banner-metric-icon" aria-hidden="true">🔥</span>
+              <div>
+                <span class="banner-metric-value" id="banner-streak-text">0</span>
+                <span class="banner-metric-label">días racha</span>
+              </div>
+            </div>
+            <div class="banner-metric banner-metric-weather" id="banner-weather-wrap">
+              <span class="banner-metric-icon" id="banner-weather-icon" aria-hidden="true">🌤️</span>
+              <div>
+                <span class="banner-metric-value" id="banner-weather-temp">—</span>
+                <span class="banner-metric-label" id="banner-weather-label">clima</span>
+              </div>
+            </div>
+            <span id="banner-shield" class="banner-shield hidden" title="">🛡️</span>
+          </div>
+
+          <div class="banner-end">
+            <time id="banner-date" class="banner-date" datetime=""></time>
+            <a href="#/plan" id="banner-cta" class="banner-cta btn-primary no-underline">Continuar plan</a>
+            <a href="#/perfil" class="banner-avatar no-underline" id="banner-avatar" title="Perfil">
+              <span id="banner-avatar-icon">🌱</span>
+            </a>
+            <a href="#/ajustes" class="banner-icon-btn btn-ghost no-underline" title="Ajustes" aria-label="Ajustes">⚙️</a>
+          </div>
+        </div>
+      </header>
+      <main id="app-content" class="app-content"></main>
+    </div>
+  </div>
+
+  <div id="tour-overlay" class="tour-overlay" aria-hidden="true"></div>
+  <script type="module" src="js/app.js?v=21"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mejora — Tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #050608; color: #e8f7f4; padding: 2rem; max-width: 40rem; margin: 0 auto; }
+    .ok { color: #00f5d4; }
+    .fail { color: #fb7185; }
+  </style>
+</head>
+<body>
+  <h1>Tests core.js</h1>
+  <pre id="out">Ejecutando…</pre>
+  <script type="module">
+    const out = document.getElementById('out')
+    try {
+      const { results } = await import('./core.test.js?v=2')
+      out.innerHTML = results.map(r =>
+        `<span class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'} ${r.name}${r.error ? ' — ' + r.error : ''}</span>`
+      ).join('\n')
+      if (results.some(r => !r.ok)) out.innerHTML += '\n<span class="fail">Algunos tests fallaron</span>'
+    } catch (e) {
+      out.innerHTML = `<span class="fail">${e.message}</span>`
+    }
+  </script>
+</body>
+</html>
