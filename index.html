@@ -18,13 +18,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="styles.css?v=54" />
-  <link rel="stylesheet" href="css/design-system.css?v=54" />
-  <link rel="stylesheet" href="css/aurora-theme.css?v=54" />
-  <link rel="stylesheet" href="css/onboarding.css?v=54" />
-  <link rel="stylesheet" href="css/page-themes.css?v=54" />
-  <link rel="stylesheet" href="css/impact.css?v=54" />
-  <link rel="stylesheet" href="css/mejora-redesign.css?v=54" />
+  <link rel="stylesheet" href="styles.css?v=55" />
+  <link rel="stylesheet" href="css/design-system.css?v=55" />
+  <link rel="stylesheet" href="css/aurora-theme.css?v=55" />
+  <link rel="stylesheet" href="css/onboarding.css?v=55" />
+  <link rel="stylesheet" href="css/page-themes.css?v=55" />
+  <link rel="stylesheet" href="css/impact.css?v=55" />
+  <link rel="stylesheet" href="css/mejora-redesign.css?v=55" />
 </head>
 <body class="mejora-v3">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -132,6 +132,16 @@
       document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Usa <strong>Mejora.app</strong> o en terminal:</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre><p style="color:#8a8480">Luego abre <a href="http://localhost:5173" style="color:#c4a484">http://localhost:5173</a></p></div>'
     }
   </script>
-  <script type="module" src="js/app.js?v=54"></script>
+  <script type="module">
+    window.addEventListener('error', (e) => {
+      if (!e.filename?.includes('/js/')) return
+      const box = document.createElement('div')
+      box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#1a1a1a;background:#fff3cd;border:1px solid #f0c36d;border-radius:12px'
+      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 1rem;line-height:1.5">Usa el servidor local (no abras index.html directo). Doble clic en <strong>start-server.command</strong> o en terminal:</p><pre style="background:#fff;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
+      document.body.innerHTML = ''
+      document.body.appendChild(box)
+    })
+  </script>
+  <script type="module" src="js/app.js?v=55"></script>
 </body>
 </html>

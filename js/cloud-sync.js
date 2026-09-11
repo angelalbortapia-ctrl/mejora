@@ -1,10 +1,12 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import { PREFIX, setItem, getSettings, saveSettings } from './core.js'
+import { PREFIX, getSettings, saveSettings } from './core.js'
 import { exportAllData } from './backup.js'
-import { isSupabaseConfigured, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js'
+import {
+  ensureSupabaseConfig, isSupabaseConfigured, SUPABASE_URL, SUPABASE_ANON_KEY,
+} from './supabase-config.js'
 
 const META_KEY = 'cloudSync'
 let client = null
+let clientReady = null
 let session = null
 let pushTimer = null
 let syncing = false
@@ -46,18 +48,28 @@ export function onCloudStatus(fn) {
   return () => listeners.delete(fn)
 }
 
-function getClient() {
+async function getClient() {
+  await ensureSupabaseConfig()
   if (!isSupabaseConfigured()) return null
-  if (!client) {
-    client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    })
+  if (client) return client
+  if (!clientReady) {
+    clientReady = import('https://esm.sh/@supabase/supabase-js@2.49.1')
+      .then(({ createClient }) => {
+        client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+          },
+        })
+        return client
+      })
+      .catch((err) => {
+        clientReady = null
+        throw err
+      })
   }
-  return client
+  return clientReady
 }
 
 function applyRemotePayload(payload) {
@@ -93,26 +105,30 @@ function hasLocalProgress() {
 }
 
 export async function initCloudSync() {
-  const sb = getClient()
-  if (!sb) return getCloudStatus()
+  try {
+    const sb = await getClient()
+    if (!sb) return getCloudStatus()
 
-  const { data } = await sb.auth.getSession()
-  session = data.session
+    const { data } = await sb.auth.getSession()
+    session = data.session
 
-  sb.auth.onAuthStateChange(async (_event, newSession) => {
-    session = newSession ?? null
+    sb.auth.onAuthStateChange(async (_event, newSession) => {
+      session = newSession ?? null
+      if (session?.user) {
+        try {
+          await pullFromCloud({ silent: true })
+        } catch {}
+      }
+      notify()
+    })
+
     if (session?.user) {
       try {
         await pullFromCloud({ silent: true })
       } catch {}
     }
-    notify()
-  })
-
-  if (session?.user) {
-    try {
-      await pullFromCloud({ silent: true })
-    } catch {}
+  } catch {
+    // Sin red o sin Supabase configurado — la app sigue en local
   }
 
   notify()
@@ -120,7 +136,7 @@ export async function initCloudSync() {
 }
 
 export async function signUp(email, password) {
-  const sb = getClient()
+  const sb = await getClient()
   if (!sb) throw new Error('Supabase no configurado')
   const { data, error } = await sb.auth.signUp({ email, password })
   if (error) throw error
@@ -131,7 +147,7 @@ export async function signUp(email, password) {
 }
 
 export async function signIn(email, password) {
-  const sb = getClient()
+  const sb = await getClient()
   if (!sb) throw new Error('Supabase no configurado')
   const { data, error } = await sb.auth.signInWithPassword({ email, password })
   if (error) throw error
@@ -142,7 +158,7 @@ export async function signIn(email, password) {
 }
 
 export async function signOut() {
-  const sb = getClient()
+  const sb = await getClient()
   if (!sb) return
   await sb.auth.signOut()
   session = null
@@ -150,7 +166,7 @@ export async function signOut() {
 }
 
 export async function pullFromCloud(opts = {}) {
-  const sb = getClient()
+  const sb = await getClient()
   if (!sb || !session?.user) return null
   syncing = true
   notify()
@@ -187,7 +203,7 @@ export async function pullFromCloud(opts = {}) {
 }
 
 export async function pushToCloud(opts = {}) {
-  const sb = getClient()
+  const sb = await getClient()
   if (!sb || !session?.user) return null
   if (syncing && !opts.force) return null
 
