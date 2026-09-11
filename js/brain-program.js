@@ -73,6 +73,7 @@ export const EXERCISES = {
     paradigm: 'N-back auditivo-visual',
     duration: '3 min',
     desc: 'Identifica cuando el estímulo coincide con el de hace N posiciones.',
+    brainScan: 'CPFDL + cíngulo anterior + parietal posterior se activan con carga N.',
     adaptive: true,
   },
   corsi: {
@@ -83,6 +84,7 @@ export const EXERCISES = {
     paradigm: 'Span espacial (Corsi blocks)',
     duration: '3 min',
     desc: 'Reproduce secuencias de posiciones en una cuadrícula.',
+    brainScan: 'Hipocampo y corteza parietal derecha — mapas espaciales en WM.',
     adaptive: true,
   },
   stroop: {
@@ -93,6 +95,7 @@ export const EXERCISES = {
     paradigm: 'Stroop de colores',
     duration: '2 min',
     desc: 'Nombra el color de la tinta, no la palabra escrita.',
+    brainScan: 'Cíngulo anterior detecta conflicto; PFC ventrolateral inhibe respuesta prepotente.',
     adaptive: false,
   },
   gonogo: {
@@ -103,6 +106,7 @@ export const EXERCISES = {
     paradigm: 'Go/No-Go',
     duration: '2 min',
     desc: 'Responde solo a estímulos Go; inhibe la respuesta en No-Go.',
+    brainScan: 'Corteza motora suplementaria + PFC ventrolateral frenan respuesta en No-Go.',
     adaptive: true,
   },
   flanker: {
@@ -113,6 +117,7 @@ export const EXERCISES = {
     paradigm: 'Eriksen Flanker',
     duration: '2 min',
     desc: 'Indica la dirección de la flecha central ignorando distractores.',
+    brainScan: 'Precuneus y LIFG filtran distractores laterales — red dorsal en acción.',
     adaptive: false,
   },
   switching: {
@@ -123,6 +128,7 @@ export const EXERCISES = {
     paradigm: 'Task switching',
     duration: '3 min',
     desc: 'Alterna entre reglas (par/impar vs mayor/menor que 5).',
+    brainScan: 'PFC rostrolateral reconfigura task-set — switching cost medible en fMRI.',
     adaptive: true,
   },
   symbols: {
@@ -133,6 +139,7 @@ export const EXERCISES = {
     paradigm: 'Symbol-Digit Modalities',
     duration: '2 min',
     desc: 'Asocia símbolos con dígitos lo más rápido posible.',
+    brainScan: 'Corteza parietal y motor premotor — automatización de asociaciones.',
     adaptive: false,
   },
   math: {
@@ -173,6 +180,7 @@ export const EXERCISES = {
     paradigm: 'Deductive reasoning',
     duration: '3 min',
     desc: 'Razonamiento lógico y verbal.',
+    brainScan: 'PFC rostrolateral + parietal posterior — razonamiento bajo incertidumbre.',
     adaptive: false,
   },
   sequence: {
@@ -189,12 +197,12 @@ export const EXERCISES = {
 
 const WEEKLY_CURRICULUM = [
   ['nback', 'stroop', 'corsi', 'switching', 'flanker', 'symbols'],
-  ['corsi', 'gonogo', 'nback', 'math', 'stroop', 'switching'],
-  ['nback', 'flanker', 'memory', 'switching', 'gonogo', 'logic'],
-  ['symbols', 'nback', 'corsi', 'stroop', 'sequence', 'flanker'],
-  ['switching', 'gonogo', 'nback', 'math', 'corsi', 'stroop'],
-  ['flanker', 'memory', 'switching', 'nback', 'symbols', 'gonogo'],
-  ['nback', 'corsi', 'stroop', 'flanker', 'switching', 'simon'],
+  ['corsi', 'gonogo', 'nback', 'flanker', 'stroop', 'switching'],
+  ['nback', 'flanker', 'corsi', 'switching', 'gonogo', 'symbols'],
+  ['symbols', 'nback', 'corsi', 'stroop', 'flanker', 'switching'],
+  ['switching', 'gonogo', 'nback', 'corsi', 'stroop', 'flanker'],
+  ['flanker', 'gonogo', 'switching', 'nback', 'symbols', 'stroop'],
+  ['nback', 'corsi', 'stroop', 'flanker', 'switching', 'gonogo'],
 ]
 
 export function getBrainProgram() {

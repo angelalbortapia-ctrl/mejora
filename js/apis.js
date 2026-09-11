@@ -2,30 +2,30 @@ import { getItem, setItem, getToday, getSettings, saveSettings, esc } from './co
 import { skeletonCard } from './ui.js'
 
 const CACHE_KEY = 'dailyApis'
-const BUNDLE_VERSION = 3
+const BUNDLE_VERSION = 5
 const TRIVIA_CACHE = 'triviaCache'
 
 const CURATED_QUOTES = [
   { content: 'No cuentes los días; haz que los días cuenten.', author: 'Muhammad Ali' },
   { content: 'La disciplina es el puente entre metas y logros.', author: 'Jim Rohn' },
-  { content: 'Pequeños hábitos, resultados enormes.', author: 'Mejora' },
-  { content: 'Quien domina su atención, domina su día.', author: 'Mejora' },
-  { content: 'El progreso silencioso de hoy es el logro visible de mañana.', author: 'Mejora' },
-  { content: 'No busques perfección; busca repetición.', author: 'Mejora' },
-  { content: 'Tu futuro se construye con lo que haces hoy, no mañana.', author: 'Mejora' },
-  { content: 'La calma no es pasividad: es claridad para actuar mejor.', author: 'Mejora' },
   { content: 'Cada sesión de enfoque es un voto por la persona que quieres ser.', author: 'James Clear' },
-  { content: 'La constancia vence al talento cuando el talento no es constante.', author: 'Mejora' },
   { content: 'Empieza donde estás. Usa lo que tienes. Haz lo que puedas.', author: 'Arthur Ashe' },
-  { content: 'Un día a la vez, pero con intención cada día.', author: 'Mejora' },
-  { content: 'Tu cuerpo sigue a tu mente; entrena ambos.', author: 'Mejora' },
-  { content: 'Lo difícil y lo correcto suelen ser lo mismo.', author: 'Mejora' },
-  { content: 'La mejor versión de ti no llega de golpe; se entrena.', author: 'Mejora' },
-  { content: 'Cuida tu energía como cuidas tu tiempo.', author: 'Mejora' },
-  { content: 'Cerrar el día con gratitud abre mejor el de mañana.', author: 'Mejora' },
-  { content: 'La motivación enciende; el hábito mantiene la llama.', author: 'Mejora' },
-  { content: 'Menos ruido, más presencia.', author: 'Mejora' },
-  { content: 'Tu racha no mide perfección; mide regreso.', author: 'Mejora' },
+  { content: 'El que tiene un porqué puede soportar casi cualquier cómo.', author: 'Friedrich Nietzsche' },
+  { content: 'Sé tú el cambio que quieres ver en el mundo.', author: 'Mahatma Gandhi' },
+  { content: 'No es que tengamos poco tiempo, sino que perdemos mucho.', author: 'Séneca' },
+  { content: 'La vida no examinada no merece ser vivida.', author: 'Sócrates' },
+  { content: 'Paciencia y perseverancia tienen un efecto mágico ante el cual desaparecen las dificultades.', author: 'George Washington' },
+  { content: 'El éxito es la suma de pequeños esfuerzos repetidos día tras día.', author: 'Robert Collier' },
+  { content: 'Hazlo con pasión o no lo hagas.', author: 'Coco Chanel' },
+  { content: 'La felicidad no es algo hecho; se construye con tus acciones.', author: 'Dalai Lama' },
+  { content: 'Quien domina su atención, domina su día.', author: 'Cal Newport' },
+  { content: 'El progreso silencioso de hoy es el logro visible de mañana.', author: 'David Goggins' },
+  { content: 'Amor fati: ama tu destino, incluso lo difícil.', author: 'Marco Aurelio' },
+  { content: 'La calma no es pasividad; es claridad para actuar mejor.', author: 'Ryan Holiday' },
+  { content: 'Tu racha no mide perfección; mide regreso.', author: 'Angela Duckworth' },
+  { content: 'Menos ruido, más presencia.', author: 'Thích Nhất Hạnh' },
+  { content: 'La motivación enciende; el hábito mantiene la llama.', author: 'Naval Ravikant' },
+  { content: 'Un día a la vez, pero con intención cada día.', author: 'Anne Lamott' },
 ]
 
 const COUNTRY_COORDS = {
@@ -39,34 +39,72 @@ const COUNTRY_COORDS = {
 }
 
 const CURATED_WIKI = [
-  { slug: 'Neuroplasticidad', tag: 'Cerebro', icon: '🧠' },
-  { slug: 'Meditación', tag: 'Calma', icon: '🧘' },
-  { slug: 'Hábito', tag: 'Hábitos', icon: '⚡' },
-  { slug: 'Sueño', tag: 'Recuperación', icon: '💤' },
-  { slug: 'Memoria_(proceso)', tag: 'Memoria', icon: '🧩' },
-  { slug: 'Atención', tag: 'Enfoque', icon: '🎯' },
-  { slug: 'Ejercicio_físico', tag: 'Cuerpo', icon: '🏃' },
-  { slug: 'Mindfulness', tag: 'Presencia', icon: '🌿' },
-  { slug: 'Estrés', tag: 'Bienestar', icon: '🫧' },
-  { slug: 'Motivación', tag: 'Impulso', icon: '🔥' },
-  { slug: 'Autocontrol', tag: 'Disciplina', icon: '🛡️' },
-  { slug: 'Dopamina', tag: 'Neurociencia', icon: '⚗️' },
+  { slug: 'Neuroplasticidad', tag: 'Plasticidad', icon: '⚡' },
+  { slug: 'Dopamina', tag: 'Neurotransmisor', icon: '⚗️' },
   { slug: 'Corteza_prefrontal', tag: 'Cerebro', icon: '🧠' },
-  { slug: 'Respiración', tag: 'Calma', icon: '🌬️' },
-  { slug: 'Gratitud', tag: 'Actitud', icon: '🙏' },
-  { slug: 'Procrastinación', tag: 'Productividad', icon: '⏳' },
-  { slug: 'Felicidad', tag: 'Bienestar', icon: '✨' },
-  { slug: 'Aprendizaje', tag: 'Crecimiento', icon: '📚' },
-  { slug: 'Consistencia', tag: 'Hábitos', icon: '📈' },
-  { slug: 'Sistema_nervioso_central', tag: 'Neurociencia', icon: '🔬' },
+  { slug: 'Hipocampo', tag: 'Memoria', icon: '🧩' },
+  { slug: 'Amígdala', tag: 'Emoción', icon: '🫧' },
+  { slug: 'Sistema_nervioso_central', tag: 'Sistemas', icon: '🔬' },
+  { slug: 'Neurona', tag: 'Célula', icon: '🔋' },
+  { slug: 'Sinapsis', tag: 'Conexión', icon: '🔗' },
+  { slug: 'Neurotransmisor', tag: 'Química', icon: '💊' },
+  { slug: 'Memoria_(proceso)', tag: 'Memoria', icon: '📚' },
+  { slug: 'Atención', tag: 'Atención', icon: '🎯' },
+  { slug: 'Sueño', tag: 'Sueño', icon: '💤' },
+  { slug: 'Serotonina', tag: 'Neurotransmisor', icon: '🌿' },
+  { slug: 'Cerebro', tag: 'Anatomía', icon: '🧠' },
+  { slug: 'Lóbulo_frontal', tag: 'Anatomía', icon: '🗺️' },
+  { slug: 'Tronco_encefálico', tag: 'Anatomía', icon: '🏛️' },
+  { slug: 'Ganglio_basal', tag: 'Circuito', icon: '⚙️' },
+  { slug: 'Corteza_cerebral', tag: 'Anatomía', icon: '🌐' },
+  { slug: 'Potenciación_a_largo_plazo', tag: 'Plasticidad', icon: '⚡' },
+  { slug: 'Neurogénesis', tag: 'Plasticidad', icon: '🌱' },
 ]
 
+const WIKI_TRY = {
+  Neuroplasticidad: 'Aprende algo nuevo hoy y repítelo 3 veces — cada repetición fortalece sinapsis (LTP).',
+  Dopamina: 'Después de completar una tarea, pausa 30 s antes de abrir redes — separa señal de recompensa de scroll.',
+  Corteza_prefrontal: 'Antes de decidir algo importante, espera 10 s — da tiempo a la PFC para evaluar.',
+  Hipocampo: 'Cierra los ojos y reconstruye de memoria lo último que aprendiste — activa consolidación.',
+  Amígdala: 'Cuando sientas alarma sin causa clara, nombra la emoción en voz alta — activa PFC sobre amígdala.',
+  Sistema_nervioso_central: 'Escanea mandíbula, hombros y respiración — señales interoceptivas que la ínsula procesa.',
+  Neurona: 'Lee una lección de Academia hoy — entender cómo funciona el cerebro cambia cómo lo usas.',
+  Sinapsis: 'Repite un hábito bueno hoy — cada repetición es potenciación sináptica.',
+  Neurotransmisor: '10 min de movimiento elevan BDNF — prueba caminar antes del mediodía.',
+  'Memoria_(proceso)': 'Repasa en voz alta sin mirar notas — la recuperación activa consolida en hipocampo.',
+  Atención: '25 min con una sola tarea — protege la red atencional dorsal de distractores ventrales.',
+  Sueño: 'Esta noche: horario ±30 min y sin pantallas 30 min antes — prioriza ondas lentas (N3).',
+  Serotonina: 'Luz natural por la mañana regula ritmos circadianos que modulan serotonina.',
+  Cerebro: 'Abre Academia y lee la lección de la semana — 5 min de neurociencia aplicada.',
+  Lóbulo_frontal: 'Automatiza una decisión trivial hoy — ahorra PFC para lo que importa.',
+  'Tronco_encefálico': '5 respiraciones con exhalar largo — activa nervio vago desde el tronco encefálico.',
+  Ganglio_basal: 'Ancla un hábito nuevo a un trigger existente — los ganglios basales necesitan repetición.',
+  Corteza_cerebral: 'Haz una sesión de laboratorio — entrena circuitos documentados en neuroimagen.',
+  Potenciación_a_largo_plazo: 'Practica 2 min algo que aprendiste esta semana — LTP requiere repetición.',
+  Neurogénesis: 'Camina 15 min — el ejercicio aeróbico promueve BDNF y neurogénesis hipocampal.',
+}
+
 const WIKI_FALLBACKS = {
-  Neuroplasticidad: 'Tu cerebro puede formar nuevas conexiones a cualquier edad. Cada repetición refuerza esas vías.',
-  Meditación: 'Meditar con regularidad reduce el estrés y mejora la atención en pocas semanas.',
-  Hábito: 'Formar un hábito toma en promedio unos 66 días — la constancia importa más que la perfección.',
-  Atención: 'La atención es un músculo: se entrena con bloques cortos y sin distracciones.',
-  Sueño: 'Dormir bien consolida la memoria y regula el ánimo — es parte del entrenamiento.',
+  Neuroplasticidad: 'Tu cerebro reorganiza conexiones toda la vida mediante LTP (potenciación a largo plazo) y LTD (depresión). Cada repetición fortalece sinapsis; cada semana sin práctica las debilita. La neuroplasticidad adulta es real pero requiere consistencia.',
+  Dopamina: 'No es “placer” — es señal de predicción de error (Schultz). La VTA dispara cuando la recompensa supera lo esperado. Anticipación > consumo. Redes sociales explotan recompensas variables.',
+  Corteza_prefrontal: 'Regula planificación, inhibición de impulsos y memoria de trabajo. Se fatiga con decisiones triviales y cortisol crónico. Los ganglios basales toman el relevo cuando un hábito se automatiza.',
+  Hipocampo: 'Indexa memoria episódica y transfiere a corteza durante el sueño (hippocampal replay). Neuronas de lugar y tiempo marcan contexto espacial. Sin hipocampo funcional, no hay memoria nueva.',
+  Amígdala: 'Detecta amenazas en ~12 ms vía tálamo, antes de la corteza visual. Estrés crónico la mantiene hiperactiva. La PFC puede modularla mediante reappraisal y respiración lenta.',
+  Sistema_nervioso_central: 'Cerebro, médula y nervios periféricos coordinan todo. El nervio vago conecta tronco encefálico con órganos. Respiración lenta es la única palanca voluntaria del sistema autónomo.',
+  Neurona: 'Célula básica del SNC: dendritas reciben, axón transmite, sinapsis liberan neurotransmisores. “Neurons that fire together, wire together” (Hebb) — base de todo aprendizaje.',
+  Sinapsis: 'Espacio entre neuronas donde glutamato (excita) y GABA (inhibe) modulan la transmisión. La plasticidad sináptica es el mecanismo molecular del aprendizaje y los hábitos.',
+  Neurotransmisor: 'Dopamina (motivación), serotonina (ánimo), noradrenalina (alerta), acetilcolina (atención). No son emociones en una molécula — modulan circuitos completos.',
+  'Memoria_(proceso)': 'No es archivo — es reconstrucción activa. Se consolida en sueño N3/REM, se fortalece con recuperación activa y repetición espaciada. El hipocampo codifica; la corteza almacena.',
+  Atención: 'Dos redes: dorsal (top-down, voluntaria) y ventral (bottom-up, automática). La dorsal se fatiga en ~25 min. Flanker entrena filtrado de distractores laterales.',
+  Sueño: 'N3 consolida memoria vía ondas delta hipocampo-corteza. REM integra emoción. El sistema glinfático limpia metabolitos solo durante sueño profundo. 5 h = atención como intoxicación leve.',
+  Serotonina: 'Modula ánimo, impulsividad y ritmos circadianos. Se sintetiza en núcleos del rafe del tronco encefálico. Luz matutina y ejercicio regulan sus niveles.',
+  Cerebro: '~86 mil millones de neuronas, 100 billones de sinapsis. Consume 20% de la energía corporal. La corteza cerebral es la capa más externa — sede de pensamiento consciente.',
+  Lóbulo_frontal: 'Sede de PFC: planificación, personalidad, control motor voluntario. Dañado en caso Phineas Gage. Se desarrolla hasta los ~25 años — última región en madurar.',
+  'Tronco_encefálico': 'Conecta cerebro con médula. Controla respiración, frecuencia cardíaca y alerta. El nervio vago emerge aquí — puente entre cerebro y cuerpo.',
+  Ganglio_basal: 'Automatizan hábitos: señal → rutina → recompensa. Con repetición, actividad migra de PFC a estriado. No borras hábitos — los sobreescribes con nuevos circuitos.',
+  Corteza_cerebral: 'Capa de materia gris con surcos y circunvoluciones. Dividida en lóbulos: frontal (ejecutivo), parietal (integración), temporal (memoria/audición), occipital (visión).',
+  Potenciación_a_largo_plazo: 'Mecanismo molecular del aprendizaje: sinapsis que se activan juntas se fortalecen. Descubierto en hipocampo. Base de memoria, hábitos y rehabilitación.',
+  Neurogénesis: 'Nuevas neuronas en hipocampo adulto (debatible en humanos, robusto en roedores). BDNF y ejercicio aeróbico la promueven. Dormir y aprender la consolidan.',
 }
 
 const CURATED_ADVICE = [
@@ -222,6 +260,7 @@ function buildLocalWiki(day) {
   const pick = CURATED_WIKI[day % CURATED_WIKI.length]
   const title = pick.slug.replace(/_/g, ' ')
   return {
+    slug: pick.slug,
     title,
     tag: pick.tag,
     icon: pick.icon,
@@ -289,6 +328,7 @@ export async function fetchCuratedWiki() {
     )
     const extract = data.extract?.split('. ').slice(0, 2).join('. ')
     return {
+      slug: pick.slug,
       title: data.title || pick.slug.replace(/_/g, ' '),
       tag: pick.tag,
       icon: pick.icon,
@@ -300,6 +340,7 @@ export async function fetchCuratedWiki() {
   } catch {
     const title = pick.slug.replace(/_/g, ' ')
     return {
+      slug: pick.slug,
       title,
       tag: pick.tag,
       icon: pick.icon,
@@ -540,6 +581,15 @@ function getLocalTrivia(amount) {
     { category: 'Cultura', question: '¿Quién pintó la Mona Lisa?', correct: 'Leonardo da Vinci', options: ['Picasso', 'Van Gogh', 'Leonardo da Vinci', 'Miguel Ángel'] },
     { category: 'Astronomía', question: '¿Qué planeta es conocido como el planeta rojo?', correct: 'Marte', options: ['Venus', 'Júpiter', 'Marte', 'Saturno'] },
     { category: 'Salud', question: '¿Cuántas horas de sueño recomienda la OMS para adultos?', correct: '7-9 horas', options: ['4-5 horas', '5-6 horas', '7-9 horas', '10-12 horas'] },
+    { category: 'Neurociencia', question: '¿Qué neurotransmisor se asocia con la motivación y la recompensa?', correct: 'Dopamina', options: ['Serotonina', 'Dopamina', 'Adrenalina', 'Melatonina'] },
+    { category: 'Hábitos', question: 'Según estudios, ¿cuántos días tarda en formarse un hábito en promedio?', correct: '66 días', options: ['21 días', '30 días', '66 días', '90 días'] },
+    { category: 'Psicología', question: '¿Qué técnica ayuda a reducir la ansiedad centrándose en el presente?', correct: 'Mindfulness', options: ['Multitarea', 'Mindfulness', 'Procrastinación', 'Rumiación'] },
+    { category: 'Literatura', question: '¿Quién escribió "Cien años de soledad"?', correct: 'Gabriel García Márquez', options: ['Borges', 'Gabriel García Márquez', 'Vargas Llosa', 'Neruda'] },
+    { category: 'Matemáticas', question: '¿Cuánto es 15% de 200?', correct: '30', options: ['20', '25', '30', '35'] },
+    { category: 'Biología', question: '¿Cuál es la unidad básica de la vida?', correct: 'La célula', options: ['El átomo', 'La célula', 'El tejido', 'El órgano'] },
+    { category: 'Geografía', question: '¿Cuál es el río más largo del mundo?', correct: 'Nilo', options: ['Amazonas', 'Nilo', 'Misisipi', 'Yangtsé'] },
+    { category: 'Cultura', question: '¿En qué país nació el tango?', correct: 'Argentina', options: ['Brasil', 'Argentina', 'Cuba', 'España'] },
+    { category: 'Salud', question: '¿Qué vitamina se produce con exposición al sol?', correct: 'Vitamina D', options: ['Vitamina C', 'Vitamina D', 'Vitamina B12', 'Vitamina A'] },
   ]
   return shuffle(pool).slice(0, amount).map((q, i) => ({
     ...q,
@@ -552,8 +602,11 @@ function getLocalTrivia(amount) {
 const SPANISH_WORDS = [
   'mente', 'calma', 'habito', 'fuerza', 'logro', 'rumbo', 'pulso', 'brillo',
   'ritmo', 'enfoque', 'meta', 'ruta', 'saber', 'valor', 'clima', 'energia',
-  'sueno', 'calma', 'avance', 'racha', 'nivel', 'calma', 'pausa', 'flujo',
-  'orden', 'claridad', 'impulso', 'constancia', 'presencia', 'equilibrio',
+  'sueno', 'avance', 'racha', 'nivel', 'pausa', 'flujo', 'orden', 'claridad',
+  'impulso', 'constancia', 'presencia', 'equilibrio', 'gracia', 'bondad',
+  'paz', 'luz', 'vida', 'alma', 'coraje', 'fe', 'arte', 'musica', 'danza',
+  'fuego', 'agua', 'tierra', 'aire', 'nube', 'lluvia', 'sol', 'luna', 'mar',
+  'cielo', 'bosque', 'flor', 'raiz', 'semilla', 'camino', 'puente', 'puerta',
 ]
 
 export async function fetchAnagramWords(count = 6) {
@@ -565,12 +618,34 @@ export async function fetchAnagramWords(count = 6) {
   }))
 }
 
+const TIME_TIPS = {
+  morning: [
+    { icon: '🌅', label: 'Mañana', text: 'Antes del correo: nombra la única tarea que haría valer la pena el día si solo pudieras hacer una.' },
+    { icon: '🌅', label: 'Mañana', text: 'Tu ventana de mayor claridad cognitiva suele ser ahora. Bloquea 25 min para rutina o enfoque.' },
+    { icon: '🌅', label: 'Mañana', text: 'No necesitas sentirte listo para empezar — la rutina express de 5 min cuenta como victoria.' },
+  ],
+  midday: [
+    { icon: '☀️', label: 'Mediodía', text: 'Pausa real: 10 min sin pantalla. Tu atención de la tarde depende de esto.' },
+    { icon: '☀️', label: 'Mediodía', text: 'Revisa el plan: ¿qué misión pendiente tiene más impacto si la haces antes de las 18:00?' },
+    { icon: '☀️', label: 'Mediodía', text: 'Si la mañana fue caótica, aún puedes rescatar el día con 2 hábitos + una reflexión.' },
+  ],
+  afternoon: [
+    { icon: '🌤️', label: 'Tarde', text: 'Energía media-baja: ideal para gimnasia cerebral o hábitos físicos ligeros, no para decisiones grandes.' },
+    { icon: '🌤️', label: 'Tarde', text: 'La procrastinación de tarde suele ser cansancio disfrazado. Prueba 5 min de movimiento antes de posponer.' },
+    { icon: '🌤️', label: 'Tarde', text: 'Si meditaste esta mañana, una sesión corta de respiración ahora consolida el hábito.' },
+  ],
+  evening: [
+    { icon: '🌙', label: 'Noche', text: 'Cierra con diario + ánimo. Lo que escribas hoy es el ancla de mañana.' },
+    { icon: '🌙', label: 'Noche', text: 'No evalúes el día en escala 1-10 — descríbelo. Una frase honesta basta.' },
+    { icon: '🌙', label: 'Noche', text: 'Si el plan no se completó, anota qué te frenó. Eso es dato, no fracaso.' },
+  ],
+}
+
 function getTimeTip() {
   const h = new Date().getHours()
-  if (h < 10) return { icon: '🌅', label: 'Mañana', text: 'Bloquea 25 min sin distracciones para tu rutina — es tu ventana de mayor claridad.' }
-  if (h < 14) return { icon: '☀️', label: 'Mediodía', text: 'Revisa el plan: ¿qué misión te acerca más al cierre del día?' }
-  if (h < 18) return { icon: '🌤️', label: 'Tarde', text: 'Ideal para hábitos y gimnasia cerebral antes de que baje tu energía.' }
-  return { icon: '🌙', label: 'Noche', text: 'Cierra con reflexión y calma. Mañana empieza con lo que registres hoy.' }
+  const slot = h < 10 ? 'morning' : h < 14 ? 'midday' : h < 18 ? 'afternoon' : 'evening'
+  const tips = TIME_TIPS[slot]
+  return tips[curatedIndex(slot.length, tips.length)]
 }
 
 export function adviceCardHTML(advice) {
@@ -614,8 +689,39 @@ export function sunsetBannerHTML(sun) {
   </div>`
 }
 
-export function dailyContentHTML(bundle, loading = false) {
-  return homePulseHTML(bundle, loading)
+/** Una sola tarjeta de insight para el home v3 */
+export function homeInsightHTML(bundle, loading = false) {
+  if (loading && !bundle) {
+    return `<section class="m-insight"><p class="m-insight-text">Cargando algo para leer…</p></section>`
+  }
+  if (!bundle) return ''
+
+  const { wiki, advice, quote } = bundle
+  if (wiki?.extract) {
+    const wikiTry = WIKI_TRY[wiki.slug] || WIKI_TRY.Neuroplasticidad
+    return `<section class="m-insight">
+      <p class="m-insight-tag">Para pensar · ${esc(wiki.tag || 'mente')}</p>
+      <h3 class="m-insight-title">${esc(wiki.title || 'Neurociencia')}</h3>
+      <p class="m-insight-text">${esc(wiki.extract)}</p>
+      <p class="m-insight-text" style="margin-top:0.5rem"><strong>Prueba:</strong> ${esc(wikiTry)}</p>
+      ${wiki.url ? `<a href="${esc(wiki.url)}" target="_blank" rel="noopener" class="m-insight-link">Leer más →</a>` : ''}
+    </section>`
+  }
+  if (advice?.advice) {
+    return `<section class="m-insight">
+      <p class="m-insight-tag">Consejo del día</p>
+      <p class="m-insight-text">"${esc(advice.advice)}"</p>
+      <a href="#/mejora/diario" onclick="mejoraTab='diario';diarioSection='daily';render(true)" class="m-insight-link">Llevarlo al diario →</a>
+    </section>`
+  }
+  if (quote?.content) {
+    return `<section class="m-insight">
+      <p class="m-insight-tag">Cita</p>
+      <p class="m-insight-text">"${esc(quote.content)}"</p>
+      <p class="m-insight-text" style="margin-top:0.35rem">— ${esc(quote.author)}</p>
+    </section>`
+  }
+  return ''
 }
 
 export function homePulseHTML(bundle, loading = false) {
@@ -635,44 +741,60 @@ export function homePulseHTML(bundle, loading = false) {
       : `<span class="pulse-chip">${timeTip.icon} ${timeTip.label}</span>`
 
   const nowCard = sunsetTip
-    ? `<div class="pulse-card pulse-card--sunset card-static">
+    ? `<div class="pulse-card pulse-card--sunset pulse-card--elite card-static">
+        <div class="pulse-card-corner" aria-hidden="true"></div>
         <div class="pulse-card-head"><span class="pulse-card-tag">${sunsetTip.title}</span><span>${sunsetTip.icon}</span></div>
         <p class="pulse-now-text">${sunsetTip.text}</p>
         <a href="#/meditacion" class="text-xs no-underline mt-2 inline-block" style="color:var(--neon)">Ir a meditación →</a>
       </div>`
-    : `<div class="pulse-card pulse-card--now card-static">
+    : `<div class="pulse-card pulse-card--now pulse-card--elite card-static">
+        <div class="pulse-card-corner" aria-hidden="true"></div>
         <div class="pulse-card-head"><span class="pulse-card-tag">Ahora mismo</span></div>
         <p class="pulse-now-text">${timeTip.text}</p>
       </div>`
 
   const statusBadge = bundleStatusHTML(bundle)
 
-  return `<div class="pulse-grid pulse-grid--wide">
-    ${statusBadge ? `<div class="pulse-status-row">${statusBadge}</div>` : ''}
-    <div class="pulse-card pulse-card--quote card-static">
-      <div class="pulse-card-head">
-        <span class="pulse-card-tag">Inspiración</span>
-        ${holidayChip}
-      </div>
-      <p class="pulse-quote">"${esc(quote.content)}"</p>
-      <p class="pulse-author">— ${esc(quote.author)}</p>
+  const wikiTry = WIKI_TRY[wiki?.slug] || WIKI_TRY.Neuroplasticidad
+
+  const wikiCard = wiki ? `<div class="pulse-card pulse-card--wiki pulse-card--elite card-static">
+    <div class="pulse-card-corner" aria-hidden="true"></div>
+    <div class="pulse-card-head">
+      <span class="pulse-card-tag">Ciencia · ${wiki.tag || 'Cerebro'}</span>
+      <span class="pulse-card-icon">${wiki.icon || '🧠'}</span>
     </div>
-    <div class="pulse-card pulse-card--wiki card-static">
-      <div class="pulse-card-head">
-        <span class="pulse-card-tag">${wiki?.tag || 'Ciencia'}</span>
-        <span class="pulse-card-icon">${wiki?.icon || '🧠'}</span>
-      </div>
-      <h4 class="pulse-tip-title">${esc(wiki?.title || 'Neurociencia')}</h4>
-      <p class="pulse-tip-text">${esc(wiki?.extract || '')}</p>
-      ${wiki?.url ? `<a href="${esc(wiki.url)}" target="_blank" rel="noopener" class="pulse-wiki-link">Leer más →</a>` : ''}
+    <h4 class="pulse-tip-title">${esc(wiki.title || 'Neurociencia')}</h4>
+    <p class="pulse-tip-text">${esc(wiki.extract || '')}</p>
+    <p class="pulse-try-label">Prueba hoy (60 s)</p>
+    <p class="pulse-try-text">${esc(wikiTry)}</p>
+    ${wiki.url ? `<a href="${esc(wiki.url)}" target="_blank" rel="noopener" class="pulse-wiki-link">Profundizar →</a>` : ''}
+  </div>` : ''
+
+  const adviceCard = advice?.advice ? `<div class="pulse-card pulse-card--advice pulse-card--elite card-static">
+    <div class="pulse-card-corner" aria-hidden="true"></div>
+    <div class="pulse-card-head">
+      <span class="pulse-card-tag">Consejo accionable</span>
+      <span class="pulse-card-icon">💡</span>
     </div>
-    <div class="pulse-card pulse-card--advice card-static">
-      <div class="pulse-card-head">
-        <span class="pulse-card-tag">Consejo</span>
-        <span class="pulse-card-icon">💡</span>
-      </div>
-      <p class="pulse-quote" style="font-size:0.9rem">"${esc(advice?.advice || '')}"</p>
+    <p class="pulse-quote pulse-quote--compact">"${esc(advice.advice)}"</p>
+    <p class="text-xs text-muted mt-2">Llévalo al diario como punto de partida ↓</p>
+  </div>` : ''
+
+  const quoteCard = quote ? `<div class="pulse-card pulse-card--quote pulse-card--elite card-static">
+    <div class="pulse-card-corner" aria-hidden="true"></div>
+    <div class="pulse-card-head">
+      <span class="pulse-card-tag">Cita</span>
+      ${holidayChip}
     </div>
+    <p class="pulse-quote">"${esc(quote.content)}"</p>
+    <p class="pulse-author">— ${esc(quote.author)}</p>
+  </div>` : ''
+
+  return `<div class="pulse-grid pulse-grid--wide pulse-grid--elite">
+    ${statusBadge ? `<div class="pulse-status-row span-full">${statusBadge}</div>` : ''}
+    ${wikiCard}
+    ${adviceCard}
+    ${quoteCard}
     ${nowCard}
     ${readingCardHTML(reading)}
   </div>`

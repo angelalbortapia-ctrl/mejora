@@ -7,22 +7,36 @@
     body { font-family: system-ui, sans-serif; background: #050608; color: #e8f7f4; padding: 2rem; max-width: 40rem; margin: 0 auto; }
     .ok { color: #00f5d4; }
     .fail { color: #fb7185; }
+    h2 { font-size: 1rem; margin: 1.5rem 0 0.5rem; color: #94a3b8; }
   </style>
 </head>
 <body>
-  <h1>Tests core.js</h1>
-  <pre id="out">Ejecutando…</pre>
+  <h1>Tests Mejora</h1>
+  <div id="out">Ejecutando…</div>
   <script type="module">
     const out = document.getElementById('out')
-    try {
-      const { results } = await import('./core.test.js?v=2')
-      out.innerHTML = results.map(r =>
-        `<span class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'} ${r.name}${r.error ? ' — ' + r.error : ''}</span>`
-      ).join('\n')
-      if (results.some(r => !r.ok)) out.innerHTML += '\n<span class="fail">Algunos tests fallaron</span>'
-    } catch (e) {
-      out.innerHTML = `<span class="fail">${e.message}</span>`
+    const suites = [
+      { title: 'core.js', mod: './core.test.js?v=3' },
+      { title: 'router.js', mod: './router.test.js?v=1' },
+    ]
+    const lines = []
+    let failed = false
+    for (const suite of suites) {
+      lines.push(`<h2>${suite.title}</h2>`)
+      try {
+        const { results } = await import(suite.mod)
+        for (const r of results) {
+          lines.push(`<span class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'} ${r.name}${r.error ? ' — ' + r.error : ''}</span>`)
+          if (!r.ok) failed = true
+        }
+      } catch (e) {
+        lines.push(`<span class="fail">✗ ${suite.title} — ${e.message}</span>`)
+        failed = true
+      }
     }
+    if (failed) lines.push('<span class="fail">Algunos tests fallaron</span>')
+    else lines.push('<span class="ok">Todos los tests pasaron</span>')
+    out.innerHTML = lines.join('<br>')
   </script>
 </body>
 </html>

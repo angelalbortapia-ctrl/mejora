@@ -3,7 +3,7 @@ import { getTotalLevel, getItem, setItem } from './core.js'
 export const UNLOCKS = [
   { id: 'theme_ocean', level: 3, type: 'theme', name: 'Tema Océano', icon: '🌊', desc: 'Turquesa profundo' },
   { id: 'theme_sunset', level: 5, type: 'theme', name: 'Tema Atardecer', icon: '🌅', desc: 'Tonos cálidos' },
-  { id: 'game_anagrams', level: 7, type: 'game', name: 'Anagramas', icon: '🔤', desc: 'Nuevo juego mental' },
+  { id: 'game_anagrams', level: 7, type: 'game', name: 'Laboratorio+', icon: '🔬', desc: 'Desbloquea sesión guiada avanzada' },
   { id: 'review_monthly', level: 8, type: 'feature', name: 'Revisión Mensual', icon: '📅', desc: 'Reflexión de largo plazo' },
   { id: 'diff_expert', level: 10, type: 'feature', name: 'Modo Experto', icon: '💎', desc: 'Máxima dificultad' },
   { id: 'theme_midnight', level: 12, type: 'theme', name: 'Tema Medianoche', icon: '🌙', desc: 'Oscuro profundo' },
@@ -27,10 +27,6 @@ export function isUnlocked(unlockId) {
 
 export function getUnlocked() {
   return UNLOCKS.filter(u => isUnlocked(u.id))
-}
-
-export function getLocked() {
-  return UNLOCKS.filter(u => !isUnlocked(u.id))
 }
 
 export function getNextUnlock() {

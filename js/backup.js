@@ -43,11 +43,6 @@ function toDateStrLocal(d) {
   return `${y}-${m}-${day}`
 }
 
-export function exportMonthlyReport() {
-  const report = buildMonthlyReport()
-  downloadJSON(report, `mejora-informe-${getToday()}.json`)
-}
-
 export function exportMonthlyReportText() {
   const r = buildMonthlyReport()
   const text = [

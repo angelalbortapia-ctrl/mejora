@@ -1,26 +1,42 @@
-const CACHE = 'mejora-v21'
+const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
+const CACHE = 'mejora-v54'
 const ASSETS = [
+  `${BASE}/manifest.json`,
+  `${BASE}/public/favicon.svg`,
+  `${BASE}/public/audio/rain.wav`,
+  `${BASE}/public/audio/ocean.wav`,
+  `${BASE}/public/audio/forest.wav`,
+  `${BASE}/public/audio/wind.wav`,
+  `${BASE}/public/audio/stream.wav`,
+  `${BASE}/public/audio/fire.wav`,
+  `${BASE}/public/audio/night.wav`,
+  `${BASE}/public/audio/brown.wav`,
+  `${BASE}/public/audio/cafe.wav`,
+  `${BASE}/public/audio/zen.wav`,
+]
+
+const NETWORK_FIRST = [
   '/',
   '/index.html',
   '/styles.css',
   '/css/utilities.css',
-  '/js/app.js',
-  '/js/core.js',
-  '/js/content.js',
-  '/js/unlocks.js',
-  '/js/apis.js',
-  '/js/notifications.js',
-  '/js/brain-program.js',
-  '/js/brain-exercises.js',
-  '/js/layout.js',
-  '/js/journey.js',
-  '/js/analytics.js',
-  '/js/ui.js',
-  '/js/tour.js',
-  '/js/backup.js',
-  '/manifest.json',
-  '/public/favicon.svg',
+  '/css/design-system.css',
+  '/css/aurora-theme.css',
+  '/css/onboarding.css',
+  '/css/page-themes.css',
+  '/js/',
 ]
+
+function relPath(url) {
+  const p = url.pathname
+  if (BASE && p.startsWith(BASE)) return p.slice(BASE.length) || '/'
+  return p
+}
+
+function isNetworkFirst(url) {
+  const rel = relPath(url)
+  return NETWORK_FIRST.some(p => rel === p || rel.startsWith(p))
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -36,9 +52,13 @@ self.addEventListener('activate', (e) => {
   )
 })
 
+self.addEventListener('message', (e) => {
+  if (e.data?.type === 'SKIP_WAITING') self.skipWaiting()
+})
+
 self.addEventListener('notificationclick', (e) => {
   e.notification.close()
-  const url = e.notification.data?.url || '/'
+  const url = e.notification.data?.url || `${BASE}/`
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
       for (const client of clients) {
@@ -57,16 +77,29 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url)
   if (url.origin !== location.origin) return
 
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(res => {
+  if (isNetworkFirst(url)) {
+    e.respondWith(
+      fetch(e.request).then(res => {
         if (res.ok) {
           const clone = res.clone()
           caches.open(CACHE).then(cache => cache.put(e.request, clone))
         }
         return res
-      }).catch(() => cached)
-      return cached || fetchPromise
+      }).catch(() => caches.match(e.request))
+    )
+    return
+  }
+
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      if (cached) return cached
+      return fetch(e.request).then(res => {
+        if (res.ok) {
+          const clone = res.clone()
+          caches.open(CACHE).then(cache => cache.put(e.request, clone))
+        }
+        return res
+      })
     })
   )
 })

@@ -22,6 +22,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inject Supabase config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            cat > js/supabase-config.js <<EOF
+          export let SUPABASE_URL = '$SUPABASE_URL'
+          export let SUPABASE_ANON_KEY = '$SUPABASE_ANON_KEY'
+          try {
+            const local = await import('./supabase-config.local.js')
+            if (local.SUPABASE_URL) SUPABASE_URL = local.SUPABASE_URL
+            if (local.SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = local.SUPABASE_ANON_KEY
+          } catch {}
+          export function isSupabaseConfigured() {
+            return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
+          }
+          EOF
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -34,7 +34,7 @@ export function startTour(onStep) {
         </div>
       </div>`
     positionSpotlight(el)
-    document.getElementById('tour-skip')?.addEventListener('click', finishTour)
+    document.getElementById('tour-skip')?.addEventListener('click', skipTour)
     document.getElementById('tour-next')?.addEventListener('click', () => {
       step++
       if (step >= STEPS.length) finishTour()
@@ -68,7 +68,7 @@ export function finishTour() {
   saveSettings(s)
 }
 
-export function skipTour() {
+function skipTour() {
   setItem('tourSkipped', true)
   finishTour()
 }

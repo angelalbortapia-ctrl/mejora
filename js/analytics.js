@@ -112,14 +112,44 @@ export function getWeeklySummary() {
   const prevTrend = getHabitTrendWeeks(2)
   const habitDelta = (prevTrend[1]?.percent || 0) - (prevTrend[0]?.percent || 0)
 
-  const lines = []
-  lines.push(`Esta semana estuviste activo ${activeDays} de 7 días.`)
-  if (habitDays > 0) lines.push(`Completaste hábitos en ${habitDays} días.`)
-  if (brainCount > 0) lines.push(`${brainCount} sesión${brainCount > 1 ? 'es' : ''} de gimnasia cerebral.`)
-  if (reflections > 0) lines.push(`${reflections} reflexión${reflections > 1 ? 'es' : ''} en el diario.`)
-  if (moodAvg) lines.push(`Ánimo promedio: ${moodAvg}/4.`)
-  if (habitDelta > 5) lines.push('Tus hábitos mejoraron respecto a la semana anterior.')
-  else if (habitDelta < -5) lines.push('La semana fue más ligera en hábitos — retoma con el plan de hoy.')
+  let topHabit = null
+  let topHabitDays = 0
+  for (const h of habits) {
+    let days = 0
+    for (let i = 0; i < 7; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      if (isHabitComplete(h, toDateStr(d))) days++
+    }
+    if (days > topHabitDays) { topHabitDays = days; topHabit = h }
+  }
+
+  const parts = []
+  if (activeDays >= 6) parts.push(`Semana sólida: activo ${activeDays}/7 días. Tu sistema diario está tomando forma.`)
+  else if (activeDays >= 4) parts.push(`Esta semana estuviste presente ${activeDays} de 7 días — ritmo intermedio con margen de mejora.`)
+  else if (activeDays >= 1) parts.push(`Semana ligera (${activeDays}/7 días activos). No te castigues: un día fuerte puede cambiar la tendencia.`)
+  else parts.push('Semana sin actividad registrada. La rutina express de 5 min es el reinicio más fácil.')
+
+  if (topHabit && topHabitDays >= 2) {
+    parts.push(`Tu hábito más constante fue «${topHabit.name}» (${topHabitDays}/7). Duplica esfuerzo ahí antes de añadir otro.`)
+  } else if (habits.length && habitDays === 0) {
+    parts.push('Ningún hábito se completó esta semana — elige solo uno para la próxima y redúcelo a 2 minutos.')
+  }
+
+  if (brainCount >= 3) parts.push(`${brainCount} sesiones cerebrales: tu atención y memoria de trabajo están recibiendo estímulo real.`)
+  else if (brainCount > 0) parts.push(`${brainCount} sesión${brainCount > 1 ? 'es' : ''} cerebral — intenta 2 la próxima semana para ver patrones.`)
+  else parts.push('Sin entrenamiento cognitivo esta semana. Una sesión de 15 min el miércoles puede ser tu ancla.')
+
+  if (reflections >= 3) parts.push(`${reflections} reflexiones: tu diario ya tiene material para revisar patrones.`)
+  else if (reflections > 0) parts.push(`${reflections} reflexión${reflections > 1 ? 'es' : ''} — sube a 3 por semana para insights más claros.`)
+
+  if (moodAvg) {
+    if (moodAvg >= 3.5) parts.push(`Ánimo promedio alto (${moodAvg}/4). Buen momento para metas ambiciosas o dificultad experta.`)
+    else if (moodAvg < 2.5) parts.push(`Ánimo bajo (${moodAvg}/4). Prioriza calma y hábitos mínimos — no grandes cambios.`)
+  }
+
+  if (habitDelta > 5) parts.push('Tus hábitos mejoraron vs. la semana pasada. Mantén el plan del día como ancla.')
+  else if (habitDelta < -5) parts.push('Hábitos por debajo de la semana anterior. Revisa si la meta es demasiado alta.')
 
   return {
     activeDays,
@@ -128,7 +158,9 @@ export function getWeeklySummary() {
     reflections,
     moodAvg,
     habitDelta,
-    narrative: lines.join(' '),
+    narrative: parts.join(' '),
+    topHabit: topHabit?.name,
+    topHabitDays,
   }
 }
 
@@ -144,8 +176,8 @@ export function getNextBestAction() {
   if (progress.allDone) {
     return {
       icon: '✨',
-      title: 'Día perfecto',
-      desc: 'Plan completo. Revisa tu viaje o repite una sesión cerebral.',
+      title: 'Día completo',
+      desc: 'Hiciste lo que tenías pendiente. Descansa o mira cómo vas.',
       link: '#/viaje',
       cta: 'Ver mi viaje',
       priority: 'done',
@@ -216,7 +248,7 @@ export function getNextBestAction() {
     return {
       icon: pending.icon,
       title: pending.label,
-      desc: `+${pending.xp} XP al completar esta misión.`,
+      desc: pending.brief || pending.why || `+${pending.xp} XP al completar esta misión.`,
       link: pending.link,
       cta: 'Continuar',
       priority: 'medium',
@@ -237,15 +269,26 @@ export function getJourneyInsight() {
   const s = getJourneySummary()
   const trend = getHabitTrendWeeks(4)
   const habitDelta = (trend[3]?.percent || 0) - (trend[2]?.percent || 0)
-  if (s.daysSinceStart < 7) return 'Estás en la fase de arranque. La constancia de los primeros 7 días define tu ritmo futuro.'
-  if (s.consistency30 >= 80) return 'Excelente consistencia. Tu sistema diario está consolidado — es momento de subir metas o profundizar en gimnasia cerebral.'
-  if (s.consistency30 >= 50) {
-    return habitDelta > 5
-      ? 'Tus hábitos mejoran semana a semana. Mantén el plan del día como ancla.'
-      : 'Ritmo estable. Prioriza completar el plan antes de añadir más actividades.'
+  const weekly = getWeeklySummary()
+  const goals = getGoals().filter(g => g.active)
+
+  if (s.daysSinceStart < 7) {
+    return `Día ${s.daysSinceStart} de tu camino. Los primeros 7 días no miden talento — miden si vuelves. Una rutina express cuenta igual que una completa.`
   }
-  if (s.streak >= 3) return 'Tienes racha activa. Un día a la vez: el viaje se construye con pequeñas victorias repetidas.'
-  return 'Retoma con una rutina express o 2 hábitos hoy. La neuroplasticidad responde a la repetición, no a la perfección.'
+  if (s.consistency30 >= 80) {
+    const extra = s.brainSessions < 20
+      ? ' Tu siguiente nivel: más neurociencia aplicada o metas de 90 días.'
+      : goals.length < 2 ? ' Considera una segunda meta activa para canalizar esta consistencia.' : ''
+    return `Consistencia del ${s.consistency30}% en 30 días — estás en el 10% superior de quienes empiezan apps de hábitos.${extra}`
+  }
+  if (s.consistency30 >= 50) {
+    if (habitDelta > 5) return `Hábitos en alza (+${habitDelta}% vs. semana pasada). ${weekly.topHabit ? `«${weekly.topHabit}» es tu ancla — protégelo.` : 'Mantén el plan del día como ritual, no como lista.'}`
+    if (s.streak >= 5) return `Racha de ${s.streak} días con consistencia media (${s.consistency30}%). El siguiente salto es completar el plan entero 3 días seguidos.`
+    return `Ritmo intermedio (${s.consistency30}% consistencia). Prioriza cerrar el plan antes de añadir actividades — la profundidad gana a la amplitud.`
+  }
+  if (s.streak >= 3) return `Racha de ${s.streak} días activa. Un mal día no la rompe — no volver mañana sí.`
+  if (s.reflections >= 10) return `Llevas ${s.reflections} reflexiones escritas. Relee una de hace 2 semanas: verás patrones que hoy no notas.`
+  return 'Reinicio suave: rutina express (5 min) + 2 hábitos + una línea en el diario. Tres victorias pequeñas > un plan perfecto abandonado.'
 }
 
 export function getMilestones() {

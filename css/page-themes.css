@@ -1,0 +1,443 @@
+/* ═══ Temas por sección + focus mode + FX ═══ */
+
+/* ── FX layer ── */
+#fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fx-confetti {
+  position: absolute;
+  top: -8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: fx-fall linear forwards;
+}
+
+@keyframes fx-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.fx-pulse {
+  animation: fx-pulse 0.45s ease;
+}
+
+@keyframes fx-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ── Focus mode ── */
+body.focus-mode .sidebar,
+body.focus-mode .bottom-nav,
+body.focus-mode .app-banner,
+body.focus-mode .app-aurora {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.focus-mode .app-main { margin-left: 0 !important; }
+
+body.focus-mode .app-content {
+  min-height: 100vh;
+  padding-top: 0 !important;
+}
+
+body.focus-mode .focus-exit {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 300;
+}
+
+body.focus-mode .med-session-side,
+body.focus-mode .enfoque-info { display: none; }
+
+body.focus-mode .med-active-grid {
+  grid-template-columns: 1fr !important;
+  max-width: 36rem;
+  margin: 0 auto;
+  min-height: 70vh;
+  align-items: center;
+}
+
+body.focus-mode .page-meditation .exercise-stage {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ── Icon badges ── */
+.mi-icon { width: 1.125rem; height: 1.125rem; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+.mi-icon--badge { width: 1.25rem; height: 1.25rem; }
+.mi-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--neon);
+}
+
+/* ── Page heroes ── */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.35rem;
+  margin-bottom: 0.25rem;
+  background: var(--bg-elevated);
+}
+
+.page-hero__mesh {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-hero__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.page-hero__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 800;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.03em;
+}
+
+.page-hero__sub {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.45;
+  max-width: 28rem;
+}
+
+.page-hero__stat {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.page-hero__stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  display: block;
+}
+
+.page-hero__stat-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* ── PLAN ── */
+.page-plan .page-hero {
+  background: linear-gradient(145deg, #f0f9ff, #e0f2fe);
+  border-color: rgba(56, 189, 248, 0.28);
+}
+
+.page-plan .page-hero__mesh {
+  background: radial-gradient(ellipse 70% 60% at 30% 0%, rgba(56, 189, 248, 0.18), transparent 55%);
+}
+
+.page-plan .page-hero__title { color: #0c4a6e; }
+.page-plan .page-hero__stat-val { color: #0284c7; }
+
+/* ── METAS ── */
+.page-metas .page-hero {
+  background: linear-gradient(145deg, #fdf2f8, #fce7f3);
+  border-color: rgba(244, 114, 182, 0.28);
+}
+
+.page-metas .page-hero__title { color: #831843; }
+.page-metas .page-hero__stat-val { color: #db2777; }
+
+/* ── GIMNASIA — neural sci-fi ── */
+.page-brain {
+  --page-accent: #22d3ee;
+  --page-accent-2: #818cf8;
+  --page-glow: rgba(34, 211, 238, 0.2);
+}
+
+.page-brain .page-hero {
+  background: linear-gradient(145deg, #ecfeff, #e0f2fe);
+  border-color: rgba(34, 211, 238, 0.28);
+  box-shadow: 0 8px 32px rgba(34, 211, 238, 0.1);
+}
+
+.page-brain .page-hero__mesh {
+  background:
+    radial-gradient(ellipse 70% 60% at 0% 0%, rgba(34, 211, 238, 0.18), transparent 55%),
+    radial-gradient(ellipse 50% 50% at 100% 100%, rgba(129, 140, 248, 0.12), transparent 50%),
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(34, 211, 238, 0.03) 31px, rgba(34, 211, 238, 0.03) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(34, 211, 238, 0.03) 31px, rgba(34, 211, 238, 0.03) 32px);
+}
+
+.page-brain .page-hero__title {
+  color: #164e63;
+  text-shadow: none;
+}
+
+.page-brain .page-hero__stat-val { color: var(--page-accent); }
+
+.page-brain .program-hero,
+.page-brain .brain-hero {
+  border-color: rgba(34, 211, 238, 0.22);
+  background: linear-gradient(160deg, #ffffff, #f0fdfa);
+}
+
+.page-brain .game-card {
+  border-color: rgba(34, 211, 238, 0.1);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+.page-brain .game-card:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 32px rgba(34, 211, 238, 0.12);
+  transform: translateY(-2px);
+}
+
+.page-brain .brain-domain-grid .card {
+  border-color: rgba(129, 140, 248, 0.12);
+}
+
+/* ── CALMA — zen minimal ── */
+.page-meditation {
+  --page-accent: #6ee7b7;
+  --page-accent-2: #93c5fd;
+}
+
+.page-meditation .page-hero {
+  background: linear-gradient(160deg, #ecfdf5, #d1fae5);
+  border-color: rgba(110, 231, 183, 0.35);
+}
+
+.page-meditation .page-hero__mesh {
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 0%, rgba(110, 231, 183, 0.12), transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(147, 197, 253, 0.08), transparent 50%);
+  animation: zen-drift 20s ease-in-out infinite;
+}
+
+@keyframes zen-drift {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+.page-meditation .page-hero__title { color: #065f46; }
+.page-meditation .page-hero__stat-val { color: var(--page-accent); }
+
+.page-meditation .med-sessions-grid .card {
+  border-color: rgba(110, 231, 183, 0.1);
+  transition: border-color 0.25s, transform 0.25s;
+}
+
+.page-meditation .med-sessions-grid .card:hover {
+  border-color: rgba(110, 231, 183, 0.3);
+  transform: translateY(-2px);
+}
+
+.page-meditation .breathe-circle,
+.page-meditation .meditation-ring {
+  background: radial-gradient(circle, rgba(110, 231, 183, 0.25), rgba(147, 197, 253, 0.08));
+  border: 2px solid rgba(110, 231, 183, 0.35);
+  box-shadow: 0 0 60px rgba(110, 231, 183, 0.15);
+}
+
+.page-meditation.focus-session .exercise-stage {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ── VIAJE — analytics dashboard ── */
+.page-viaje {
+  --page-accent: #a78bfa;
+  --page-accent-2: #38bdf8;
+}
+
+.page-viaje .page-hero {
+  background: linear-gradient(145deg, #f5f3ff, #ede9fe);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.page-viaje .page-hero__mesh {
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 20%, rgba(167, 139, 250, 0.15), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(56, 189, 248, 0.1), transparent 50%);
+}
+
+.page-viaje .page-hero__title { color: #4c1d95; }
+.page-viaje .page-hero__stat-val { color: var(--page-accent); }
+
+.viaje-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .viaje-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.viaje-kpi {
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(8px);
+}
+
+.viaje-kpi-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--page-accent);
+  line-height: 1;
+}
+
+.viaje-kpi-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.page-viaje .consistency-ring {
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.page-viaje .trend-bar {
+  background: linear-gradient(180deg, var(--page-accent), var(--page-accent-2));
+}
+
+/* ── PERFIL — rank showcase ── */
+.page-profile {
+  --page-accent: #fbbf24;
+  --page-accent-2: #f472b6;
+}
+
+.page-profile .page-hero {
+  background: linear-gradient(145deg, #fffbeb, #fef3c7);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.page-profile .page-hero__mesh {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 0%, rgba(251, 191, 36, 0.15), transparent 55%),
+    radial-gradient(ellipse 40% 40% at 90% 90%, rgba(244, 114, 182, 0.1), transparent 50%);
+}
+
+.page-profile .page-hero__title { color: #78350f; }
+.page-profile .page-hero__stat-val { color: var(--page-accent); }
+
+.profile-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #b45309;
+  margin-bottom: 0.75rem;
+}
+
+.page-profile .ds-stat {
+  border-color: rgba(251, 191, 36, 0.12);
+  background: rgba(251, 191, 36, 0.04);
+}
+
+.page-profile .unlock-card.unlocked {
+  border-color: rgba(45, 212, 191, 0.3);
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.08);
+}
+
+/* ── ENFOQUE — deep focus ── */
+.page-enfoque {
+  --page-accent: #fb923c;
+}
+
+.page-enfoque .page-hero {
+  background: linear-gradient(160deg, #fff7ed, #ffedd5);
+  border-color: rgba(251, 146, 60, 0.35);
+}
+
+.page-enfoque .page-hero__mesh {
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(251, 146, 60, 0.12), transparent 60%);
+}
+
+.page-enfoque .page-hero__title { color: #9a3412; }
+
+.page-enfoque .enfoque-timer {
+  border-color: rgba(251, 146, 60, 0.15);
+}
+
+body.focus-mode.page-enfoque-active .enfoque-dashboard,
+body.focus-mode .page-enfoque.focus-active .enfoque-dashboard {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.focus-mode .enfoque-timer {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(251, 146, 60, 0.2);
+  background: rgba(12, 10, 8, 0.9);
+  box-shadow: 0 0 80px rgba(251, 146, 60, 0.08);
+}
+
+/* ── Solo hoy focus ── */
+.page-solo-hoy .solo-focus {
+  border-color: rgba(13, 148, 136, 0.25);
+  background: linear-gradient(160deg, #f0fdfa, #ecfdf5);
+}
+
+/* ── Habit complete animation ── */
+.habit-card.done,
+.habit-item.done {
+  animation: habit-done 0.4s ease;
+}
+
+@keyframes habit-done {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* ── Level up toast ── */
+.xp-toast-level {
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  box-shadow: 0 0 40px rgba(251, 191, 36, 0.2) !important;
+}
+

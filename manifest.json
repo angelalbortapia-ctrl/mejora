@@ -1,14 +1,14 @@
 {
-  "name": "Mejora — Mejora continua",
+  "name": "Mejora",
   "short_name": "Mejora",
-  "description": "Hábitos, gimnasia cerebral, meditación y metas personales",
+  "description": "Hábitos, mente y calma — un paso claro cada día",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "lang": "es",
-  "background_color": "#050608",
-  "theme_color": "#00f5d4",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2dd4bf",
   "icons": [
     { "src": "public/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "public/favicon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }

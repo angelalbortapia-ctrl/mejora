@@ -1,19 +1,95 @@
 /** Componentes UI reutilizables */
-export function icon(name, cls = 'ui-icon') {
-  const icons = {
-    home: '<path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z"/>',
-    plan: '<path d="M6 4h12a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V5a1 1 0 011-1zm2 3h8M8 11h8M8 15h5"/>',
-    brain: '<circle cx="12" cy="12" r="3"/><path d="M12 2a7 7 0 017 7c0 2.5-1.2 4.7-3 6.1V18H8v-2.9A7 7 0 0112 2z"/>',
-    habit: '<path d="M9 12l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/>',
-    goal: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
-    chart: '<path d="M4 19V5M8 19V11M12 19V8M16 19V14M20 19V6"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    spark: '<path d="M12 2l1.8 5.5L19 9l-5.2 1.5L12 16l-1.8-5.5L5 9l5.2-1.5L12 2z"/>',
-    shield: '<path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/>',
-    zap: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
-  }
-  const body = icons[name] || icons.spark
-  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
+
+import { icon } from './icons.js'
+
+/** Pestañas horizontales — stateVar: nombre de variable global (ej. mejoraTab) */
+export function tabBar(tabs, activeId, stateVar, extraOnClick = '') {
+  return `<nav class="ds-tabs" role="tablist">
+    ${tabs.map(t => {
+      const locked = t.locked
+      const active = activeId === t.id
+      return `<button type="button" role="tab" aria-selected="${active}"
+        class="ds-tab ${active ? 'is-active' : ''} ${locked ? 'ds-tab--locked' : ''}"
+        ${locked ? 'disabled title="' + (t.lockTitle || 'Bloqueado') + '"' : `onclick="${stateVar}='${t.id}';${extraOnClick}render()"`}>
+        ${t.icon ? `<span class="ds-tab-icon" aria-hidden="true">${t.icon}</span>` : ''}
+        <span>${t.label}</span>
+      </button>`
+    }).join('')}
+  </nav>`
+}
+
+/** Pestañas secundarias (píldoras) */
+export function subTabBar(tabs, activeId, stateVar, extraOnClick = '') {
+  return `<div class="ds-subtabs" role="tablist">
+    ${tabs.map(t => {
+      const active = activeId === t.id
+      return `<button type="button" role="tab" aria-selected="${active}"
+        class="ds-subtab ${active ? 'is-active' : ''}"
+        onclick="${stateVar}='${t.id}';${extraOnClick}render()">
+        ${t.icon ? `${t.icon} ` : ''}${t.label}
+      </button>`
+    }).join('')}
+  </div>`
+}
+
+/** Control segmentado (dificultad, filtros) */
+export function segmentBar(items, activeId, onchangeFn) {
+  return `<div class="ds-segment" role="group">
+    ${items.map(item => {
+      const locked = item.locked
+      const active = activeId === item.id
+      return `<button type="button"
+        class="ds-segment-btn ${active ? 'is-active' : ''}"
+        ${locked ? 'disabled title="' + (item.lockTitle || 'Bloqueado') + '"' : `onclick="${onchangeFn}('${item.id}')"`}>
+        ${locked ? '🔒 ' : ''}${item.icon ? `${item.icon} ` : ''}${item.label}${locked && item.lockLabel ? ` ${item.lockLabel}` : ''}
+      </button>`
+    }).join('')}
+  </div>`
+}
+
+export function settingRow(label, control, hint = '') {
+  return `<div class="ds-setting-row ${hint ? 'ds-setting-row--stack' : ''}">
+    <div>
+      <span class="ds-setting-label">${label}</span>
+      ${hint ? `<p class="ds-setting-hint">${hint}</p>` : ''}
+    </div>
+    ${hint ? control : `<div class="ds-setting-control">${control}</div>`}
+  </div>`
+}
+
+export function settingGroup(title, rowsHtml) {
+  return `<div class="ds-setting-group">
+    ${title ? `<p class="ds-section-title">${title}</p>` : ''}
+    ${rowsHtml}
+  </div>`
+}
+
+export function pageLead(html) {
+  return `<p class="ds-lead">${html}</p>`
+}
+
+export function pageHero(title, subtitle, statVal = '', statLabel = '') {
+  return `<div class="page-hero span-full">
+    <div class="page-hero__mesh" aria-hidden="true"></div>
+    <div class="page-hero__body">
+      <div>
+        <h1 class="page-hero__title">${title}</h1>
+        ${subtitle ? `<p class="page-hero__sub">${subtitle}</p>` : ''}
+      </div>
+      ${statVal ? `<div class="page-hero__stat"><span class="page-hero__stat-val">${statVal}</span><span class="page-hero__stat-label">${statLabel}</span></div>` : ''}
+    </div>
+  </div>`
+}
+
+export function zoneHeader(title, subtitle = '') {
+  return `<div class="ds-zone">
+    <div class="ds-zone-line" aria-hidden="true"></div>
+    <div class="ds-zone-text">
+      <h2 class="ds-zone-title">${title}</h2>
+      ${subtitle ? `<p class="ds-zone-sub">${subtitle}</p>` : ''}
+    </div>
+    <div class="ds-zone-line" aria-hidden="true"></div>
+  </div>`
 }
 
 export function skeletonCard(lines = 3) {
@@ -24,14 +100,18 @@ export function skeletonCard(lines = 3) {
   </div>`
 }
 
-export function emptyState({ icon: emoji = '✦', title, desc, ctaLabel, ctaHref, ctaOnclick }) {
+export function emptyState({ icon: emoji = '✦', iconKey, title, desc, ctaLabel, ctaHref, ctaOnclick }) {
   const action = ctaOnclick
     ? `<button onclick="${ctaOnclick}" class="btn-primary">${ctaLabel}</button>`
     : ctaHref
       ? `<a href="${ctaHref}" class="btn-primary no-underline">${ctaLabel}</a>`
       : ''
-  return `<div class="empty-state">
-    <span class="empty-state-icon">${emoji}</span>
+  const iconHtml = iconKey
+    ? `<span class="empty-state-icon empty-state-icon--svg">${icon(iconKey, 'empty-state-svg')}</span>`
+    : `<span class="empty-state-icon">${emoji}</span>`
+  return `<div class="empty-state empty-state--premium">
+    <div class="empty-state-glow" aria-hidden="true"></div>
+    ${iconHtml}
     <p class="empty-state-title">${title}</p>
     <p class="empty-state-desc">${desc}</p>
     ${action ? `<div class="empty-state-action">${action}</div>` : ''}

@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#050608" />
+  <meta name="theme-color" content="#f5f7fb" />
   <script>
     try {
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
-      if (s && s.darkMode === false) document.documentElement.classList.remove('dark')
+      if (s && s.darkMode === true) document.documentElement.classList.add('dark')
+      if (s && s.reducedMotion) document.documentElement.classList.add('reduce-motion')
     } catch (_) {}
   </script>
   <title>Mejora — Tu espacio de crecimiento</title>
@@ -15,11 +16,24 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="styles.css?v=21" />
+  <link rel="stylesheet" href="styles.css?v=54" />
+  <link rel="stylesheet" href="css/design-system.css?v=54" />
+  <link rel="stylesheet" href="css/aurora-theme.css?v=54" />
+  <link rel="stylesheet" href="css/onboarding.css?v=54" />
+  <link rel="stylesheet" href="css/page-themes.css?v=54" />
+  <link rel="stylesheet" href="css/impact.css?v=54" />
+  <link rel="stylesheet" href="css/mejora-redesign.css?v=54" />
 </head>
-<body>
+<body class="mejora-v3">
+  <div id="fx-layer" aria-hidden="true"></div>
+  <div class="app-aurora" aria-hidden="true">
+    <div class="app-aurora-orb app-aurora-orb--1"></div>
+    <div class="app-aurora-orb app-aurora-orb--2"></div>
+    <div class="app-aurora-orb app-aurora-orb--3"></div>
+    <div class="app-aurora-grid"></div>
+  </div>
   <div class="app-shell">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
@@ -60,7 +74,7 @@
             </button>
             <div class="banner-titles">
               <nav class="banner-breadcrumb" aria-label="Ubicación">
-                <span id="banner-section" class="banner-crumb">Hoy</span>
+                <a href="#/" id="banner-section-link" class="banner-crumb banner-crumb-link no-underline">Hoy</a>
                 <span class="banner-crumb-sep" aria-hidden="true">/</span>
                 <span id="banner-page" class="banner-crumb banner-crumb-current">Inicio</span>
               </nav>
@@ -108,9 +122,16 @@
       </header>
       <main id="app-content" class="app-content"></main>
     </div>
+    <nav id="bottom-nav" class="bottom-nav" aria-label="Acceso rápido"></nav>
   </div>
 
+  <div id="onboarding-overlay" class="onboarding-overlay" aria-hidden="true"></div>
   <div id="tour-overlay" class="tour-overlay" aria-hidden="true"></div>
-  <script type="module" src="js/app.js?v=21"></script>
+  <script>
+    if (location.protocol === 'file:') {
+      document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Usa <strong>Mejora.app</strong> o en terminal:</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre><p style="color:#8a8480">Luego abre <a href="http://localhost:5173" style="color:#c4a484">http://localhost:5173</a></p></div>'
+    }
+  </script>
+  <script type="module" src="js/app.js?v=54"></script>
 </body>
 </html>

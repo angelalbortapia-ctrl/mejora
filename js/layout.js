@@ -1,36 +1,27 @@
-/** Navegación central — una sola fuente de verdad para sidebar y rutas */
+import { icon } from './icons.js'
+
+/** Navegación — 5 destinos claros */
 export const NAV_SECTIONS = [
   {
-    label: 'Hoy',
+    label: '',
     items: [
-      { path: '/', label: 'Inicio', icon: '🏠', desc: 'Resumen del día' },
-      { path: '/plan', label: 'Plan', icon: '📋', desc: 'Misiones diarias' },
-      { path: '/hoy', label: 'Solo hoy', icon: '⚡', desc: 'Vista minimalista' },
-    ],
-  },
-  {
-    label: 'Crecimiento',
-    items: [
-      { path: '/gimnasia', label: 'Gimnasia', icon: '🧠', desc: 'Entrenamiento cerebral' },
-      { path: '/meditacion', label: 'Calma', icon: '🧘', desc: 'Meditación guiada' },
-      { path: '/mejora', label: 'Hábitos', icon: '✅', desc: 'Rutinas y diario' },
-      { path: '/metas', label: 'Metas', icon: '🎯', desc: 'Objetivos 30 días' },
-    ],
-  },
-  {
-    label: 'Progreso',
-    items: [
-      { path: '/viaje', label: 'Mi viaje', icon: '📊', desc: 'Historial y consistencia' },
-      { path: '/perfil', label: 'Perfil', icon: '🏆', desc: 'Logros y nivel' },
+      { path: '/', label: 'Hoy', iconKey: 'home', desc: 'Tu día' },
+      { path: '/mejora', label: 'Hábitos', iconKey: 'habit', desc: 'Rutinas y diario' },
+      { path: '/gimnasia', label: 'Neurociencia', iconKey: 'brain', desc: 'Lecciones y laboratorio' },
+      { path: '/meditacion', label: 'Calma', iconKey: 'calm', desc: 'Respirar y meditar' },
+      { path: '/perfil', label: 'Tú', iconKey: 'profile', desc: 'Progreso y logros' },
     ],
   },
 ]
 
 const EXTRA_ROUTES = {
-  '/rutina': { label: 'Rutina', icon: '⚔️', desc: 'Sesión guiada del día', section: 'Hoy' },
-  '/ajustes': { label: 'Ajustes', icon: '⚙️', desc: 'Preferencias y respaldo', section: 'Sistema' },
-  '/enfoque': { label: 'Enfoque', icon: '⏱️', desc: 'Temporizador Pomodoro', section: 'Hoy' },
-  '/desafios': { label: 'Desafíos', icon: '⚔️', desc: 'Retos adicionales', section: 'Progreso' },
+  '/plan': { label: 'Plan del día', icon: '📋', desc: 'Lista completa de hoy', section: 'Hoy' },
+  '/metas': { label: 'Metas', icon: '🎯', desc: 'Objetivos a 30 días', section: 'Tú' },
+  '/viaje': { label: 'Tu historial', icon: '📊', desc: 'Actividad y consistencia', section: 'Tú' },
+  '/hoy': { label: 'Solo hoy', icon: '◎', desc: 'Vista enfocada', section: 'Hoy' },
+  '/rutina': { label: 'Rutina', icon: '🌅', desc: 'Sesión guiada', section: 'Hoy' },
+  '/enfoque': { label: 'Enfoque', icon: '⏱️', desc: 'Pomodoro', section: 'Hoy' },
+  '/ajustes': { label: 'Ajustes', icon: '⚙️', desc: 'Preferencias', section: 'Sistema' },
 }
 
 export const NAV_PATHS = [
@@ -38,11 +29,33 @@ export const NAV_PATHS = [
   ...Object.keys(EXTRA_ROUTES),
 ]
 
+export const BOTTOM_NAV = [
+  { path: '/', iconKey: 'home', label: 'Hoy' },
+  { path: '/mejora', iconKey: 'habit', label: 'Hábitos' },
+  { path: '/gimnasia', iconKey: 'brain', label: 'Neuro' },
+  { path: '/perfil', iconKey: 'profile', label: 'Tú' },
+]
+
+function navIconMarkup(item) {
+  return item.iconKey ? icon(item.iconKey, 'nav-svg') : (item.icon || '')
+}
+
+export function getSectionHomePath(sectionLabel) {
+  if (!sectionLabel || sectionLabel === 'Mejora' || sectionLabel === 'App' || sectionLabel === 'Tú') return '/'
+  const section = NAV_SECTIONS.find(s => s.label === sectionLabel)
+  return section?.items[0]?.path || '/'
+}
+
+export function normalizeNavPath(path) {
+  const base = '/' + (path.split('/').filter(Boolean)[0] || '')
+  return NAV_PATHS.includes(base) ? base : '/'
+}
+
 export function getNavMeta(path) {
   if (EXTRA_ROUTES[path]) return { path, ...EXTRA_ROUTES[path] }
   for (const section of NAV_SECTIONS) {
     const item = section.items.find(i => i.path === path)
-    if (item) return { ...item, section: section.label }
+    if (item) return { ...item, section: section.label || 'Mejora' }
   }
   return { path, label: 'Mejora', icon: '✦', desc: 'Tu espacio de crecimiento', section: 'App' }
 }
@@ -57,24 +70,42 @@ function formatBannerDate() {
 
 export function mountSidebar() {
   const nav = document.getElementById('sidebar-nav')
-  if (!nav || nav.dataset.mounted) return
+  if (!nav || nav.dataset.mounted === 'v3') return
   nav.innerHTML = NAV_SECTIONS.map(section => `
     <div class="sidebar-section">
-      <p class="sidebar-section-label">${section.label}</p>
+      ${section.label ? `<p class="sidebar-section-label">${section.label}</p>` : ''}
       ${section.items.map(item => `
         <a href="#${item.path}" data-path="${item.path}" class="sidebar-link no-underline" title="${item.desc}">
-          <span class="sidebar-link-icon">${item.icon}</span>
+          <span class="sidebar-link-icon">${navIconMarkup(item)}</span>
           <span class="sidebar-link-text">
             <span class="sidebar-link-label">${item.label}</span>
-            <span class="sidebar-link-desc">${item.desc}</span>
           </span>
         </a>`).join('')}
     </div>`).join('')
-  nav.dataset.mounted = '1'
+  nav.dataset.mounted = 'v3'
+}
+
+export function mountBottomNav() {
+  const el = document.getElementById('bottom-nav')
+  if (!el || el.dataset.mounted === 'v3') return
+  el.innerHTML = BOTTOM_NAV.map(item => `
+    <a href="#${item.path}" data-path="${item.path}" class="bottom-nav-link no-underline" title="${item.label}">
+      <span class="bottom-nav-icon" aria-hidden="true">${navIconMarkup(item)}</span>
+      <span class="bottom-nav-label">${item.label}</span>
+    </a>`).join('')
+  el.dataset.mounted = 'v3'
+}
+
+export function updateBottomNav(path) {
+  const normalized = normalizeNavPath(path)
+  document.querySelectorAll('.bottom-nav-link[data-path]').forEach(el => {
+    el.classList.toggle('active', el.dataset.path === normalized)
+  })
 }
 
 export function initLayout() {
   mountSidebar()
+  mountBottomNav()
   const sidebar = document.getElementById('sidebar')
   const backdrop = document.getElementById('sidebar-backdrop')
   const toggle = document.getElementById('sidebar-toggle')
@@ -120,7 +151,6 @@ export function updateTopBanner(path, data = {}) {
     weather = null,
   } = data
 
-  const sectionEl = document.getElementById('banner-section')
   const pageCrumbEl = document.getElementById('banner-page')
   const titleEl = document.getElementById('page-title')
   const subtitleEl = document.getElementById('page-subtitle')
@@ -131,7 +161,11 @@ export function updateTopBanner(path, data = {}) {
   const ctaEl = document.getElementById('banner-cta')
   const avatarEl = document.getElementById('banner-avatar-icon')
 
-  if (sectionEl) sectionEl.textContent = meta.section || 'App'
+  const sectionLink = document.getElementById('banner-section-link')
+  if (sectionLink) {
+    sectionLink.textContent = meta.section || 'Mejora'
+    sectionLink.href = `#${getSectionHomePath(meta.section) || '/'}`
+  }
   if (pageCrumbEl) pageCrumbEl.textContent = meta.label
   if (titleEl) titleEl.textContent = meta.label
   if (subtitleEl) subtitleEl.textContent = meta.desc
@@ -140,20 +174,8 @@ export function updateTopBanner(path, data = {}) {
   if (streakTextEl) streakTextEl.textContent = String(streak)
   document.querySelector('.banner-metric-streak')?.classList.toggle('banner-streak-hot', streak >= 3)
 
-  const weatherIconEl = document.getElementById('banner-weather-icon')
-  const weatherTempEl = document.getElementById('banner-weather-temp')
-  const weatherLabelEl = document.getElementById('banner-weather-label')
   const weatherWrapEl = document.getElementById('banner-weather-wrap')
-  if (weatherWrapEl) {
-    if (weather?.temp != null) {
-      weatherWrapEl.classList.remove('hidden')
-      if (weatherIconEl) weatherIconEl.textContent = weather.icon || '🌤️'
-      if (weatherTempEl) weatherTempEl.textContent = `${Math.round(weather.temp)}°`
-      if (weatherLabelEl) weatherLabelEl.textContent = weather.label || 'clima'
-    } else {
-      weatherWrapEl.classList.add('hidden')
-    }
-  }
+  if (weatherWrapEl) weatherWrapEl.classList.add('hidden')
 
   if (dateEl) {
     dateEl.textContent = formatBannerDate()
@@ -161,15 +183,15 @@ export function updateTopBanner(path, data = {}) {
   }
   if (avatarEl) avatarEl.textContent = rankIcon
   if (ctaEl) {
-    if (path === '/plan') {
-      ctaEl.textContent = planAllDone ? '✓ Completado' : 'Ver misiones'
-      ctaEl.href = '#/plan'
+    if (path === '/') {
+      ctaEl.textContent = planAllDone ? 'Día completo' : 'Ver lista'
+      ctaEl.href = '#/'
     } else if (planAllDone) {
-      ctaEl.textContent = '✨ Día perfecto'
-      ctaEl.href = '#/perfil'
+      ctaEl.textContent = 'Día completo'
+      ctaEl.href = '#/'
     } else {
-      ctaEl.textContent = 'Continuar plan'
-      ctaEl.href = '#/plan'
+      ctaEl.textContent = 'Ir a hoy'
+      ctaEl.href = '#/'
     }
     ctaEl.classList.toggle('banner-cta-done', planAllDone)
   }
@@ -177,18 +199,7 @@ export function updateTopBanner(path, data = {}) {
   document.getElementById('app-banner')?.classList.toggle('banner-plan-complete', planAllDone)
 
   const shieldEl = document.getElementById('banner-shield')
-  if (shieldEl && shield) {
-    if (!shield.unlocked) {
-      shieldEl.classList.add('hidden')
-    } else {
-      shieldEl.classList.remove('hidden')
-      shieldEl.classList.toggle('available', shield.available)
-      shieldEl.classList.toggle('used', shield.used && !shield.available)
-      shieldEl.title = shield.available
-        ? 'Escudo de racha disponible este mes'
-        : shield.used ? 'Escudo usado este mes' : 'Escudo de racha'
-    }
-  }
+  if (shieldEl) shieldEl.classList.add('hidden')
 
   const greeting = userName ? ` · ${userName}` : ''
   document.title = `${meta.label}${greeting} — Mejora`
@@ -201,10 +212,12 @@ export function applyCompactSidebar(compact) {
 }
 
 export function setActiveNav(path) {
+  const normalized = normalizeNavPath(path)
   document.querySelectorAll('.sidebar-link[data-path]').forEach(el => {
-    const match = el.dataset.path === path || (path === '/ajustes' && el.dataset.path === '/ajustes')
+    const match = el.dataset.path === normalized || (normalized === '/ajustes' && el.dataset.path === '/ajustes')
     el.classList.toggle('active', match)
   })
+  updateBottomNav(path)
 }
 
 export function updateSidebarStats({ streak, level, rankTitle, planPercent }) {

@@ -1,23 +1,24 @@
 import {
-  PREFIX, SKILLS, DIFFICULTIES, RANKS, getItem, setItem, getToday, esc,
+  PREFIX, SKILLS, DIFFICULTIES, getItem, setItem, getToday, esc,
   getProgress, saveProgress, getLevel, getLevelInfo, getTotalLevel, getRank,
-  addXp, recordActivity, getStreak, getWeekActivity, getStats, updateStats,
+  addXp, recordActivity, getStreak, getStats, updateStats,
   getSettings, saveSettings, getHabits, getHabitProgress, completeHabit, uncompleteHabit,
   incrementHabit, decrementHabit, getHabitCount, isHabitComplete, getCompletedHabitsCount,
-  setRecord, getRecord, getAchievements, checkAchievements,
+  setRecord, getAchievements,
   ensureDailyPlan, getPlanProgress, checkPlanTask, isRoutineDoneToday, getWeekNumber,
-  GOAL_TEMPLATES, getGoals, addGoal, syncGoals, getGoalProgress, getHabitWeekChart,
+  GOAL_TEMPLATES, getGoals, addGoal, syncGoals, getHabitWeekChart,
   needsOnboarding, MOODS, getMood, setMood, getMoodWeek, getMoodInsight,
   getStreakShieldStatus,
 } from './core.js'
 import {
-  LOGIC_PUZZLES, HABIT_CATEGORIES, REFLECTION_PROMPTS, BODY_SCAN_STEPS,
+  HABIT_CATEGORIES, HABIT_TEMPLATES,
   WEEKLY_REVIEW_PROMPTS, MONTHLY_REVIEW_PROMPTS, genMathProblem, getMemoryConfig, getSimonConfig,
-  getLogicPuzzles, getWordGroup, getAnagrams, COLORS,
+  getLogicPuzzles, getWordGroup, getAnagrams, COLORS, getReflectionPrompt, pickSequence,
 } from './content.js'
+import { MEDITATIONS, MEDITATION_STEPS } from './meditations.js'
 import {
   UNLOCKS, THEMES, isUnlocked, getUnlocked, getNextUnlock,
-  checkNewUnlocks, applyTheme,
+  checkNewUnlocks, markUnlockSeen, applyTheme,
 } from './unlocks.js'
 import {
   getDailyBundle, ensureDailyBundle, buildLocalBundle, homePulseHTML, formatWeather,
@@ -40,30 +41,40 @@ import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCom
 import {
   getActivityCalendar, getConsistencyScore, getJourneySummary, getJourneyInsight,
   getHabitTrendWeeks, getMilestones, getNextBestAction, getWeeklySummary, getWeeklyActivityScores,
-} from './journey.js'
-import { emptyState, milestoneBar, sparklineSVG } from './ui.js'
+} from './analytics.js'
+import {
+  emptyState, milestoneBar, sparklineSVG,
+  tabBar, subTabBar, segmentBar, settingGroup, settingRow, pageLead, zoneHeader, pageHero,
+} from './ui.js?v=48'
+import { celebrate, haptic, updateAppShell } from './fx.js'
+import { playTone, playClick, playHabitDone, playSuccess } from './sounds.js'
+import {
+  bindRender, scheduleRender, navigate, parsePath,
+  getLastRenderPath, setLastRenderPath,
+} from './router.js'
+import { onboarding, renderOnboardingOverlay, resetOnboardingCache } from './onboarding-ui.js'
+import { renderHome } from './pages/home.js'
+import { getMissionTone, getMissionChip } from './coaching.js'
+import {
+  getDailyLesson, getWeeklyLesson, getWeeklyLessonMeta, LESSONS, LAB_EXERCISE_IDS, EXERCISE_REAL_WORLD,
+  renderLessonCard, renderLessonFull, renderNeuroPunchBanner, renderDebateBanner, renderLegendaryHall,
+  renderHomeNeuroCard, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
+  getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson,
+} from './brain-academy.js'
 import { startTour, shouldShowTour } from './tour.js'
 import { exportMonthlyReportText, maybeAutoBackup } from './backup.js'
-
-// --- Audio ---
-let audioCtx = null
-function playTone(freq = 440, duration = 0.15) {
-  if (!getSettings().sound) return
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc = audioCtx.createOscillator()
-    const gain = audioCtx.createGain()
-    osc.connect(gain); gain.connect(audioCtx.destination)
-    osc.frequency.value = freq
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration)
-    osc.start(); osc.stop(audioCtx.currentTime + duration)
-  } catch {}
-}
+import {
+  initCloudSync, getCloudStatus, signIn, signUp, signOut,
+  pullFromCloud, pushToCloud, onCloudStatus,
+} from './cloud-sync.js'
+import {
+  playSingingBowl, startAmbientSound, stopAmbientSound, setAmbientVolume, resumeAudioContext,
+  isAmbientPlaying, AMBIENT_PRESETS,
+} from './ambient-audio.js'
 
 // --- State ---
 let brainState = {
-  exercise: null, difficulty: 'medio', mode: 'hub', brainView: 'program',
+  exercise: null, difficulty: 'medio', mode: 'hub', brainView: 'academy', activeLesson: null, lessonFlow: null,
   session: null, memory: {}, math: {}, words: {}, simon: {}, logic: {}, anagrams: {}, trivia: {},
   nback: {}, stroop: {}, flanker: {}, switching: {}, gonogo: {}, corsi: {}, symbols: {},
 }
@@ -72,21 +83,26 @@ function clearBrainTimers() { brainTimers.forEach(t => clearTimeout(t)); brainTi
 let deferredInstallPrompt = null
 let dailyApis = getDailyBundle()
 let dailyApisLoading = false
-let medState = { session: null, difficulty: 'medio', completed: false, completedMin: 0, phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0 }
+let medState = {
+  session: null, difficulty: 'medio', completed: false, completedMin: 0,
+  phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0, ambientPreview: false,
+}
 let medTimers = []
 let mejoraTab = 'habits'
 let diarioSection = 'daily'
 let pomodoro = { minutes: 25, seconds: 0, active: false, mode: 'work' }
 let pomodoroTimer = null
-let promptIndex = getItem('promptIndex', 0)
 let routineState = { active: false, step: 0, difficulty: 'medio' }
 let routineTimers = []
 let settingsTab = 'general'
+let viajeTab = 'resumen'
+let metasTab = 'activas'
+let profileTab = 'resumen'
 let editingHabits = false
 let logicSession = { puzzles: [], index: 0, score: 0, difficulty: 'medio', finished: false, selected: null }
-let onboardingStep = 0
-let onboardingSelectedHabits = []
-let onboardingGoal = null
+function renderHomePage() {
+  return renderHome({ moodPickerHTML, dailyApis, dailyApisLoading })
+}
 
 function ensureToastContainer() {
   let el = document.getElementById('toast-container')
@@ -112,6 +128,7 @@ function showToast(message, xp, skill, levelUp = false) {
 }
 
 function showUnlockToast(unlock) {
+  markUnlockSeen(unlock.id)
   const container = ensureToastContainer()
   const el = document.createElement('div')
   el.className = 'xp-toast unlock-toast'
@@ -125,16 +142,20 @@ function awardXp(skill, amount, message) {
   const prevLevel = getTotalLevel()
   const result = addXp(skill, amount)
   const newLevel = getTotalLevel()
-  if (result.levelUp) showToast(result.newLevel, amount, skill, true)
-  else showToast(message, amount, skill)
+  if (result.levelUp) {
+    celebrate('level')
+    showToast(result.newLevel, amount, skill, true)
+  } else showToast(message, amount, skill)
   checkNewUnlocks(prevLevel, newLevel).forEach(showUnlockToast)
   return result
 }
 
 function processPlanAwards(awards) {
   for (const a of awards) {
-    if (a.bonus) showToast('¡Plan del día completo!', a.result.xp, 'discipline')
-    else if (a.task) showToast(a.task.label, a.result.xp, 'discipline')
+    if (a.bonus) {
+      celebrate()
+      showToast('¡Plan del día completo!', a.result.xp, 'discipline')
+    } else if (a.task) showToast(a.task.label, a.result.xp, 'discipline')
   }
 }
 
@@ -195,13 +216,6 @@ function habitChartHTML(compact = false, home = false) {
   </div>`
 }
 
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Buenos días'
-  if (h < 18) return 'Buenas tardes'
-  return 'Buenas noches'
-}
-
 function xpBar(info, color) {
   return `<div class="mb-1 flex justify-between text-xs text-muted"><span>Nivel ${info.level}</span><span>${info.xp} XP</span></div>
     <div class="progress-track w-full" style="height:0.5rem">
@@ -210,12 +224,18 @@ function xpBar(info, color) {
 }
 
 function difficultyPicker(current, onchange) {
-  return `<div class="flex gap-2 flex-wrap mb-6">
-    ${Object.entries(DIFFICULTIES).map(([k, d]) => {
-      const locked = k === 'experto' && !isUnlocked('diff_expert')
-      return `<button onclick="${locked ? '' : `${onchange}('${k}')`}" class="px-3 py-2 rounded-xl text-sm font-medium ${current === k ? 'btn-primary' : 'btn-secondary'} ${locked ? 'opacity-50' : ''}" title="${locked ? 'Desbloquea en nivel 10' : ''}">${locked ? '🔒' : d.icon} ${d.label}${locked ? ' (Nv.10)' : ''}</button>`
-    }).join('')}
-  </div>`
+  return segmentBar(
+    Object.entries(DIFFICULTIES).map(([k, d]) => ({
+      id: k,
+      label: d.label,
+      icon: d.icon,
+      locked: k === 'experto' && !isUnlocked('diff_expert'),
+      lockTitle: 'Desbloquea en nivel 10',
+      lockLabel: '(Nv.10)',
+    })),
+    current,
+    onchange,
+  )
 }
 
 function guardDifficulty(d) {
@@ -275,326 +295,6 @@ function heatmapHTML(days = 28) {
   ).join('')}</div>`
 }
 
-function nextActionHTML(home = false) {
-  const action = getNextBestAction()
-  const priorityClass = action.priority === 'high' ? 'next-action--urgent' : action.priority === 'done' ? 'next-action--done' : ''
-  const pill = action.priority === 'high' ? '⚡ Prioridad' : action.priority === 'done' ? '✓ Completado' : '→ Siguiente paso'
-  const shell = home ? 'home-glass next-action--home' : 'card'
-  return `<a href="${action.link}" class="${shell} next-action block no-underline ${priorityClass}">
-    <div class="next-action-glow" aria-hidden="true"></div>
-    <div class="next-action-inner">
-      <span class="next-action-pill">${pill}</span>
-      <div class="flex items-start gap-3">
-        <span class="next-action-icon-wrap">${action.icon}</span>
-        <div class="flex-1 min-w-0">
-          <p class="font-display text-lg font-bold text-main">${action.title}</p>
-          <p class="text-sm text-muted mt-1">${action.desc}</p>
-        </div>
-        <span class="next-action-cta btn-primary btn-shimmer" style="pointer-events:none">${action.cta} →</span>
-      </div>
-    </div>
-  </a>`
-}
-
-function homeStatStripHTML() {
-  const streak = getStreak()
-  const progress = getPlanProgress()
-  const consistency = getConsistencyScore(30)
-  const journey = getJourneySummary()
-  const items = [
-    { icon: '🔥', value: streak || '0', label: 'Racha', hot: streak >= 3 },
-    { icon: '📋', value: `${progress.percent}%`, label: 'Plan', hot: progress.allDone },
-    { icon: '📈', value: `${consistency}%`, label: 'Consistencia', hot: consistency >= 70 },
-    { icon: '🧭', value: journey.daysSinceStart, label: 'Días viaje', hot: false },
-  ]
-  return items.map((s) => `
-    <div class="home-stat-pill ${s.hot ? 'home-stat-pill--hot' : ''}">
-      <span class="home-stat-pill-icon">${s.icon}</span>
-      <span class="home-stat-pill-value">${s.value}</span>
-      <span class="home-stat-pill-label">${s.label}</span>
-    </div>`).join('')
-}
-
-function homeHeroHTML() {
-  const streak = getStreak()
-  const progress = getPlanProgress()
-  const rank = getRank()
-  const settings = getSettings()
-  const name = settings.userName ? `, ${esc(settings.userName)}` : ''
-  const level = getTotalLevel()
-  const p = getProgress()
-  const totalXp = Object.values(p.xp).reduce((a, b) => a + b, 0)
-  const levelInfo = getLevelInfo(totalXp)
-  const w = formatWeather(dailyApis?.weather)
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'short' })
-  const quote = dailyApis?.quote
-  const quoteBlock = quote
-    ? `<blockquote class="home-hero-quote">
-        <p>"${esc(quote.content.length > 100 ? quote.content.slice(0, 100) + '…' : quote.content)}"</p>
-        <cite>— ${esc(quote.author)}</cite>
-      </blockquote>`
-    : ''
-  const weatherChip = w
-    ? `<span class="home-hero-chip home-hero-chip--weather">${w.text}</span>`
-    : ''
-  const streakChip = streak >= 1
-    ? `<span class="home-hero-chip ${streak >= 7 ? 'home-hero-chip--hot' : ''}">🔥 ${streak}d racha</span>`
-    : ''
-
-  return `<section class="home-mega-hero">
-    <div class="home-mega-border" aria-hidden="true"></div>
-    <div class="home-mega-bg" aria-hidden="true"></div>
-    <div class="home-mega-orbs" aria-hidden="true">
-      <span class="home-orb home-orb--1"></span>
-      <span class="home-orb home-orb--2"></span>
-      <span class="home-orb home-orb--3"></span>
-    </div>
-    <div class="home-mega-scanline" aria-hidden="true"></div>
-    <div class="home-mega-grid">
-      <div class="home-mega-copy">
-        <div class="home-mega-meta">
-          <span class="home-live-date">${dateStr}</span>
-          <span class="home-hero-badge"><span class="home-hero-badge-icon">${rank.icon}</span>${rank.title} · Nv.${level}</span>
-          ${weatherChip}
-          ${streakChip}
-        </div>
-        <h1 class="home-mega-title">${greeting()}${name}</h1>
-        <p class="home-mega-sub">${progress.allDone ? 'Día perfecto — todas las misiones completadas' : `Te faltan ${progress.total - progress.done} misiones para cerrar el día con bonus XP`}</p>
-        <div class="home-xp-bar">
-          <div class="home-xp-track"><div class="home-xp-fill" style="width:${levelInfo.percent}%"></div></div>
-          <span class="home-xp-label">${levelInfo.xp} XP · siguiente nivel</span>
-        </div>
-        ${quoteBlock}
-        <div class="home-mega-actions">
-          <a href="#/plan" class="btn-primary btn-shimmer no-underline home-cta-primary">Ver plan del día</a>
-          <a href="#/hoy" class="btn-secondary no-underline home-cta-secondary">Modo enfoque</a>
-        </div>
-      </div>
-      <div class="home-mega-ring" aria-label="Progreso del plan: ${progress.percent}%">
-        <div class="home-ring-aura" style="--ring-pct:${progress.percent}"></div>
-        <svg class="hero-ring-svg hero-ring-svg--lg" viewBox="0 0 36 36" aria-hidden="true">
-          <defs>
-            <linearGradient id="hero-ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00f5d4"/>
-              <stop offset="100%" stop-color="#00d4ff"/>
-            </linearGradient>
-          </defs>
-          <path class="hero-ring-track" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-          <path class="hero-ring-progress" stroke-dasharray="${progress.percent}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-        </svg>
-        <div class="hero-ring-label">
-          <span class="hero-ring-pct">${progress.percent}%</span>
-          <span class="hero-ring-cap">${progress.done}/${progress.total}</span>
-        </div>
-      </div>
-    </div>
-    <div class="home-mega-stats">${homeStatStripHTML()}</div>
-  </section>`
-}
-
-function inlineOnboardingHTML() {
-  if (!needsOnboarding()) return ''
-  const settings = getSettings()
-  const habits = getHabits()
-
-  if (onboardingStep === 0) {
-    return `<div class="card onboarding-inline mb-6 animate-slide-up" id="onboarding-inline">
-      <p class="text-xs text-muted uppercase tracking-wide mb-2">Configuración inicial</p>
-      <h2 class="font-display text-xl font-bold text-main mb-2">Bienvenido a Mejora</h2>
-      <p class="text-sm text-muted mb-4">Tu sistema de mejora continua. Configura en 3 pasos sin salir de la app.</p>
-      <input id="onboard-name" class="input-field mb-3" placeholder="¿Cómo te llamas?" value="${esc(settings.userName || '')}">
-      <button onclick="onboardNext()" class="btn-primary w-full">Comenzar</button>
-    </div>`
-  }
-  if (onboardingStep === 1) {
-    return `<div class="card onboarding-inline mb-6" id="onboarding-inline">
-      <p class="text-xs text-muted mb-2">Paso 2 de 3 · Hábitos</p>
-      <div class="space-y-2 mb-4 max-h-48 overflow-y-auto">
-        ${habits.map(h => `<button onclick="toggleOnboardHabit('${h.id}')" class="w-full p-3 rounded-xl text-left flex items-center gap-3 ${onboardingSelectedHabits.includes(h.id) ? 'habit-item done' : 'habit-item'}">
-          <span>${h.icon}</span><span class="text-main flex-1">${esc(h.name)}</span>
-          ${onboardingSelectedHabits.includes(h.id) ? '✓' : ''}
-        </button>`).join('')}
-      </div>
-      <button onclick="onboardNext()" class="btn-primary w-full" ${onboardingSelectedHabits.length < 1 ? 'disabled' : ''}>Continuar (${onboardingSelectedHabits.length}/3)</button>
-    </div>`
-  }
-  if (onboardingStep === 2) {
-    return `<div class="card onboarding-inline mb-6" id="onboarding-inline">
-      <p class="text-xs text-muted mb-2">Paso 3 de 3 · Meta</p>
-      <div class="space-y-2 mb-4">
-        ${GOAL_TEMPLATES.slice(0, 4).map((t, i) => `<button onclick="setOnboardGoal(${i})" class="w-full p-3 rounded-xl text-left ${onboardingGoal===i?'habit-item done':'habit-item'}">
-          <span class="mr-2">${t.icon}</span><span class="text-main">${t.title}</span>
-        </button>`).join('')}
-      </div>
-      <select id="onboard-reminder" class="input-field mb-3">
-        <option value="">Sin recordatorio</option>
-        ${[7,8,9,12,18,20,21].map(h => `<option value="${h}">${h}:00</option>`).join('')}
-      </select>
-      <button onclick="finishOnboarding()" class="btn-primary w-full" ${onboardingGoal === null ? 'disabled' : ''}>¡Empezar mi viaje!</button>
-    </div>`
-  }
-  return ''
-}
-
-function planMissionsHTML() {
-  const plan = ensureDailyPlan()
-  const progress = getPlanProgress()
-  return `<div class="home-glass home-panel">
-    <div class="home-panel-head">
-      <div>
-        <h3 class="home-panel-title">Misiones del día</h3>
-        <p class="home-panel-sub">${progress.allDone ? 'Todo listo — día épico' : 'Tu hoja de ruta para cerrar el día'}</p>
-      </div>
-      <div class="home-panel-ring" style="--pct:${progress.percent}">
-        <span>${progress.done}/${progress.total}</span>
-      </div>
-    </div>
-    <div class="mission-list">
-      ${plan.tasks.map((t, i) => `
-        <a href="${t.link}" class="mission-row home-mission-row ${t.done ? 'done' : ''} no-underline" style="--mi:${i}">
-          <span class="mission-check">${t.done ? '✓' : ''}</span>
-          <span class="mission-icon">${t.icon}</span>
-          <span class="mission-body">
-            <span class="mission-label">${t.label}</span>
-            <span class="mission-meta">+${t.xp} XP</span>
-          </span>
-          <span class="mission-arrow">→</span>
-        </a>`).join('')}
-    </div>
-  </div>`
-}
-
-function habitsSnapshotHTML() {
-  const habits = getHabits()
-  if (!habits.length) return ''
-  const done = habits.filter(h => isHabitComplete(h)).length
-  const pct = Math.round((done / habits.length) * 100)
-  return `<div class="home-glass home-panel">
-    <div class="home-panel-head">
-      <div>
-        <h3 class="home-panel-title">Hábitos hoy</h3>
-        <p class="home-panel-sub">${done} de ${habits.length} completados</p>
-      </div>
-      <span class="home-panel-pct">${pct}%</span>
-    </div>
-    <div class="habit-snap-grid">
-      ${habits.map(h => {
-        const isDone = isHabitComplete(h)
-        return `<a href="#/mejora" class="habit-snap ${isDone ? 'done' : ''} no-underline">
-          <span class="habit-snap-icon">${h.icon}</span>
-          <span class="habit-snap-name">${esc(h.name)}</span>
-          <span class="habit-snap-status">${isDone ? '✓' : '○'}</span>
-        </a>`
-      }).join('')}
-    </div>
-  </div>`
-}
-
-function dashStatsHTML() {
-  const streak = getStreak()
-  const progress = getPlanProgress()
-  const consistency = getConsistencyScore(30)
-  const journey = getJourneySummary()
-  const items = [
-    { icon: '🔥', value: streak || '—', label: 'Racha', mod: streak >= 3 ? 'dash-stat--pulse' : '' },
-    { icon: '📋', value: `${progress.percent}%`, label: 'Plan hoy', mod: progress.allDone ? 'dash-stat--glow' : '' },
-    { icon: '📈', value: `${consistency}%`, label: 'Consistencia', mod: consistency >= 70 ? 'dash-stat--glow' : '' },
-    { icon: '🧭', value: journey.daysSinceStart, label: 'Días viaje', mod: '' },
-  ]
-  return `<div class="dash-stats">${items.map((s, i) => `
-    <div class="dash-stat ${s.mod}" style="--i:${i}">
-      <span class="dash-stat-icon" aria-hidden="true">${s.icon}</span>
-      <div class="dash-stat-body">
-        <div class="value">${s.value}</div>
-        <div class="label">${s.label}</div>
-      </div>
-    </div>`).join('')}</div>`
-}
-
-// --- Home ---
-function renderHome() {
-  const streak = getStreak()
-  const plan = ensureDailyPlan()
-  const progress = getPlanProgress()
-  const goals = syncGoals().filter(g => g.active)
-  const mood = getMood()
-
-  const hasHabits = getHabits().length > 0
-  const moodBlock = mood
-    ? `<div class="home-glass home-mood-panel home-mood-panel--done">
-        <p class="home-mood-label">Ánimo de hoy</p>
-        <p class="home-mood-value">${mood.emoji} ${mood.label}</p>
-        <a href="#/mejora/diario" class="home-mood-link no-underline">Cambiar →</a>
-      </div>`
-    : moodPickerHTML('home')
-
-  return `<div class="animate-fade-in route-enter page-shell page-home">
-    <div class="home-ambient" aria-hidden="true"></div>
-    ${inlineOnboardingHTML()}
-    <div class="home-dashboard">
-      <div class="hd-hero home-reveal">${homeHeroHTML()}</div>
-      ${needsOnboarding() ? '' : `<div class="hd-action home-reveal home-reveal--1">${nextActionHTML(true)}</div>`}
-      <div class="hd-plan home-reveal home-reveal--2">${planMissionsHTML()}</div>
-      <div class="hd-habits home-reveal home-reveal--3">${hasHabits ? habitsSnapshotHTML() : ''}</div>
-      <div class="hd-mood home-reveal home-reveal--4 ${hasHabits ? '' : 'hd-mood--wide'}">${moodBlock}</div>
-      <div class="hd-pulse home-reveal home-reveal--5">
-        <div class="home-section-head">
-          <h3 class="home-section-title">Impulso del día</h3>
-          <span class="home-section-sub">APIs · ciencia · inspiración</span>
-        </div>
-        ${homePulseHTML(dailyApis, dailyApisLoading)}
-      </div>
-      <div class="hd-qa home-reveal home-reveal--6">
-        <a href="#/rutina" class="qa-card qa-card--routine qa-card--pro no-underline">
-          <span class="qa-icon">⚔️</span>
-          <div class="qa-text"><p class="qa-title">Rutina express</p><p class="qa-desc">5 min · calienta el día</p></div>
-        </a>
-        <a href="#/mejora" onclick="mejoraTab='diario';diarioSection='daily';setTimeout(render,0)" class="qa-card qa-card--journal qa-card--pro no-underline">
-          <span class="qa-icon">📝</span>
-          <div class="qa-text"><p class="qa-title">Diario</p><p class="qa-desc">Reflexión guiada</p></div>
-        </a>
-        <a href="#/gimnasia" class="qa-card qa-card--brain qa-card--pro no-underline">
-          <span class="qa-icon">🧠</span>
-          <div class="qa-text"><p class="qa-title">Gimnasia cerebral</p><p class="qa-desc">Sesión neurociencia</p></div>
-        </a>
-        <a href="#/hoy" class="qa-card qa-card--focus qa-card--pro no-underline">
-          <span class="qa-icon">⚡</span>
-          <div class="qa-text"><p class="qa-title">Modo solo hoy</p><p class="qa-desc">Vista de enfoque</p></div>
-        </a>
-      </div>
-      ${goals.length ? `<div class="hd-goal home-glass home-panel">
-        <div class="home-panel-head">
-          <div>
-            <h3 class="home-panel-title">Meta activa</h3>
-            <p class="home-panel-sub">Progreso a 30 días</p>
-          </div>
-          <a href="#/metas" class="home-panel-link no-underline">Ver todas →</a>
-        </div>
-        ${goals.slice(0, 1).map(g => {
-          const daysLeft = Math.max(0, Math.ceil((new Date(g.endDate + 'T12:00:00') - new Date()) / 86400000))
-          return `<div class="goal-snap">
-            <div class="flex items-center gap-2 mb-3"><span class="text-2xl">${g.icon}</span><span class="font-display text-lg text-main">${g.title}</span></div>
-            ${milestoneBar(g.progress, g.target, g.milestonesHit || [])}
-            <p class="text-xs text-muted mt-3">${g.progress}/${g.target} · ${daysLeft} días restantes</p>
-          </div>`
-        }).join('')}
-      </div>` : ''}
-      <div class="hd-activity home-glass home-panel">
-        <div class="home-panel-head">
-          <div>
-            <h3 class="home-panel-title">Mapa de actividad</h3>
-            <p class="home-panel-sub">Últimas 4 semanas</p>
-          </div>
-          <a href="#/viaje" class="home-panel-link no-underline">Mi viaje →</a>
-        </div>
-        ${heatmapHTML(35)}
-      </div>
-      <div class="hd-chart">${habitChartHTML(false, true)}</div>
-    </div>
-  </div>`
-}
-
 // --- Solo hoy (minimal) ---
 function renderSoloHoy() {
   const progress = getPlanProgress()
@@ -602,8 +302,10 @@ function renderSoloHoy() {
   const habits = getHabits().filter(h => !isHabitComplete(h)).slice(0, 3)
 
   return `<div class="animate-fade-in route-enter page-shell page-wide page-solo-hoy">
-    <div class="solo-dashboard">
-    <div class="card text-center card-static solo-focus">
+    <a href="#/" class="btn-secondary focus-exit no-underline">← Salir</a>
+    <div class="ds-page ds-page--full solo-dashboard">
+    ${pageHero('Solo hoy', 'Una cosa a la vez, sin ruido', `${progress.percent}%`, 'plan del día')}
+    <div class="ds-panel ds-panel--flat text-center solo-focus">
       <p class="text-xs text-muted uppercase tracking-wide mb-2">Modo enfoque</p>
       <p class="font-display text-3xl font-bold text-main">${progress.percent}%</p>
       <p class="text-sm text-muted">Plan del día · ${progress.done}/${progress.total}</p>
@@ -616,21 +318,27 @@ function renderSoloHoy() {
       </div>
     </div>
 
-    <a href="${action.link}" class="card next-action block no-underline solo-action">
-      <p class="text-xs text-muted mb-1">Ahora</p>
-      <p class="font-display text-lg font-bold text-main">${action.icon} ${action.title}</p>
-      <p class="text-sm text-muted mt-1">${action.desc}</p>
+    <a href="${action.link}" class="ds-list-item next-action no-underline solo-action">
+      <span class="ds-list-icon">${action.icon}</span>
+      <div class="ds-list-body">
+        <p class="ds-list-meta" style="margin:0">Ahora</p>
+        <p class="ds-list-title">${action.title}</p>
+        <p class="ds-list-meta">${action.desc}</p>
+      </div>
+      <span class="text-muted">→</span>
     </a>
 
-    ${habits.length ? `<div class="card card-static solo-habits">
+    ${habits.length ? `<div class="ds-panel ds-panel--flat solo-habits">
       <h3 class="section-title" style="margin:0 0 0.75rem">Hábitos pendientes</h3>
       <div class="space-y-2">
         ${habits.map(h => `<a href="#/mejora" class="flex items-center gap-2 p-2 rounded-lg no-underline habit-item">
           <span>${h.icon}</span><span class="text-main text-sm flex-1">${esc(h.name)}</span><span class="text-muted text-xs">→</span>
         </a>`).join('')}
       </div>
-    </div>` : `<div class="card card-static text-center py-4 solo-habits">
-      <p class="text-main font-medium">✅ Hábitos al día</p>
+    </div>` : `<div class="card card-static solo-habits solo-habits--done">
+      <p class="text-main font-medium mb-1">✅ Hábitos al día</p>
+      <p class="text-sm text-muted mb-3">Si tienes 3 minutos, una reflexión corta cerraría el día con intención.</p>
+      <a href="#/mejora/diario" onclick="mejoraTab='diario';diarioSection='daily';render(true)" class="btn-secondary text-sm no-underline">Abrir diario →</a>
     </div>`}
     </div>
   </div>`
@@ -650,10 +358,19 @@ function renderViaje() {
   const max12 = Math.max(...trends12.map(t => t.percent), 1)
 
   const since = new Date(s.firstActivity + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
-  return `<div class="animate-fade-in page-shell page-viaje route-enter">
-    <p class="content-lead">Día <strong>${s.daysSinceStart}</strong> de tu viaje · desde ${since}</p>
+  const viajeTabs = tabBar([
+    { id: 'resumen', label: 'Resumen', icon: '📊' },
+    { id: 'actividad', label: 'Actividad', icon: '📈' },
+    { id: 'hitos', label: 'Hitos', icon: '🏆' },
+  ], viajeTab, 'viajeTab')
 
-    <div class="viaje-dashboard">
+  const resumenBlock = `
+    <div class="viaje-kpi-grid">
+      <div class="viaje-kpi"><span class="viaje-kpi-val">${s.streak}</span><span class="viaje-kpi-label">🔥 Racha</span></div>
+      <div class="viaje-kpi"><span class="viaje-kpi-val">${s.consistency30}%</span><span class="viaje-kpi-label">Consistencia</span></div>
+      <div class="viaje-kpi"><span class="viaje-kpi-val">${s.habitsCompleted}</span><span class="viaje-kpi-label">Hábitos</span></div>
+      <div class="viaje-kpi"><span class="viaje-kpi-val">${s.brainSessions}</span><span class="viaje-kpi-label">Sesiones mente</span></div>
+    </div>
     <div class="card card-static weekly-summary-card viaje-weekly">
       <h3 class="section-title">Resumen semanal</h3>
       <p class="text-sm text-main leading-relaxed mb-3">${weekly.narrative}</p>
@@ -689,6 +406,12 @@ function renderViaje() {
       <p class="text-sm text-main leading-relaxed">${insight}</p>
     </div>
 
+    <div class="viaje-actions flex gap-2 flex-wrap span-full">
+      <button onclick="exportMonthlyReportText()" class="btn-secondary flex-1">📄 Informe mensual</button>
+      <a href="#/ajustes" onclick="settingsTab='data';setTimeout(render,0)" class="btn-ghost flex-1 text-center no-underline">Respaldo →</a>
+    </div>`
+
+  const actividadBlock = `
     <div class="card card-static viaje-heatmap">
       <h3 class="section-title">Mapa de actividad (35 días)</h3>
       ${heatmapHTML(35)}
@@ -713,11 +436,6 @@ function renderViaje() {
       <p class="text-xs text-muted mt-3 text-center">Total de actividades registradas por semana</p>
     </div>
 
-    <div class="viaje-actions flex gap-2 flex-wrap">
-      <button onclick="exportMonthlyReportText()" class="btn-secondary flex-1">📄 Informe mensual</button>
-      <a href="#/ajustes" onclick="settingsTab='data';setTimeout(render,0)" class="btn-ghost flex-1 text-center no-underline">Respaldo →</a>
-    </div>
-
     <div class="card card-static viaje-domains">
       <h3 class="section-title">Dominios cognitivos</h3>
       <div class="space-y-3">
@@ -733,9 +451,10 @@ function renderViaje() {
           </div>`).join('')}
       </div>
       <a href="#/gimnasia" class="btn-secondary w-full mt-4 block text-center no-underline">Ir a gimnasia →</a>
-    </div>
+    </div>`
 
-    <div class="viaje-milestones">
+  const hitosBlock = `
+    <div class="viaje-milestones span-full">
       <h3 class="section-title">Hitos del viaje</h3>
       <div class="milestone-grid">
         ${milestones.map(m => `
@@ -744,13 +463,25 @@ function renderViaje() {
             ${m.label}
           </div>`).join('')}
       </div>
-    </div>
+    </div>`
+
+  const tabContent = viajeTab === 'resumen' ? resumenBlock
+    : viajeTab === 'actividad' ? actividadBlock
+    : hitosBlock
+
+  return `<div class="animate-fade-in page-shell page-viaje route-enter">
+    <div class="ds-page ds-page--full">
+    ${pageHero('Mi viaje', `Día ${s.daysSinceStart} de tu camino · desde ${since}`, `${s.consistency30}%`, 'consistencia 30d')}
+    ${viajeTabs}
+    <div class="viaje-dashboard">${tabContent}</div>
     </div>
   </div>`
 }
 
 // --- Plan del día ---
 function renderPlan() {
+  processPlanAwards(checkPlanTask('plan_review'))
+  processPlanAwards(checkPlanTask('morning'))
   const plan = ensureDailyPlan()
   const progress = getPlanProgress()
   const p = getProgress()
@@ -765,10 +496,11 @@ function renderPlan() {
   const statusBadge = bundleStatusHTML(dailyApis)
 
   return `<div class="animate-fade-in page-shell page-plan">
-    <p class="content-lead">${holidayMsg}${statusBadge ? ` ${statusBadge}` : ''}</p>
+    <div class="ds-page ds-page--full">
+    ${pageHero('Plan del día', `${holidayMsg}${statusBadge ? ` · ${statusBadge}` : ''}`, `${progress.done}/${progress.total}`, 'pendientes')}
 
     <div class="plan-dashboard">
-    <div class="card card-static plan-progress">
+    <div class="ds-panel ds-panel--flat plan-progress">
       <div class="flex justify-between items-center mb-2">
         <span class="text-sm font-medium text-main">${progress.done}/${progress.total} misiones</span>
         <span class="text-sm text-muted">${progress.percent}%</span>
@@ -781,18 +513,22 @@ function renderPlan() {
         : `<p class="text-center text-sm text-muted">Completa todo para +${plan.bonusXp} XP extra</p>`}
     </div>
 
-    <div class="plan-missions space-y-3">
-      ${plan.tasks.map(t => `
-        <a href="${t.link}" class="card block no-underline challenge-card ${t.done ? 'opacity-60' : ''}">
-          <div class="flex items-center gap-4">
-            <span class="text-2xl">${t.done ? '✅' : t.icon}</span>
-            <div class="flex-1">
-              <p class="font-medium text-main">${t.label}</p>
-              <p class="text-xs text-muted">+${t.xp} XP disciplina</p>
-            </div>
-            ${!t.done ? '<span class="text-muted">→</span>' : ''}
+    <div class="plan-missions ds-list">
+      ${plan.tasks.map(t => {
+        const tone = getMissionTone(t)
+        return `
+        <a href="${t.link}" class="ds-list-item plan-mission-item mission--${tone} ${t.done ? 'is-done' : ''} no-underline">
+          <span class="ds-list-icon">${t.done ? '✅' : t.icon}</span>
+          <div class="ds-list-body">
+            <span class="mission-chip">${getMissionChip(tone)}</span>
+            <p class="ds-list-title">${t.label}</p>
+            ${t.brief ? `<p class="plan-mission-brief">${t.brief}</p>` : ''}
+            <p class="ds-list-meta">${t.why || `+${t.xp} XP`}</p>
           </div>
-        </a>`).join('')}
+          <span class="mission-xp">+${t.xp}</span>
+          ${!t.done ? '<span class="text-muted">→</span>' : ''}
+        </a>`
+      }).join('')}
     </div>
 
     <div class="plan-side">
@@ -816,6 +552,7 @@ function renderPlan() {
 
     <div class="plan-chart">${habitChartHTML()}</div>
     </div>
+    </div>
   </div>`
 }
 
@@ -827,13 +564,22 @@ function renderMetas() {
   const completed = goals.filter(g => g.completed)
   const failed = goals.filter(g => g.failed)
 
-  return `<div class="animate-fade-in route-enter page-shell page-wide page-metas">
-    <p class="content-lead">Objetivos a 30-90 días con hitos en 25%, 50% y 75%</p>
+  const metasTabs = tabBar([
+    { id: 'activas', label: `Activas (${active.length}/3)`, icon: '🎯' },
+    { id: 'plantillas', label: 'Nueva', icon: '➕' },
+    { id: 'historial', label: 'Historial', icon: '📜' },
+  ], metasTab, 'metasTab')
 
-    ${active.length ? `<h2 class="font-semibold text-main mb-3">Activas (${active.length}/3)</h2>
-    <div class="metas-active-grid mb-8">
+  let tabContent = ''
+  if (metasTab === 'activas') {
+    tabContent = !active.length ? emptyState({
+      iconKey: 'goal',
+      title: 'Sin metas activas',
+      desc: 'Elige una plantilla en la pestaña Nueva para darle dirección a tu progreso.',
+      ctaLabel: 'Ver plantillas',
+      ctaOnclick: "metasTab='plantillas';render()",
+    }) : `<div class="metas-active-grid">
       ${active.map(g => {
-        const pct = Math.min(100, Math.round((g.progress / g.target) * 100))
         const daysLeft = Math.max(0, Math.ceil((new Date(g.endDate) - new Date()) / 86400000))
         return `<div class="card">
           <div class="flex items-center gap-3 mb-3">
@@ -845,29 +591,59 @@ function renderMetas() {
           <p class="text-sm text-muted mt-2">${g.progress} / ${g.target} · Hitos 25/50/75% · +150 XP al completar</p>
         </div>`
       }).join('')}
-    </div>` : ''}
-
-    ${active.length < 3 ? `<h2 class="font-semibold text-main mb-3">Nueva meta</h2>
-    <div class="metas-templates-grid mb-8">
-      ${GOAL_TEMPLATES.map((t, i) => `
-        <button onclick="pickGoal(${i})" class="card text-left w-full cursor-pointer">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">${t.icon}</span>
-            <div class="flex-1">
-              <p class="font-medium text-main">${t.title}</p>
-              <p class="text-xs text-muted">${t.days} días · Meta: ${t.target} · +150 XP</p>
+    </div>`
+  } else if (metasTab === 'plantillas') {
+    tabContent = active.length >= 3
+      ? '<p class="text-muted text-sm text-center py-8">Máximo 3 metas activas. Completa una para agregar otra.</p>'
+      : `<div class="metas-templates-grid">
+        ${GOAL_TEMPLATES.map((t, i) => `
+          <button onclick="pickGoal(${i})" class="card text-left w-full cursor-pointer goal-template-card">
+            <div class="flex items-start gap-3">
+              <span class="text-2xl">${t.icon}</span>
+              <div class="flex-1">
+                <p class="font-medium text-main">${t.title}</p>
+                <p class="text-sm text-muted mt-1">${t.pitch || ''}</p>
+                <p class="text-xs text-muted mt-2">${t.days} días · Meta: ${t.target} · +150 XP</p>
+              </div>
             </div>
-          </div>
-        </button>`).join('')}
-    </div>` : '<p class="text-muted text-sm mb-6">Máximo 3 metas activas. Completa una para agregar otra.</p>'}
+          </button>`).join('')}
+      </div>`
+  } else {
+    tabContent = !completed.length && !failed.length
+      ? emptyState({
+        iconKey: 'journey',
+        title: 'Sin historial aún',
+        desc: 'Cuando completes o cierres metas, aparecerán aquí.',
+      })
+      : `${completed.length ? `<p class="ds-section-title">Completadas</p>
+        <div class="ds-list mb-6">${completed.map(g => `
+          <div class="ds-list-item is-done">
+            <span class="ds-list-icon">${g.icon}</span>
+            <div class="ds-list-body">
+              <p class="ds-list-title">${g.title}</p>
+              <p class="ds-list-meta">${g.progress}/${g.target} · +150 XP</p>
+            </div>
+            <span class="ds-chip ds-chip--accent">🏆</span>
+          </div>`).join('')}
+        </div>` : ''}
+        ${failed.length ? `<p class="ds-section-title">No completadas</p>
+        <div class="ds-list">${failed.map(g => `
+          <div class="ds-list-item is-done">
+            <span class="ds-list-icon">${g.icon}</span>
+            <div class="ds-list-body">
+              <p class="ds-list-title">${g.title}</p>
+              <p class="ds-list-meta">Meta no alcanzada</p>
+            </div>
+          </div>`).join('')}
+        </div>` : ''}`
+  }
 
-    ${completed.length ? `<h2 class="font-semibold text-main mb-3">Completadas 🏆</h2>
-    <div class="space-y-2 mb-6">${completed.map(g => `<div class="card py-3 opacity-80">
-      <span>${g.icon} ${g.title} — ${g.progress}/${g.target}</span>
-    </div>`).join('')}</div>` : ''}
-
-    ${failed.length ? `<h2 class="font-semibold text-muted mb-3">No completadas</h2>
-    <div class="space-y-2">${failed.map(g => `<div class="card py-3 opacity-50 text-sm text-muted">${g.icon} ${g.title}</div>`).join('')}</div>` : ''}
+  return `<div class="animate-fade-in route-enter page-shell page-wide page-metas">
+    <div class="ds-page ds-page--full">
+      ${pageHero('Metas', 'Objetivos a 30-90 días con hitos en 25%, 50% y 75%', active.length, 'activas')}
+      ${metasTabs}
+      <div class="ds-panel ds-panel--flat">${tabContent}</div>
+    </div>
   </div>`
 }
 
@@ -884,47 +660,58 @@ function renderProfile() {
   const unlocked = achievements.filter(a => a.unlocked).length
   const stats = getStats()
   const p = getProgress()
+  const rank = getRank()
 
-  return `<div class="animate-fade-in page-shell page-wide page-profile">
-    <p class="content-lead">${getRank().icon} ${getRank().title} · Nivel <strong>${getTotalLevel()}</strong></p>
+  const profileTabs = tabBar([
+    { id: 'resumen', label: 'Resumen', icon: '👤' },
+    { id: 'logros', label: `Logros (${unlocked})`, icon: '🏅' },
+    { id: 'desbloqueables', label: 'Extras', icon: '🔓' },
+  ], profileTab, 'profileTab')
 
+  const shieldBlock = (() => {
+    const sh = getStreakShieldStatus()
+    if (!sh.unlocked) return ''
+    return `<div class="card p-4 flex items-center gap-3 profile-shield-wrap ${sh.available ? '' : 'opacity-70'}">
+      <span class="text-3xl">🛡️</span>
+      <div class="flex-1">
+        <p class="font-medium text-main">Escudo de racha</p>
+        <p class="text-xs text-muted">${sh.available ? '1 día perdido al mes no rompe tu racha · Disponible' : `Usado este mes${sh.savedDate ? ` (${sh.savedDate})` : ''}`}</p>
+      </div>
+    </div>`
+  })()
+
+  const resumenBlock = `
     <div class="profile-dashboard page-dashboard">
-    <div class="card profile-skills">${skillBars()}</div>
+      <div class="card profile-skills">${skillBars()}</div>
+      ${shieldBlock}
+      <div class="ds-stat-row profile-stats span-full">
+        ${[
+          ['Rutinas', stats.routinesCompleted], ['Ejercicios', stats.brainSessions],
+          ['Meditación', stats.meditationMinutes + ' min'], ['Reflexiones', stats.reflections],
+          ['Hábitos', stats.habitsCompleted], ['Desafíos', stats.challengesWon],
+        ].map(([l, v]) => `<div class="ds-stat"><p class="ds-stat-value">${v}</p><p class="ds-stat-label">${l}</p></div>`).join('')}
+      </div>
+      <h2 class="ds-section-title span-full">Récords</h2>
+      <div class="card span-full">
+        ${Object.keys(p.records).length === 0 ? '<p class="text-muted text-sm">Entrena en el laboratorio para establecer récords.</p>' :
+          Object.entries(p.records).map(([k, r]) => `<div class="flex justify-between py-2 border-b border-[var(--border)] last:border-0">
+            <span class="text-sm text-main">${k.replace('_', ' · ')}</span>
+            <span class="text-sm font-medium text-muted">${r.best} pts · ${r.plays} partidas</span>
+          </div>`).join('')}
+      </div>
+    </div>`
 
-    ${(() => {
-      const sh = getStreakShieldStatus()
-      if (!sh.unlocked) return ''
-      return `<div class="card p-4 flex items-center gap-3 profile-shield-wrap ${sh.available ? '' : 'opacity-70'}">
-        <span class="text-3xl">🛡️</span>
-        <div class="flex-1">
-          <p class="font-medium text-main">Escudo de racha</p>
-          <p class="text-xs text-muted">${sh.available ? '1 día perdido al mes no rompe tu racha · Disponible' : `Usado este mes${sh.savedDate ? ` (${sh.savedDate})` : ''}`}</p>
-        </div>
-      </div>`
-    })()}
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 profile-stats">
-      ${[
-        ['Rutinas', stats.routinesCompleted], ['Ejercicios', stats.brainSessions],
-        ['Meditación', stats.meditationMinutes + ' min'], ['Reflexiones', stats.reflections],
-        ['Hábitos', stats.habitsCompleted], ['Desafíos', stats.challengesWon],
-      ].map(([l, v]) => `<div class="card stat-pill card-static"><p class="value">${v}</p><p class="text-xs text-muted">${l}</p></div>`).join('')}
-    </div>
-
-    <div class="profile-achievements span-full">
-    <h2 class="font-display text-lg font-semibold text-main mb-3">Logros (${unlocked}/${achievements.length})</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 profile-ach-grid">
+  const logrosBlock = `
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 profile-ach-grid">
       ${achievements.map(a => `<div class="card text-center py-4 ${a.unlocked ? '' : 'opacity-40'}">
         <span class="text-3xl">${a.icon}</span>
         <p class="text-sm font-medium text-main mt-2">${a.name}</p>
         <p class="text-xs text-muted">${a.desc}</p>
       </div>`).join('')}
-    </div>
-    </div>
+    </div>`
 
-    <div class="profile-unlocks span-full">
-    <h2 class="font-display text-lg font-semibold text-main mb-3">Desbloqueables (${getUnlocked().length}/${UNLOCKS.length})</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  const desbloqueablesBlock = `
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
       ${UNLOCKS.map(u => {
         const ok = isUnlocked(u.id)
         return `<div class="unlock-card card text-center py-3 ${ok ? 'unlocked' : 'locked'}">
@@ -934,24 +721,35 @@ function renderProfile() {
         </div>`
       }).join('')}
     </div>
-    ${getNextUnlock() ? `<p class="text-sm text-muted mb-6">Próximo: <strong class="text-main">${getNextUnlock().icon} ${getNextUnlock().name}</strong> en nivel ${getNextUnlock().level}</p>` : ''}
-    </div>
+    ${getNextUnlock() ? `<p class="text-sm text-muted">Próximo: <strong class="text-main">${getNextUnlock().icon} ${getNextUnlock().name}</strong> en nivel ${getNextUnlock().level}</p>` : ''}`
 
-    <h2 class="font-display text-lg font-semibold text-main mb-3 span-full">Récords</h2>
-    <div class="card span-full">
-      ${Object.keys(p.records).length === 0 ? '<p class="text-muted text-sm">Juega en gimnasia cerebral para establecer récords.</p>' :
-        Object.entries(p.records).map(([k, r]) => `<div class="flex justify-between py-2 border-b border-[var(--border)] last:border-0">
-          <span class="text-sm text-main">${k.replace('_', ' · ')}</span>
-          <span class="text-sm font-medium text-muted">${r.best} pts · ${r.plays} partidas</span>
-        </div>`).join('')}
-    </div>
+  const tabContent = profileTab === 'resumen' ? resumenBlock
+    : profileTab === 'logros' ? logrosBlock
+    : desbloqueablesBlock
+
+  return `<div class="animate-fade-in page-shell page-wide page-profile">
+    <div class="ds-page ds-page--full">
+      ${pageHero(`${rank.icon} ${rank.title}`, `Nivel ${getTotalLevel()} · ${unlocked}/${achievements.length} logros`, getTotalLevel(), 'nivel total')}
+      ${profileTabs}
+      <div class="ds-panel ds-panel--flat">${tabContent}</div>
     </div>
   </div>`
 }
 
-function renderChallenges() { return renderPlan() }
-
 // --- Routine ---
+const ROUTINE_STROOP_INK = [
+  { key: 'rojo', label: 'Rojo', name: 'ROJO', css: '#ef4444' },
+  { key: 'azul', label: 'Azul', name: 'AZUL', css: '#3b82f6' },
+  { key: 'verde', label: 'Verde', name: 'VERDE', css: '#22c55e' },
+]
+
+function genRoutineStroop() {
+  const ink = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
+  let word = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
+  while (word.key === ink.key) word = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
+  return { ink, word }
+}
+
 function clearRoutineTimers() { routineTimers.forEach(t => clearInterval(t)); routineTimers = [] }
 
 function startRoutine() {
@@ -962,14 +760,18 @@ function startRoutine() {
   routineState = {
     active: true, step: 1, difficulty: diff,
     breathing: { elapsed: 0, phase: 'inhale', total: diff === 'experto' ? 180 : diff === 'dificil' ? 150 : 120 },
-    brain: { round: 0, total: diff === 'facil' ? 3 : diff === 'experto' ? 8 : 5, problem: genMathProblem(diff), answer: '', feedback: null, score: 0 },
+    brain: { round: 0, total: 5, score: 0, trial: genRoutineStroop(), feedback: null },
   }
   routineTimers.push(setInterval(() => {
-    if (routineState.step === 1) {
-      const b = routineState.breathing
-      b.elapsed++
-      if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
-      if (b.elapsed >= b.total) { routineState.step = 2; routineState.brain.problem = genMathProblem(routineState.difficulty) }
+    if (routineState.step !== 1) return
+    const b = routineState.breathing
+    b.elapsed++
+    if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
+    if (b.elapsed >= b.total) {
+      routineState.step = 2
+      routineState.brain.trial = genRoutineStroop()
+      render()
+      return
     }
     render()
   }, 1000))
@@ -996,14 +798,18 @@ window.startExpress = function() {
   routineState = {
     active: true, step: 1, difficulty: diff, express: true,
     breathing: { elapsed: 0, phase: 'inhale', total: 60 },
-    brain: { round: 0, total: 3, problem: genMathProblem(diff), answer: '', feedback: null, score: 0 },
+    brain: { round: 0, total: 5, score: 0, trial: genRoutineStroop(), feedback: null },
   }
   routineTimers.push(setInterval(() => {
-    if (routineState.step === 1) {
-      const b = routineState.breathing
-      b.elapsed++
-      if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
-      if (b.elapsed >= b.total) { routineState.step = 2; routineState.brain.problem = genMathProblem(diff) }
+    if (routineState.step !== 1) return
+    const b = routineState.breathing
+    b.elapsed++
+    if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
+    if (b.elapsed >= b.total) {
+      routineState.step = 2
+      routineState.brain.trial = genRoutineStroop()
+      render()
+      return
     }
     render()
   }, 1000))
@@ -1017,18 +823,20 @@ function renderRoutine() {
       <p class="text-4xl mb-4">✨</p><h2 class="font-display text-2xl font-bold text-main mb-2">Rutina completada</h2>
       <p class="text-muted mb-6">Vuelve mañana para más XP.</p><a href="#/plan" class="btn-primary inline-block no-underline">Ver plan</a></div></div>`
     return `<div class="animate-fade-in page-shell page-wide page-routine">
+      <div class="ds-page ds-page--full">
+      ${pageLead('Respiración + Stroop rápido + reflexión · protocolos con evidencia')}
       <div class="page-dashboard routine-intro-grid">
-        <div class="routine-intro-main">
-          <h1 class="font-display text-3xl font-bold text-main mb-2">Rutina diaria</h1>
-          <p class="text-muted mb-6">Elige dificultad. Más difícil = más XP.</p>
+        <div class="routine-intro-main ds-panel ds-panel--flat">
+          <p class="ds-section-title">Dificultad</p>
           ${difficultyPicker(routineState.difficulty || getSettings().defaultDifficulty, 'setRoutineDiff')}
         </div>
-        <div class="card space-y-3 text-left routine-intro-steps">
+        <div class="ds-panel ds-panel--flat space-y-3 text-left routine-intro-steps">
           <div class="flex gap-3"><span>🌬️</span><div><p class="font-medium text-main">Respiración</p><p class="text-xs text-muted">2-3 min según nivel</p></div></div>
-          <div class="flex gap-3"><span>🔢</span><div><p class="font-medium text-main">Cálculo mental</p><p class="text-xs text-muted">3-8 operaciones</p></div></div>
+          <div class="flex gap-3"><span>🎨</span><div><p class="font-medium text-main">Stroop rápido</p><p class="text-xs text-muted">5 trials · cíngulo anterior</p></div></div>
           <div class="flex gap-3"><span>📝</span><div><p class="font-medium text-main">Reflexión</p><p class="text-xs text-muted">Pregunta según dificultad</p></div></div>
         </div>
         <button onclick="startRoutine()" class="btn-primary w-full text-lg py-4 routine-intro-cta">Comenzar rutina</button>
+      </div>
       </div>
     </div>`
   }
@@ -1040,7 +848,7 @@ function renderRoutine() {
       <a href="#/plan" class="btn-primary inline-block no-underline">Ver plan del día</a></div></div>`
   }
 
-  const steps = routineState.express ? ['Respirar', 'Calcular'] : ['Respirar', 'Calcular', 'Reflexionar']
+  const steps = routineState.express ? ['Respirar', 'Stroop'] : ['Respirar', 'Stroop', 'Reflexionar']
   const stepHtml = `<div class="step-indicator span-full">${steps.map((_, i) =>
     `<div class="step-dot ${i + 1 < routineState.step ? 'done' : i + 1 === routineState.step ? 'current' : ''}"></div>`
   ).join('')}</div>`
@@ -1049,44 +857,48 @@ function renderRoutine() {
     const b = routineState.breathing
     const scale = b.phase === 'inhale' ? 1.15 : b.phase === 'exhale' ? 0.85 : 1.05
     const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
-    return `<div class="animate-fade-in page-shell page-wide page-routine">
+    return `<div class="page-shell page-wide page-routine">
+      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
       <div class="routine-active-grid">${stepHtml}
         <div class="routine-active-side card card-static">
           <p class="text-sm text-muted mb-2">Fase 1 · Respiración</p>
           <p class="text-main font-medium">${DIFFICULTIES[routineState.difficulty].icon} ${DIFFICULTIES[routineState.difficulty].label}</p>
-          <p class="text-xs text-muted mt-3">${b.total - b.elapsed}s restantes</p>
+          <p id="routine-remaining" class="text-xs text-muted mt-3">${b.total - b.elapsed}s restantes</p>
         </div>
         <div class="routine-stage card card-static">
           <div class="relative w-44 h-44 mx-auto">
-            <div class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
-            <div class="absolute inset-0 flex items-center justify-center"><span class="font-display text-2xl meditation-text">${phase[b.phase]}</span></div>
+            <div id="routine-breathe-circle" class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
+            <div class="absolute inset-0 flex items-center justify-center"><span id="routine-phase-text" class="font-display text-2xl meditation-text">${phase[b.phase]}</span></div>
           </div>
         </div>
       </div></div>`
   }
   if (routineState.step === 2) {
     const br = routineState.brain
+    const t = br.trial
     return `<div class="animate-fade-in page-shell page-wide page-routine">
+      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
       <div class="routine-active-grid">${stepHtml}
         <div class="routine-active-side card card-static">
-          <p class="text-sm text-muted mb-2">Fase 2 · Cálculo mental</p>
-          <p class="text-main font-medium">Ronda ${br.round + 1} de ${br.total}</p>
+          <p class="text-sm text-muted mb-2">Fase 2 · Stroop</p>
+          <p class="text-main font-medium">Trial ${br.round + 1} de ${br.total}</p>
+          <p class="text-xs text-muted mt-2">Nombra el color de la tinta, no la palabra.</p>
         </div>
         <div class="card text-center exercise-stage">
-          <p class="font-display text-3xl font-bold text-main mb-6">${br.problem.a} ${br.problem.op} ${br.problem.b} = ?</p>
-          <form onsubmit="routineBrainSubmit(event)">
-            <input type="number" id="routine-math" class="input-field text-center text-2xl mb-4" autofocus>
-            <button type="submit" class="btn-primary w-full">Confirmar</button>
-          </form>
-          ${br.feedback === 'correct' ? '<p class="text-green-500 mt-2">✓</p>' : ''}
-          ${br.feedback === 'wrong' ? `<p class="text-red-400 mt-2">✗ ${br.problem.result}</p>` : ''}
+          <p class="font-display text-4xl font-bold mb-6" style="color:${t.ink.css}">${t.word.name}</p>
+          <div class="flex flex-col gap-2">
+            ${ROUTINE_STROOP_INK.map(c => `
+              <button type="button" onclick="routineStroopPick('${c.key}')" class="btn-secondary w-full">${c.label}</button>`).join('')}
+          </div>
+          ${br.feedback === 'correct' ? '<p class="text-green-500 mt-3">✓ Cíngulo + PFC</p>' : ''}
+          ${br.feedback === 'wrong' ? `<p class="text-red-400 mt-3">✗ Era ${t.ink.label}</p>` : ''}
         </div>
       </div></div>`
   }
   if (routineState.step === 3) {
-    const prompts = REFLECTION_PROMPTS[routineState.difficulty] || REFLECTION_PROMPTS.medio
-    const prompt = prompts[Math.floor(Math.random() * prompts.length)]
+    const prompt = getReflectionPrompt(routineState.difficulty)
     return `<div class="animate-fade-in page-shell page-wide page-routine">
+      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
       <div class="routine-active-grid">${stepHtml}
         <div class="routine-active-side card card-static">
           <p class="text-sm text-muted mb-2">Fase 3 · Reflexión</p>
@@ -1102,11 +914,10 @@ function renderRoutine() {
 }
 
 window.setRoutineDiff = (d) => { routineState.difficulty = guardDifficulty(d); render() }
-window.routineBrainSubmit = function(e) {
-  e.preventDefault()
+window.routineStroopPick = function(key) {
   const br = routineState.brain
-  const val = parseInt(document.getElementById('routine-math')?.value)
-  if (val === br.problem.result) { br.score++; br.feedback = 'correct'; playTone(523) }
+  if (br.feedback) return
+  if (key === br.trial.ink.key) { br.score++; br.feedback = 'correct'; playTone(523) }
   else { br.feedback = 'wrong'; playTone(200) }
   br.round++
   render()
@@ -1115,9 +926,9 @@ window.routineBrainSubmit = function(e) {
     if (br.round >= br.total) {
       if (routineState.express) finishRoutine(true)
       else routineState.step = 3
-    } else br.problem = genMathProblem(routineState.difficulty)
+    } else br.trial = genRoutineStroop()
     render()
-  }, 600)
+  }, 700)
 }
 window.routineFinishReflection = function(prompt) {
   const text = document.getElementById('routine-reflection')?.value?.trim()
@@ -1130,28 +941,19 @@ window.routineFinishReflection = function(prompt) {
   finishRoutine(routineState.express)
 }
 
-// --- Brain Gym (programa neurociencia) ---
-const LIBRARY_GAMES = [
-  { id: 'nback', unlock: null }, { id: 'corsi' }, { id: 'stroop' }, { id: 'gonogo' },
-  { id: 'flanker' }, { id: 'switching' }, { id: 'symbols' }, { id: 'math' },
-  { id: 'memory' }, { id: 'simon' }, { id: 'logic' }, { id: 'sequence' },
-  { id: 'anagrams', unlock: 'game_anagrams' }, { id: 'trivia' },
-]
-
-function getAvailableGames() {
-  return LIBRARY_GAMES.filter(g => !g.unlock || isUnlocked(g.unlock)).map(g => EXERCISES[g.id] || { id: g.id, name: g.id, icon: '🎮', desc: '' })
+// --- Brain Gym (programa neurociencia + academia) ---
+function getLabExercises() {
+  return LAB_EXERCISE_IDS.map(id => EXERCISES[id]).filter(Boolean)
 }
 
 function renderBrainExercise() {
   const id = brainState.exercise
-  if (id === 'math') return renderMathGame()
-  if (id === 'memory') return renderMemoryGame()
-  if (id === 'simon') return renderSimonGame()
-  if (id === 'logic') return renderLogicGame()
-  if (id === 'words') return renderWordsGame()
-  if (id === 'sequence') return renderSequenceGame()
-  if (id === 'anagrams') return renderAnagramGame()
-  if (id === 'trivia') return renderTriviaGame()
+  if (!LAB_EXERCISE_IDS.includes(id)) {
+    brainState.exercise = null
+    return `<div class="page-shell page-wide"><div class="card text-center p-8">
+      <p class="text-muted mb-4">Solo protocolos de laboratorio con respaldo científico.</p>
+      <button onclick="brainState.exercise=null;render()" class="btn-primary">Volver al laboratorio</button></div></div>`
+  }
   if (id === 'nback') return renderNBackGame()
   if (id === 'stroop') return renderStroopGame()
   if (id === 'flanker') return renderFlankerGame()
@@ -1163,7 +965,7 @@ function renderBrainExercise() {
 }
 
 function renderBrainGym() {
-  if (brainState.session?.phase === 'complete') return renderSessionComplete()
+  if (brainState.session?.phase === 'debrief') return renderSessionDebrief()
   if (brainState.session?.phase === 'intro' && !brainState.exercise) return renderSessionIntro()
   if (brainState.exercise) return renderBrainExercise()
 
@@ -1173,32 +975,92 @@ function renderBrainGym() {
   const diff = brainState.difficulty
   const d = DIFFICULTIES[diff]
 
-  if (brainState.brainView === 'library') {
-    const games = getAvailableGames()
+  const brainTabs = tabBar([
+    { id: 'academy', label: 'Academia', icon: '🎓' },
+    { id: 'lab', label: 'Laboratorio', icon: '🔬' },
+    { id: 'program', label: 'Programa', icon: '📋' },
+  ], brainState.brainView || 'academy', 'brainState.brainView', 'brainState.activeLesson=null;')
+
+  if (brainState.brainView === 'academy') {
+    if (brainState.activeLesson) {
+      if (brainState.lessonFlow?.id === brainState.activeLesson) {
+        return `<div class="animate-fade-in page-shell page-wide page-brain">
+          <div class="ds-page ds-page--full">${renderLessonPostFlow(brainState.lessonFlow)}</div>
+        </div>`
+      }
+      const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
+      return `<div class="animate-fade-in page-shell page-wide page-brain">
+        <div class="ds-page ds-page--full">${lesson ? renderLessonFull(lesson) : ''}</div>
+      </div>`
+    }
+    const daily = getDailyLesson()
+    const weekly = getWeeklyLessonMeta()
+    const doneCount = getCompletedLessons().length
+    const unlocked = getUnlockedLessonCount()
     return `<div class="animate-fade-in page-shell page-wide page-brain">
-      <button onclick="brainState.brainView='program';render()" class="btn-ghost mb-4">← Programa</button>
-      <p class="content-lead">Practica libremente cualquier paradigma cognitivo</p>
+      <div class="ds-page ds-page--full">
+      ${brainTabs}
+      ${pageHero('Neurociencia', '32 lecciones · casos legendarios · laboratorio', `${doneCount}/${unlocked}`, 'leídas')}
+      ${renderNeuroPunchBanner()}
+      ${renderDebateBanner()}
+      ${renderLegendaryHall()}
+      <div class="academy-weekly span-full">
+        <p class="academy-weekly-label">📅 Semana ${weekly.week} · Lección nueva</p>
+        ${renderLessonCard(weekly.lesson, { weekly: true, featured: true })}
+        <button type="button" onclick="openLesson('${weekly.lesson.id}')" class="btn-primary w-full mt-3 py-4">
+          ${weekly.isNew ? 'Leer lección de la semana →' : 'Releer lección de la semana →'}
+        </button>
+        <p class="academy-weekly-note">${unlocked}/${LESSONS.length} catálogo · legendarios siempre abiertos · +2/semana</p>
+      </div>
+      <div class="academy-daily span-full">
+        <p class="academy-daily-label">📖 Lectura rápida del día</p>
+        ${renderLessonCard(daily, { featured: true })}
+        ${isLessonUnlocked(daily.id)
+          ? `<button type="button" onclick="openLesson('${daily.id}')" class="btn-secondary w-full mt-3">Leer →</button>`
+          : `<p class="text-xs text-muted mt-2 text-center">Esta lectura se desbloquea en el catálogo primero.</p>`}
+      </div>
+      ${zoneHeader('Catálogo', `${unlocked} de ${LESSONS.length} lecciones · sistemas · memoria · atención · emoción`)}
+      <div class="academy-lesson-grid span-full">
+        ${LESSONS.map(l => renderLessonCard(l)).join('')}
+      </div>
+      </div>
+    </div>`
+  }
+
+  if (brainState.brainView === 'lab') {
+    const games = getLabExercises()
+    return `<div class="animate-fade-in page-shell page-wide page-brain">
+      <div class="ds-page ds-page--full">
+      ${brainTabs}
+      ${pageHero('Laboratorio', 'Paradigmas cognitivos con respaldo en neuroimagen', games.length, 'protocolos')}
+      <p class="ds-lead span-full">N-back, Stroop, Corsi, Flanker… Cada protocolo activa circuitos cerebrales documentados en estudios de laboratorio.</p>
       ${difficultyPicker(diff, 'setBrainDiff')}
-      <div class="brain-games-grid">
-        ${games.map(g => {
-          const ex = EXERCISES[g.id] || g
+      <div class="brain-games-grid span-full">
+        ${games.map(ex => {
           const dom = COGNITIVE_DOMAINS[ex.domain]
-          return `<button onclick="startBrain('${g.id}')" class="card game-card text-left">
-            <div class="flex items-center gap-4">
+          const rw = EXERCISE_REAL_WORLD[ex.id]
+          return `<button onclick="startBrain('${ex.id}')" class="card game-card game-card--lab text-left">
+            <div class="flex items-start gap-4">
               <span class="text-3xl game-icon">${ex.icon}</span>
               <div class="flex-1">
                 <h3 class="font-semibold text-main">${ex.name}</h3>
-                <p class="text-sm text-muted">${ex.desc || ex.paradigm || ''}</p>
-                ${dom ? `<p class="text-xs text-muted mt-1">${dom.icon} ${dom.short} · Nv.${getExerciseLevel(g.id)}</p>` : ''}
+                <p class="text-xs text-muted mt-0.5">${ex.paradigm}</p>
+                <p class="text-sm text-muted mt-2">${ex.desc}</p>
+                ${ex.brainScan ? `<p class="text-xs mt-2 academy-brain-scan">🧠 fMRI: ${ex.brainScan}</p>` : ''}
+                ${rw ? `<p class="text-xs mt-2 academy-real-world">🌍 En la vida: ${rw}</p>` : ''}
+                ${dom ? `<p class="text-xs text-muted mt-2">${dom.icon} ${dom.name} · Nv.${getExerciseLevel(ex.id)}</p>` : ''}
               </div>
             </div></button>`
         }).join('')}
+      </div>
       </div>
     </div>`
   }
 
   return `<div class="animate-fade-in page-shell page-brain">
-    <p class="content-lead">Programa adaptativo · 6 dominios · evidencia neurocientífica</p>
+    <div class="ds-page ds-page--full">
+    ${brainTabs}
+    ${pageHero('Entrenamiento', 'Sesión guiada de paradigmas cognitivos', stats.doneToday ? '✓' : '○', 'sesión hoy')}
 
     <div class="brain-dashboard">
     <div class="card program-hero card-static brain-hero">
@@ -1211,6 +1073,7 @@ function renderBrainGym() {
            <button onclick="startGuidedSession(true)" class="btn-secondary w-full">Repetir sesión</button>`
         : `<button onclick="startGuidedSession()" class="btn-primary w-full text-lg py-4">▶ Iniciar sesión guiada</button>`}
       <p class="text-xs text-muted mt-3 text-center">${stats.weekSessions}/${stats.weekTarget} sesiones esta semana (meta: 3×)</p>
+      <button type="button" onclick="openLesson('${getWeeklyLesson().id}')" class="btn-secondary w-full mt-3">🎓 Academia · lección semana ${getWeeklyLessonMeta().week}</button>
     </div>
 
     <div class="card p-4 card-static brain-disclaimer">
@@ -1223,7 +1086,7 @@ function renderBrainGym() {
       <div class="space-y-2 text-sm">
         <div class="flex justify-between"><span class="text-muted">Hoy</span><span class="text-main">${stats.doneToday ? '✅ Hecha' : 'Pendiente'}</span></div>
         <div class="flex justify-between"><span class="text-muted">Dificultad</span><span class="text-main">${d.icon} ${d.label}</span></div>
-        <div class="flex justify-between"><span class="text-muted">Ejercicios</span><span class="text-main">${getAvailableGames().length}</span></div>
+        <div class="flex justify-between"><span class="text-muted">Lecciones</span><span class="text-main">${getCompletedLessons().length}/${LESSONS.length}</span></div>
       </div>
     </div>
 
@@ -1244,7 +1107,7 @@ function renderBrainGym() {
     </div>
     </div>
 
-    <button onclick="brainState.brainView='library';render()" class="btn-secondary w-full brain-library-btn">📚 Biblioteca libre (${getAvailableGames().length} ejercicios)</button>
+    </div>
     </div>
   </div>`
 }
@@ -1267,6 +1130,8 @@ function renderSessionIntro() {
         <p class="text-xs font-semibold text-main mb-1">${dom.icon} ${dom.name}</p>
         <p class="text-xs text-muted">${dom.theory}</p>
         <p class="text-xs text-muted mt-2 italic">${ex.desc}</p>
+        ${ex.brainScan ? `<p class="text-xs mt-2 academy-brain-scan">🧠 ${ex.brainScan}</p>` : ''}
+        ${EXERCISE_REAL_WORLD[ex.id] ? `<p class="text-xs mt-2 academy-real-world">🌍 ${EXERCISE_REAL_WORLD[ex.id]}</p>` : ''}
       </div>
       <p class="text-xs text-muted mt-3">Nivel adaptativo: ${ex.level} · ~${ex.duration}</p>
       <button onclick="launchSessionExercise()" class="btn-primary w-full py-4 mt-4">Comenzar ejercicio</button>
@@ -1275,26 +1140,35 @@ function renderSessionIntro() {
   </div>`
 }
 
-function renderSessionComplete() {
+function renderSessionDebrief() {
   const s = brainState.session
   const avg = s.results.length
     ? Math.round(s.results.reduce((a, r) => a + r.accuracy, 0) / s.results.length * 100)
     : 0
-  return `<div class="animate-fade-in page-shell page-wide page-brain text-center">
-    <div class="card level-up span-full" style="max-width:none">
-      <p class="text-5xl mb-4">🧠</p>
-      <h2 class="font-display text-2xl font-bold text-main mb-2">¡Sesión completada!</h2>
-      <p class="text-muted mb-4">Precisión media: ${avg}% · ${s.results.length} ejercicios</p>
-      <div class="space-y-2 mb-6 text-left">
-        ${s.results.map(r => {
-          const ex = EXERCISES[r.exerciseId]
-          return `<div class="flex justify-between text-sm p-2 rounded-lg" style="background:var(--secondary-bg)">
-            <span>${ex?.icon} ${ex?.name}</span>
-            <span class="font-medium">${Math.round(r.accuracy * 100)}%</span>
-          </div>`
-        }).join('')}
+  const debrief = getSessionDebrief(s.results)
+  return `<div class="animate-fade-in page-shell page-wide page-brain">
+    <div class="session-debrief span-full">
+      <header class="session-debrief-header text-center mb-6">
+        <p class="text-5xl mb-3">🧠</p>
+        <h2 class="font-display text-2xl font-bold text-main mb-1">Sesión completada</h2>
+        <p class="text-muted">Precisión media ${avg}% · ${s.results.length} protocolos</p>
+      </header>
+      <div class="session-debrief-scores space-y-2 mb-6">
+        ${s.results.map(r => `<div class="flex justify-between text-sm p-2 rounded-lg session-debrief-row">
+          <span>${esc(r.icon || '')} ${esc(r.name || r.exerciseId)}</span>
+          <span class="font-medium">${Math.round(r.accuracy * 100)}%</span>
+        </div>`).join('')}
       </div>
-      <button onclick="finishGuidedSession(${avg})" class="btn-primary w-full">Recibir XP y volver</button>
+      <aside class="session-debrief-prompts card-static">
+        <p class="session-debrief-label">Debrief · 30 segundos</p>
+        <p class="session-debrief-intro">${debrief.intro}</p>
+        <ul class="session-debrief-list">
+          ${debrief.prompts.map(p => `<li>${esc(p)}</li>`).join('')}
+        </ul>
+        <textarea id="session-debrief-text" class="input-field min-h-24 resize-none mt-3" placeholder="Opcional: escribe tu reflexión (10+ caracteres para guardar en el diario)…"></textarea>
+      </aside>
+      <button type="button" onclick="submitSessionDebrief(${avg})" class="btn-primary w-full py-4 mt-4">Guardar y recibir XP</button>
+      <button type="button" onclick="finishGuidedSession(${avg})" class="btn-ghost w-full mt-2">Omitir reflexión</button>
     </div>
   </div>`
 }
@@ -1327,6 +1201,25 @@ window.launchSessionExercise = function() {
   startBrain(ex.id, true)
 }
 
+window.submitSessionDebrief = function(avgPct) {
+  const text = document.getElementById('session-debrief-text')?.value?.trim()
+  if (text && text.length >= 10 && brainState.session) {
+    const debrief = getSessionDebrief(brainState.session.results)
+    const entries = getItem('reflections', [])
+    entries.unshift({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      text,
+      prompt: debrief.prompts[0] || 'Debrief de sesión cerebral',
+      difficulty: 'medio',
+      source: 'brain_session',
+    })
+    setItem('reflections', entries)
+    updateStats({ reflections: getStats().reflections + 1 })
+  }
+  finishGuidedSession(avgPct)
+}
+
 window.finishGuidedSession = function(avgPct) {
   const bonus = Math.floor(avgPct * 1.5)
   awardXp('mental', 40 + bonus, 'Sesión cerebral completada')
@@ -1344,14 +1237,19 @@ function endExerciseBlock(score, total, exerciseId) {
   if (exerciseId) updateExerciseLevel(exerciseId, accuracy)
   clearBrainTimers()
   if (brainState.mode === 'session' && brainState.session) {
-    brainState.session.results.push({ exerciseId: exerciseId || brainState.exercise, accuracy, score, total })
+    const exId = exerciseId || brainState.exercise
+    const ex = EXERCISES[exId]
+    brainState.session.results.push({
+      exerciseId: exId, accuracy, score, total,
+      domain: ex?.domain, name: ex?.name, icon: ex?.icon,
+    })
     brainState.exercise = null
     if (brainState.session.current + 1 < brainState.session.exercises.length) {
       brainState.session.current++
       brainState.session.phase = 'intro'
     } else {
       completeSession(brainState.session.results)
-      brainState.session.phase = 'complete'
+      brainState.session.phase = 'debrief'
     }
     render()
     return
@@ -1362,9 +1260,11 @@ function endExerciseBlock(score, total, exerciseId) {
 window.setBrainDiff = (d) => { brainState.difficulty = guardDifficulty(d); render() }
 
 function startBrain(id, fromSession = false) {
+  if (!LAB_EXERCISE_IDS.includes(id)) {
+    showToast('Solo protocolos del laboratorio', 0, 'mental')
+    return
+  }
   const diff = brainState.difficulty
-  const mc = getMemoryConfig(diff)
-  const sc = getSimonConfig(diff)
   const level = fromSession ? getExerciseLevel(id) : 1
   brainState.exercise = id
   if (id === 'nback') brainState.nback = initNBack(level, diff === 'experto' ? 24 : diff === 'facil' ? 14 : 18)
@@ -1374,36 +1274,7 @@ function startBrain(id, fromSession = false) {
   if (id === 'gonogo') brainState.gonogo = initGoNoGo(diff === 'experto' ? 36 : 24)
   if (id === 'corsi') brainState.corsi = initCorsi(level + 1)
   if (id === 'symbols') brainState.symbols = initSymbols(16, diff === 'experto' ? 35 : 50)
-  if (id === 'memory') brainState.memory = { phase: 'ready', sequence: [], userInput: [], level: mc.start, score: 0, highlight: -1, config: mc }
-  if (id === 'math') brainState.math = { active: false, score: 0, timeLeft: diff === 'experto' ? 45 : diff === 'dificil' ? 50 : 60, problem: null, answer: '', feedback: null, difficulty: diff }
-  if (id === 'words') brainState.words = { round: 0, score: 0, total: diff === 'facil' ? 3 : diff === 'experto' ? 8 : 5, finished: false, selected: null, group: null, difficulty: diff }
-  if (id === 'simon') brainState.simon = { phase: 'ready', sequence: [], userInput: [], level: sc.start, score: 0, showing: -1, config: sc }
   if (id === 'logic') brainState.logic = { puzzles: getLogicPuzzles(diff, diff === 'experto' ? 8 : diff === 'dificil' ? 6 : 5), index: 0, score: 0, selected: null, finished: false, difficulty: diff }
-  if (id === 'sequence') brainState.sequence = { round: 0, score: 0, total: 5, finished: false, selected: null, current: genSequence(diff), difficulty: diff }
-  if (id === 'anagrams') {
-    const total = diff === 'facil' ? 4 : diff === 'experto' ? 8 : 6
-    brainState.anagrams = { round: 0, score: 0, total, finished: false, answer: '', feedback: null, showHint: false, items: getAnagrams(total), loading: false, difficulty: diff }
-    fetchAnagramWords(total).then(items => {
-      if (brainState.exercise === 'anagrams' && brainState.anagrams) {
-        brainState.anagrams.items = items.length ? items : getAnagrams(total)
-        render()
-      }
-    }).catch(() => {})
-  }
-  if (id === 'trivia') {
-    const total = diff === 'facil' ? 4 : diff === 'experto' ? 8 : 6
-    brainState.trivia = { round: 0, score: 0, total, finished: false, selected: null, revealed: false, questions: [], loading: true, difficulty: diff }
-    render()
-    fetchTriviaQuestions(total, diff).then(questions => {
-      if (brainState.exercise === 'trivia' && brainState.trivia) {
-        brainState.trivia.questions = questions
-        brainState.trivia.loading = false
-        brainState.trivia.total = Math.min(total, questions.length)
-        render()
-      }
-    })
-    return
-  }
   render()
 }
 
@@ -1598,13 +1469,13 @@ function renderCorsiGame() {
     <h3 class="font-display text-xl font-semibold mb-2">Bloques Corsi</h3>
     <p class="text-sm text-muted mb-6">Memoria espacial · secuencia de ${c.level} bloques</p>
     <button onclick="corsiStart()" class="btn-primary">Comenzar</button></div>`)
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Nivel ${c.level} · Ronda ${c.rounds + 1}/${c.maxRounds}</p>
-    <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-      ${Array.from({ length: 9 }, (_, i) => `<button onclick="corsiTap(${i})" ${c.phase !== 'input' ? 'disabled' : ''}
-        class="w-16 h-16 rounded-xl transition-all" style="background:${c.highlight === i ? 'var(--primary)' : 'var(--secondary-bg)'};transform:scale(${c.highlight === i ? 1.1 : 1})"></button>`).join('')}
+  return brainWrapper(`<div class="brain-game-panel text-center">
+    <p id="corsi-label" class="brain-game-label">Nivel ${c.level} · Ronda ${c.rounds + 1}/${c.maxRounds}</p>
+    <div id="corsi-grid" class="brain-grid brain-grid--3" role="group" aria-label="Bloques Corsi">
+      ${Array.from({ length: 9 }, (_, i) => `<button type="button" id="corsi-cell-${i}" onclick="corsiTap(${i})" ${c.phase !== 'input' ? 'disabled' : ''}
+        class="brain-grid-cell corsi-cell ${c.highlight === i ? 'is-lit' : ''}" aria-label="Bloque ${i + 1}"></button>`).join('')}
     </div>
-    <p class="text-xs text-muted mt-4">${{ showing: 'Observa la secuencia', input: 'Repite la secuencia', success: '✓ Correcto' }[c.phase] || ''}</p>
+    <p id="corsi-hint" class="brain-game-hint">${CORSI_HINTS[c.phase] || ''}</p>
   </div>`)
 }
 
@@ -1652,7 +1523,7 @@ function renderSymbolsGame() {
     <button onclick="symbolsStart()" class="btn-primary">Iniciar (${s.timeLeft}s)</button></div>`)
   const t = s.trials[s.index]
   return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-2">⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}</p>
+    <p id="symbols-timer" class="text-sm text-muted mb-2">⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}</p>
     <div class="flex justify-center gap-3 mb-4 text-xs">${s.map.map(m => `<span>${m.sym}=${m.digit}</span>`).join('')}</div>
     <p class="font-display text-6xl text-main mb-6">${t.sym}</p>
     <div class="grid grid-cols-3 gap-2">
@@ -1666,7 +1537,7 @@ window.symbolsStart = function() {
   const tick = setInterval(() => {
     s.timeLeft--
     if (s.timeLeft <= 0) { clearInterval(tick); s.finished = true; render() }
-    else render()
+    else if (!patchLiveUI('/gimnasia')) render()
   }, 1000)
   brainTimers.push(tick)
   render()
@@ -1692,27 +1563,99 @@ function brainFinishBtn(score, total, id, xpLabel = 'Continuar') {
 function brainWrapper(content) {
   const d = DIFFICULTIES[brainState.difficulty]
   const backFn = brainState.mode === 'session' ? 'cancelSession()' : 'brainState.exercise=null;render()'
-  return `<div class="animate-fade-in page-shell page-wide page-exercise">
-    <div class="exercise-dashboard">
-      <div class="exercise-side">
-        <button onclick="${backFn}" class="btn-ghost mb-4">← Volver</button>
-        <div class="badge-diff text-sm text-muted">${d.icon} Modo ${d.label}</div>
+  return `<div class="page-shell page-exercise route-enter">
+    <div class="exercise-dashboard exercise-dashboard--focus">
+      <div class="exercise-focus-bar">
+        <button type="button" onclick="${backFn}" class="btn-ghost">← Volver</button>
+        <span class="ds-chip ds-chip--accent">${d.icon} ${d.label}</span>
       </div>
-      <div class="card exercise-stage">${content}</div>
+      <div class="card exercise-stage exercise-stage--focus">${content}</div>
     </div>
   </div>`
 }
 
-function genSequence(difficulty) {
-  const types = {
-    facil: [{ seq: [2, 4, 6, 8], ans: 10, opts: [9, 10, 11, 12] }],
-    medio: [{ seq: [1, 1, 2, 3, 5], ans: 8, opts: [6, 7, 8, 9] }, { seq: [3, 9, 27], ans: 81, opts: [54, 72, 81, 90] }],
-    dificil: [{ seq: [2, 3, 5, 7, 11], ans: 13, opts: [12, 13, 14, 15] }, { seq: [1, 4, 9, 16], ans: 25, opts: [20, 25, 30, 36] }],
-    experto: [{ seq: [1, 2, 6, 24, 120], ans: 720, opts: [600, 720, 840, 960] }],
+const CORSI_HINTS = { showing: 'Observa la secuencia', input: 'Repite la secuencia', success: '✓ Correcto' }
+
+function patchCorsiUI() {
+  const c = brainState.corsi
+  if (!c || c.finished || c.phase === 'ready') return false
+  const grid = document.getElementById('corsi-grid')
+  if (!grid) return false
+  for (let i = 0; i < 9; i++) {
+    const cell = document.getElementById(`corsi-cell-${i}`)
+    if (!cell) return false
+    cell.classList.toggle('is-lit', c.highlight === i)
+    cell.disabled = c.phase !== 'input'
   }
-  const pool = types[difficulty] || types.medio
-  const item = pool[Math.floor(Math.random() * pool.length)]
-  return { ...item, opts: item.opts.sort(() => Math.random() - 0.5) }
+  const hint = document.getElementById('corsi-hint')
+  if (hint) hint.textContent = CORSI_HINTS[c.phase] || ''
+  const label = document.getElementById('corsi-label')
+  if (label) label.textContent = `Nivel ${c.level} · Ronda ${c.rounds + 1}/${c.maxRounds}`
+  return true
+}
+
+function patchMemoryUI() {
+  const m = brainState.memory
+  if (!m || m.phase === 'ready' || m.phase === 'failed') return false
+  const grid = document.getElementById('memory-grid')
+  if (!grid) return false
+  const colors = COLORS.slice(0, m.config.colors)
+  for (let i = 0; i < colors.length; i++) {
+    const cell = document.getElementById(`memory-cell-${i}`)
+    if (!cell) return false
+    cell.classList.toggle('is-lit', m.highlight === i)
+    cell.disabled = m.phase !== 'input'
+  }
+  const status = document.getElementById('memory-status')
+  if (status) {
+    const txt = { showing: 'Observa...', input: 'Tu turno', success: '¡Correcto!' }[m.phase] || ''
+    status.textContent = `Nv. ${m.level} · ${m.score} pts · ${txt}`
+  }
+  return true
+}
+
+function patchSimonUI() {
+  const s = brainState.simon
+  if (!s || s.phase === 'ready' || s.phase === 'failed') return false
+  if (s.phase === 'showing') {
+    const display = document.getElementById('simon-display')
+    if (!display) return false
+    display.textContent = s.showing >= 0 ? String(s.sequence[s.showing]) : ''
+    return true
+  }
+  const grid = document.getElementById('simon-grid')
+  if (!grid) return false
+  const label = document.getElementById('simon-label')
+  if (label) label.textContent = `Nivel ${s.level}`
+  return true
+}
+
+function patchBrainExerciseUI() {
+  const id = brainState.exercise
+  if (!id) return false
+  if (id === 'corsi') return patchCorsiUI()
+  if (id === 'memory') return patchMemoryUI()
+  if (id === 'simon') return patchSimonUI()
+  if (id === 'symbols' && brainState.symbols.active && !brainState.symbols.finished) {
+    const timer = document.getElementById('symbols-timer')
+    if (!timer) return false
+    const s = brainState.symbols
+    timer.textContent = `⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}`
+    return true
+  }
+  if (id === 'math' && brainState.math.active && brainState.math.timeLeft > 0) {
+    const timer = document.getElementById('math-timer')
+    const score = document.getElementById('math-score')
+    if (!timer) return false
+    timer.textContent = `${brainState.math.timeLeft}s`
+    if (score) score.textContent = `${brainState.math.score} ✓`
+    return true
+  }
+  return false
+}
+
+function genSequence(difficulty) {
+  return pickSequence(difficulty)
 }
 
 function renderSequenceGame() {
@@ -1741,7 +1684,13 @@ window.seqAnswer = function(n) {
 function renderTriviaGame() {
   const t = brainState.trivia
   if (t.loading) return brainWrapper(`<div class="text-center py-8"><p class="text-muted">Cargando preguntas…</p></div>`)
-  if (!t.questions?.length) return brainWrapper(`<div class="text-center py-8"><p class="text-muted mb-4">Sin conexión. Intenta más tarde.</p><button onclick="brainState.exercise=null;render()" class="btn-secondary">Volver</button></div>`)
+  if (!t.questions?.length) return brainWrapper(`${emptyState({
+    icon: '📡',
+    title: 'Sin conexión',
+    desc: 'La trivia en vivo necesita internet. Prueba otro ejercicio o vuelve cuando tengas red.',
+    ctaLabel: 'Volver a gimnasia',
+    ctaOnclick: "brainState.exercise=null;render()",
+  })}`)
   if (t.finished) return brainWrapper(`<div class="text-center">
     <p class="text-2xl mb-2">❓</p><p class="font-semibold mb-6">${t.score}/${t.total} correctas</p>
     <button onclick="finishBrain(${t.score * 30})" class="btn-primary">Terminar (+${Math.floor(DIFFICULTIES[t.difficulty].xp * (t.score / t.total))} XP)</button></div>`)
@@ -1820,29 +1769,141 @@ window.submitAnagram = function() {
 function renderLogicGame() {
   const l = brainState.logic
   if (l.finished) return brainWrapper(`<div class="text-center">
-    <p class="text-2xl mb-2">🧩</p><p class="font-semibold mb-6">${l.score}/${l.puzzles.length} acertijos</p>
+    <p class="text-2xl mb-2">🧩</p><p class="font-semibold mb-2">${l.score}/${l.puzzles.length} acertijos</p>
+    <p class="text-sm text-muted mb-6">Razonamiento con explicación — no adivinanza a ciegas.</p>
     ${brainFinishBtn(l.score, l.puzzles.length, 'logic', 'Terminar')}</div>`)
   const p = l.puzzles[l.index]
+  const answered = l.selected !== null
+  const correct = answered && l.selected === p.answer
   return brainWrapper(`<div>
     <p class="text-sm text-muted mb-4">Acertijo ${l.index + 1}/${l.puzzles.length} · ${l.score} aciertos</p>
-    <p class="font-medium text-main mb-6">${p.q}</p>
+    <p class="font-medium text-main mb-6 leading-relaxed">${p.q}</p>
     <div class="space-y-2">
-      ${p.options.map((opt, i) => `<button onclick="logicAnswer(${i})" ${l.selected !== null ? 'disabled' : ''}
-        class="w-full p-3 rounded-xl text-left text-main ${l.selected === i ? (i === p.answer ? 'border-2' : 'border-2 border-red-400') : ''}" style="background:var(--secondary-bg);${l.selected === i && i === p.answer ? 'border-color:var(--primary)' : ''}">${opt}</button>`).join('')}
-    </div></div>`)
+      ${p.options.map((opt, i) => {
+        let cls = 'logic-option w-full p-3 rounded-xl text-left text-main'
+        if (answered && i === p.answer) cls += ' logic-option--correct'
+        else if (answered && l.selected === i) cls += ' logic-option--wrong'
+        return `<button onclick="logicAnswer(${i})" ${answered ? 'disabled' : ''} class="${cls}">${opt}</button>`
+      }).join('')}
+    </div>
+    ${answered ? `<aside class="logic-explain card-static mt-4">
+      <p class="logic-explain-label">${correct ? '✓ Correcto' : '✗ Incorrecto'} — Por qué</p>
+      <p class="logic-explain-text">${p.explain || 'La respuesta sigue la lógica del enunciado. Relee las premisas una por una.'}</p>
+      <button onclick="logicNext()" class="btn-primary w-full mt-3">${l.index + 1 >= l.puzzles.length ? 'Ver resultado' : 'Siguiente acertijo →'}</button>
+    </aside>` : ''}
+  </div>`)
 }
 
 window.logicAnswer = function(i) {
   const l = brainState.logic
+  if (l.selected !== null) return
   l.selected = i
   const p = l.puzzles[l.index]
   if (i === p.answer) { l.score++; playTone(523) } else playTone(200)
   render()
-  setTimeout(() => {
-    l.selected = null; l.index++
-    if (l.index >= l.puzzles.length) l.finished = true
-    render()
-  }, 800)
+}
+
+window.logicNext = function() {
+  const l = brainState.logic
+  l.selected = null
+  l.index++
+  if (l.index >= l.puzzles.length) l.finished = true
+  render()
+}
+
+window.openLesson = function(id) {
+  if (!isLessonUnlocked(id)) {
+    showToast('Esta lección se desbloquea semana a semana en el catálogo', 0, 'mental')
+    return
+  }
+  brainState.activeLesson = id
+  brainState.brainView = 'academy'
+  render()
+}
+
+window.closeLesson = function() {
+  brainState.activeLesson = null
+  render()
+}
+
+window.completeLesson = function(id) {
+  const wasDone = getCompletedLessons().includes(id)
+  markLessonComplete(id)
+  if (!wasDone) {
+    awardXp('mental', 30, 'Lección de academia')
+    recordActivity('brain')
+  }
+  const quiz = getLessonQuiz(id)
+  brainState.lessonFlow = {
+    id,
+    phase: quiz ? 'quiz' : 'bridge',
+    quizIndex: 0,
+    quizScore: 0,
+  }
+  render()
+}
+
+window.answerLessonQuiz = function(choice) {
+  const flow = brainState.lessonFlow
+  if (!flow || flow.phase !== 'quiz') return
+  const quiz = getLessonQuiz(flow.id)
+  if (!quiz) { flow.phase = 'bridge'; render(); return }
+  const q = quiz[flow.quizIndex]
+  if (choice === q.correct) {
+    flow.quizScore++
+    playSuccess()
+  } else playTone(220, 0.2)
+  flow.quizIndex++
+  if (flow.quizIndex >= quiz.length) flow.phase = 'bridge'
+  render()
+}
+
+window.finishLessonFlow = function(skipReflect = false) {
+  const flow = brainState.lessonFlow
+  if (!flow) return
+  const reflect = skipReflect ? '' : document.getElementById('lesson-flow-reflect')?.value?.trim()
+  if (reflect && reflect.length >= 15) {
+    const lesson = LESSONS.find(l => l.id === flow.id)
+    const entries = getItem('reflections', [])
+    entries.unshift({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      text: reflect,
+      prompt: lesson?.reflect || 'Reflexión de academia',
+      difficulty: 'medio',
+      source: 'academy',
+      quizScore: flow.quizScore,
+    })
+    setItem('reflections', entries)
+    updateStats({ reflections: getStats().reflections + 1 })
+    processPlanAwards(checkPlanTask('reflection'))
+  }
+  brainState.lessonFlow = null
+  brainState.activeLesson = null
+  render()
+}
+
+window.goToLesson = function(id) {
+  location.hash = '/gimnasia'
+  brainState.brainView = 'academy'
+  brainState.activeLesson = id
+  brainState.lessonFlow = null
+  render()
+}
+
+window.goToLab = function(id) {
+  location.hash = '/gimnasia'
+  brainState.brainView = 'lab'
+  brainState.activeLesson = null
+  brainState.lessonFlow = null
+  startBrain(id)
+}
+
+window.startLessonPractice = function(exId) {
+  brainState.lessonFlow = null
+  brainState.activeLesson = null
+  brainState.brainView = 'lab'
+  startBrain(exId)
 }
 
 function renderMemoryGame() {
@@ -1857,11 +1918,11 @@ function renderMemoryGame() {
     ${brainFinishBtn(m.score, m.level, 'memory', `Terminar (+${DIFFICULTIES[brainState.difficulty].xp} XP)`)}</div>`)
   const status = { showing: 'Observa...', input: 'Tu turno', success: '¡Correcto!' }[m.phase] || ''
   const colors = COLORS.slice(0, cfg.colors)
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Nv. ${m.level} · ${m.score} pts · ${status}</p>
-    <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
-      ${colors.map((color, i) => `<button onclick="memoryClick(${i})" ${m.phase !== 'input' ? 'disabled' : ''}
-        class="w-20 h-20 rounded-2xl" style="background:${color};opacity:${m.highlight === i ? 1 : 0.6};transform:scale(${m.highlight === i ? 1.1 : 1})"></button>`).join('')}
+  return brainWrapper(`<div class="brain-game-panel text-center">
+    <p id="memory-status" class="brain-game-label">Nv. ${m.level} · ${m.score} pts · ${status}</p>
+    <div id="memory-grid" class="brain-grid brain-grid--3" role="group" aria-label="Memoria de colores">
+      ${colors.map((color, i) => `<button type="button" id="memory-cell-${i}" onclick="memoryClick(${i})" ${m.phase !== 'input' ? 'disabled' : ''}
+        class="brain-grid-cell memory-cell ${m.highlight === i ? 'is-lit' : ''}" style="--cell-color:${color}" aria-label="Color ${i + 1}"></button>`).join('')}
     </div></div>`)
 }
 
@@ -1901,12 +1962,12 @@ function renderSimonGame() {
   if (s.phase === 'failed') return brainWrapper(`<div class="text-center">
     <p class="font-semibold mb-6">Nivel ${s.level} · ${s.score} pts</p>
     ${brainFinishBtn(s.score, s.level, 'simon', 'Terminar')}</div>`)
-  if (s.phase === 'showing') return brainWrapper(`<div class="text-center">
-    <p class="font-display text-5xl font-bold text-main">${s.showing >= 0 ? s.sequence[s.showing] : ''}</p></div>`)
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Nivel ${s.level}</p>
-    <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
-      ${[1,2,3,4,5,6,7,8,9].map(n => `<button onclick="simonClick(${n})" class="w-16 h-16 rounded-xl text-xl font-bold text-main" style="background:var(--secondary-bg)">${n}</button>`).join('')}
+  if (s.phase === 'showing') return brainWrapper(`<div class="brain-game-panel text-center">
+    <p id="simon-display" class="brain-game-display">${s.showing >= 0 ? s.sequence[s.showing] : ''}</p></div>`)
+  return brainWrapper(`<div class="brain-game-panel text-center">
+    <p id="simon-label" class="brain-game-label">Nivel ${s.level}</p>
+    <div id="simon-grid" class="brain-grid brain-grid--3" role="group" aria-label="Secuencia numérica">
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" onclick="simonClick(${n})" class="brain-grid-cell simon-cell">${n}</button>`).join('')}
     </div></div>`)
 }
 
@@ -1947,7 +2008,7 @@ function renderMathGame() {
     <p class="text-2xl mb-2">⏱️</p><p class="font-semibold mb-6">${m.score} aciertos = ${m.score * 10} pts</p>
     ${brainFinishBtn(m.score, 10, 'math', 'Terminar')}</div>`)
   return brainWrapper(`<div class="text-center">
-    <div class="flex justify-between text-sm text-muted mb-6"><span>${m.timeLeft}s</span><span>${m.score} ✓</span></div>
+    <div class="flex justify-between text-sm text-muted mb-6"><span id="math-timer">${m.timeLeft}s</span><span id="math-score">${m.score} ✓</span></div>
     <p class="font-display text-4xl font-bold text-main mb-6">${m.problem.a} ${m.problem.op} ${m.problem.b} = ?</p>
     <form onsubmit="mathSubmit(event)">
       <input type="number" id="math-answer" value="${m.answer}" oninput="brainState.math.answer=this.value" class="input-field text-center text-2xl mb-4" autofocus>
@@ -1964,8 +2025,8 @@ window.mathStart = function() {
   if (mathTimer) clearInterval(mathTimer)
   mathTimer = setInterval(() => {
     brainState.math.timeLeft--
-    if (brainState.math.timeLeft <= 0) { clearInterval(mathTimer); mathTimer = null }
-    render()
+    if (brainState.math.timeLeft <= 0) { clearInterval(mathTimer); mathTimer = null; render() }
+    else if (!patchLiveUI('/gimnasia')) render()
   }, 1000)
   render()
 }
@@ -2018,41 +2079,112 @@ window.wordSelect = function(word) {
 // --- Meditation ---
 function clearMedTimers() { medTimers.forEach(t => clearInterval(t)); medTimers = [] }
 
+function stopMeditationSession() {
+  clearMedTimers()
+  stopAmbientSound()
+  medState.ambientPreview = false
+}
+
+function medAmbientVol(s) {
+  const v = Number(s?.medAmbientVolume ?? 0.45)
+  if (v <= 0) return 0
+  return Math.max(0.2, Math.min(1, v))
+}
+
+function medAmbientPanelHTML(compact = false) {
+  const s = getSettings()
+  const vol = Math.round((s.medAmbientVolume ?? 0.45) * 100)
+  const current = s.medAmbient || 'rain'
+  const isSilent = current === 'off'
+  const playing = isAmbientPlaying()
+  return `<div class="med-ambient-panel ${compact ? 'med-ambient-panel--compact' : ''}">
+    <div class="med-ambient-head">
+      <span class="med-ambient-title">${compact ? '🎧 Ambiente' : 'Sonido ambiente'}</span>
+      ${playing ? '<span class="med-ambient-live">● Sonando</span>' : isSilent ? '<span class="med-ambient-muted">Silencio</span>' : ''}
+    </div>
+    <div class="med-ambient-types">
+      ${AMBIENT_PRESETS.map(p => `
+        <button type="button" onclick="setMedAmbient('${p.id}')" class="med-ambient-btn ${current === p.id ? 'active' : ''}" title="${p.label}" aria-pressed="${current === p.id}">
+          <span>${p.icon}</span><span class="med-ambient-btn-label">${p.label}</span>
+        </button>`).join('')}
+    </div>
+    <label class="med-ambient-slider ${isSilent ? 'med-ambient-slider--off' : ''}">
+      <span class="text-xs text-muted">Volumen</span>
+      <input type="range" min="0" max="100" value="${isSilent ? 0 : vol}" ${isSilent ? 'disabled' : ''}
+        oninput="setMedAmbientVol(Number(this.value)/100)" class="med-ambient-range" aria-label="Volumen ambiente">
+      <span id="med-ambient-vol-pct" class="text-xs text-muted">${isSilent ? '—' : `${vol}%`}</span>
+    </label>
+    ${isSilent ? '<p class="med-ambient-hint">Silencio activo. Elige un sonido arriba para escuchar.</p>' : ''}
+    ${compact ? '' : `<button type="button" onclick="toggleAmbientPreview()" class="btn-secondary w-full text-sm mt-2">
+      ${playing ? '⏹ Detener sonido' : '▶ Probar sonido'}
+    </button>`}
+  </div>`
+}
+
 const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
-function startMeditation(id) {
-  clearMedTimers()
+function getMeditationMeta(id) {
+  return MEDITATIONS.find(m => m.id === id)
+}
+
+function getMeditationSteps(id) {
+  const meta = getMeditationMeta(id)
+  if (!meta || meta.type !== 'steps' || !meta.stepsKey) return []
+  return MEDITATION_STEPS[meta.stepsKey] || []
+}
+
+async function startMeditation(id) {
+  stopMeditationSession()
+  await resumeAudioContext()
   const diff = medState.difficulty || 'medio'
   const duration = MED_DURATIONS[diff]
-  medState = { session: id, difficulty: diff, completed: false, completedMin: duration, phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0 }
+  const meta = getMeditationMeta(id)
+  medState = {
+    session: id, difficulty: diff, completed: false, completedMin: duration,
+    phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0,
+    steps: getMeditationSteps(id),
+    sessionName: meta?.name || 'Meditación',
+  }
   const total = duration * 60
+  const settings = getSettings()
+  if (settings.sound) await playSingingBowl('start')
+  if (settings.medAmbient && settings.medAmbient !== 'off') {
+    await startAmbientSound(settings.medAmbient, medAmbientVol(settings))
+  } else {
+    stopAmbientSound()
+  }
 
   if (id === 'breathing') {
     medTimers.push(setInterval(() => {
       medState.phase = medState.phase === 'inhale' ? 'hold' : medState.phase === 'hold' ? 'exhale' : 'inhale'
       playTone(medState.phase === 'inhale' ? 330 : 220, 0.15)
-      render()
+      if (!patchLiveUI('/meditacion')) render()
     }, diff === 'experto' ? 3000 : 4000))
   }
 
   medTimers.push(setInterval(() => {
     medState.elapsed++
-    if (id === 'body-scan') {
+    if (medState.steps?.length) {
       medState.stepElapsed++
-      const step = BODY_SCAN_STEPS[medState.step]
-      if (step && medState.stepElapsed >= step.duration && medState.step < BODY_SCAN_STEPS.length - 1) {
+      const step = medState.steps[medState.step]
+      if (step && medState.stepElapsed >= step.duration && medState.step < medState.steps.length - 1) {
         medState.step++; medState.stepElapsed = 0
       }
     }
     if (medState.elapsed >= total) {
       clearMedTimers()
+      stopAmbientSound()
+      if (getSettings().sound) playSingingBowl('end')
       recordActivity('meditation')
       const xp = DIFFICULTIES[diff].xp
       awardXp('mindfulness', xp, 'Meditación completada')
       updateStats({ meditationMinutes: getStats().meditationMinutes + duration })
+      processPlanAwards(checkPlanTask('meditation'))
       medState.completed = true
+      render()
+    } else if (!patchLiveUI('/meditacion')) {
+      render()
     }
-    render()
   }, 1000))
   render()
 }
@@ -2062,7 +2194,7 @@ function renderMeditation() {
     <p class="text-4xl mb-4">✨</p><h2 class="font-display text-2xl font-bold text-main mb-2">Sesión completada</h2>
     <p class="text-muted mb-2">${medState.completedMin} min · ${DIFFICULTIES[medState.difficulty].label}</p>
     <p class="font-bold text-main mb-6">+${DIFFICULTIES[medState.difficulty].xp} XP</p>
-    <button onclick="clearMedTimers();medState.session=null;render()" class="btn-primary">Continuar</button></div></div>`
+    <button onclick="stopMeditationSession();medState.session=null;medState.completed=false;render()" class="btn-primary">Continuar</button></div></div>`
 
   if (medState.session) {
     const duration = MED_DURATIONS[medState.difficulty]
@@ -2074,22 +2206,24 @@ function renderMeditation() {
     let content
     if (medState.session === 'breathing') {
       const scale = medState.phase === 'inhale' ? 1.2 : medState.phase === 'exhale' ? 0.8 : 1.1
-      content = `<p class="text-sm text-muted mb-8">${mins}:${secs}</p>
+      content = `<p id="med-timer" class="text-sm text-muted mb-8">${mins}:${secs}</p>
         <div class="relative w-48 h-48 mx-auto mb-8">
-          <div class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
-          <div class="absolute inset-0 flex items-center justify-center"><span class="font-display text-2xl meditation-text">${phase[medState.phase]}</span></div>
+          <div id="med-breathe-circle" class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
+          <div class="absolute inset-0 flex items-center justify-center"><span id="med-phase-text" class="font-display text-2xl meditation-text">${phase[medState.phase]}</span></div>
         </div>`
     } else {
-      const step = BODY_SCAN_STEPS[medState.step]
-      content = `<p class="text-sm text-muted mb-4">${mins}:${secs} · Paso ${medState.step + 1}/${BODY_SCAN_STEPS.length}</p>
-        <div class="progress-track w-full mb-8" style="height:0.5rem"><div class="progress-fill h-full" style="width:${(medState.elapsed/total)*100}%"></div></div>
-        <p class="font-display text-lg text-main">${step?.text || ''}</p>`
+      const steps = medState.steps || []
+      const step = steps[medState.step]
+      content = `<p id="med-timer" class="text-sm text-muted mb-4">${mins}:${secs} · Paso ${medState.step + 1}/${steps.length}</p>
+        <div class="progress-track w-full mb-8" style="height:0.5rem"><div id="med-progress-fill" class="progress-fill h-full" style="width:${(medState.elapsed/total)*100}%"></div></div>
+        <p id="med-step-text" class="font-display text-lg text-main">${step?.text || ''}</p>`
     }
-    return `<div class="animate-fade-in page-shell page-wide page-meditation">
+    return `<div class="page-shell page-wide page-meditation focus-session">
+      <button onclick="stopMeditationSession();medState.session=null;render()" class="btn-secondary focus-exit">← Salir</button>
       <div class="med-active-grid">
-        <div class="routine-active-side">
-          <button onclick="clearMedTimers();medState.session=null;render()" class="btn-ghost mb-4">← Volver</button>
-          <p class="text-sm text-muted">${medState.session === 'breathing' ? 'Respiración consciente' : 'Escaneo corporal'}</p>
+        <div class="routine-active-side med-session-side">
+          <p class="text-sm text-muted mb-4">${esc(medState.sessionName || '')}</p>
+          ${medAmbientPanelHTML(true)}
         </div>
         <div class="card exercise-stage text-center">${content}</div>
       </div>
@@ -2097,28 +2231,104 @@ function renderMeditation() {
   }
 
   return `<div class="animate-fade-in page-shell page-wide page-meditation">
+    <div class="ds-page ds-page--full">
+    ${pageHero('Calma', 'Meditación guiada · respiración y presencia', `${MED_DURATIONS[medState.difficulty]} min`, 'duración')}
     ${sunsetBannerHTML(dailyApis?.sun)}
     <div class="page-dashboard">
       <div class="span-full">
-        <h1 class="font-display text-3xl font-bold text-main mb-2">Meditación</h1>
-        <p class="text-muted mb-4">Duración según dificultad: 3-12 min</p>
         ${difficultyPicker(medState.difficulty, 'setMedDiff')}
       </div>
+      <div class="span-full">${medAmbientPanelHTML()}</div>
       <div class="med-sessions-grid span-full">
-      ${[{ id: 'breathing', name: 'Respiración Consciente', icon: '🌬️' }, { id: 'body-scan', name: 'Escaneo Corporal', icon: '🫁' }].map(s =>
+      ${MEDITATIONS.map(s =>
         `<button onclick="startMeditation('${s.id}')" class="card text-left w-full cursor-pointer">
           <div class="flex items-center gap-4">
             <span class="text-3xl">${s.icon}</span>
             <div class="flex-1"><h3 class="font-semibold text-main">${s.name}</h3>
-            <p class="text-sm text-muted">${MED_DURATIONS[medState.difficulty]} min · +${DIFFICULTIES[medState.difficulty].xp} XP</p></div>
+            <p class="text-sm text-muted">${s.desc}</p>
+            ${s.neuro ? `<p class="text-xs mt-1" style="color:var(--primary)">🧠 ${s.neuro}</p>` : ''}
+            <p class="text-xs text-muted mt-1">${MED_DURATIONS[medState.difficulty]} min · +${DIFFICULTIES[medState.difficulty].xp} XP</p></div>
           </div></button>`
       ).join('')}
       </div>
+    </div>
     </div>
   </div>`
 }
 
 window.setMedDiff = (d) => { medState.difficulty = guardDifficulty(d); render() }
+
+window.setMedAmbient = async function(type) {
+  const s = getSettings()
+  s.medAmbient = type
+  saveSettings(s)
+  await resumeAudioContext()
+  if (type === 'off') {
+    stopAmbientSound()
+    medState.ambientPreview = false
+  } else {
+    const vol = medAmbientVol(s) || 0.45
+    s.medAmbientVolume = vol
+    saveSettings(s)
+    const ok = await startAmbientSound(type, vol)
+    medState.ambientPreview = ok
+    if (!ok) showToast('No se pudo reproducir el sonido. Toca de nuevo.', 0, 'mindfulness')
+  }
+  render()
+}
+
+window.setMedAmbientVol = async function(v) {
+  const vol = Math.max(0, Math.min(1, Number(v) || 0))
+  const s = getSettings()
+  s.medAmbientVolume = vol
+  await resumeAudioContext()
+
+  if (vol <= 0) {
+    s.medAmbient = 'off'
+    saveSettings(s)
+    stopAmbientSound()
+    medState.ambientPreview = false
+    render()
+    return
+  }
+
+  if (!s.medAmbient || s.medAmbient === 'off') {
+    s.medAmbient = 'rain'
+  }
+  saveSettings(s)
+
+  if (isAmbientPlaying()) {
+    setAmbientVolume(vol)
+  } else {
+    await startAmbientSound(s.medAmbient, vol)
+    medState.ambientPreview = true
+  }
+
+  const label = document.getElementById('med-ambient-vol-pct')
+  if (label) label.textContent = `${Math.round(vol * 100)}%`
+  const live = document.querySelector('.med-ambient-live')
+  if (live) live.style.display = isAmbientPlaying() ? '' : 'none'
+}
+
+window.toggleAmbientPreview = async function() {
+  await resumeAudioContext()
+  if (isAmbientPlaying()) {
+    stopAmbientSound()
+    medState.ambientPreview = false
+  } else {
+    const s = getSettings()
+    if (!s.medAmbient || s.medAmbient === 'off') {
+      s.medAmbient = 'rain'
+      s.medAmbientVolume = medAmbientVol(s) || 0.45
+      saveSettings(s)
+    }
+    if (getSettings().sound) await playSingingBowl('start')
+    const ok = await startAmbientSound(s.medAmbient, medAmbientVol(s))
+    medState.ambientPreview = ok
+    if (!ok) showToast('No se pudo reproducir el sonido. Toca de nuevo.', 0, 'mindfulness')
+  }
+  render()
+}
 
 // --- Mejora / Habits ---
 function renderMejora() {
@@ -2128,11 +2338,17 @@ function renderMejora() {
 
   let tabContent
   if (mejoraTab === 'habits') {
-    tabContent = `<div class="flex justify-between items-center mb-4">
-      <h3 class="font-display text-lg font-semibold text-main">Hábitos de hoy</h3>
-      <button onclick="editingHabits=true;render()" class="btn-ghost text-sm">✏️ Editar</button>
+    tabContent = `<div class="ds-toolbar">
+      <h3 class="ds-toolbar-title">Hábitos de hoy</h3>
+      <button onclick="editingHabits=true;render()" class="btn-secondary text-sm">✏️ Editar</button>
     </div>
-    ${editingHabits ? renderHabitEditor() : `<div class="habits-grid">
+    ${editingHabits ? renderHabitEditor() : !habits.length ? emptyState({
+      iconKey: 'habit',
+      title: 'Sin hábitos activos',
+      desc: 'Elige plantillas sugeridas o crea los tuyos para empezar a sumar XP.',
+      ctaLabel: 'Agregar hábitos',
+      ctaOnclick: 'editingHabits=true;render()',
+    }) : `<div class="habits-grid">
       ${habits.map(h => {
         const hp = getHabitProgress(h.id)
         const hLevel = getLevel(hp.xp)
@@ -2149,35 +2365,32 @@ function renderMejora() {
               <button onclick="adjustHabit('${h.id}',1)">+</button>
             </div>`
           : `<button onclick="toggleHabit('${h.id}')" class="habit-check ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</button>`
-        return `<div class="habit-item w-full p-4 rounded-xl ${isDone ? 'done' : ''}">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">${h.icon}</span>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-medium text-main ${isDone ? 'line-through' : ''}">${esc(h.name)}</span>
-                <span class="text-xs px-2 py-0.5 rounded-full" style="background:${cat.color}22;color:${cat.color}">${cat.icon}</span>
-              </div>
-              <div class="flex items-center gap-3 mt-1 text-xs text-muted flex-wrap">
-                <span>Nv. ${hLevel}</span><span>${diffStars}</span>
-                ${hp.streak > 0 ? `<span>🔥 ${hp.streak}</span>` : ''}
-                <span>+${h.xp} XP</span>
-              </div>
-              ${isCounter ? `<div class="w-full rounded-full mt-2" style="height:6px;background:var(--secondary-bg)">
-                <div class="rounded-full transition-all" style="height:6px;width:${progressPct}%;background:var(--primary)"></div>
-              </div>` : ''}
+        return `<div class="habit-card ${isDone ? 'is-done' : ''}">
+          <div class="habit-card-icon" aria-hidden="true">${h.icon}</div>
+          <div class="habit-card-body">
+            <div class="habit-card-title-row">
+              <span class="habit-card-title ${isDone ? 'is-done' : ''}">${esc(h.name)}</span>
+              <span class="habit-card-cat" style="--cat-color:${cat.color}">${cat.icon} ${cat.name}</span>
             </div>
-            ${control}
+            <div class="habit-card-meta">
+              <span>Nv. ${hLevel}</span>
+              <span class="habit-card-stars">${diffStars}</span>
+              ${hp.streak > 0 ? `<span>🔥 ${hp.streak}</span>` : ''}
+              <span>+${h.xp} XP</span>
+            </div>
+            ${isCounter ? `<div class="habit-card-progress">
+              <div class="habit-card-progress-fill" style="width:${progressPct}%"></div>
+            </div>` : ''}
           </div>
+          <div class="habit-card-action">${control}</div>
         </div>`
       }).join('')}
     </div>
     <p class="text-sm text-muted mt-4 text-center">${doneCount}/${habits.length} completados hoy</p>`}`
   } else if (mejoraTab === 'diario') {
     const diff = getSettings().defaultDifficulty
-    const prompts = REFLECTION_PROMPTS[diff] || REFLECTION_PROMPTS.medio
-    const prompt = prompts[promptIndex % prompts.length]
+    const prompt = getReflectionPrompt(diff)
     const entries = getItem('reflections', [])
-    const dailyQuote = dailyApis?.quote
     const weekly = getItem('weeklyReview', null)
     const monthly = getItem('monthlyReview', null)
 
@@ -2192,16 +2405,9 @@ function renderMejora() {
     if (diarioSection === 'daily') {
       sectionContent = `${moodPickerHTML()}
         ${adviceCardHTML(dailyApis?.advice)}
-        ${dailyQuote ? `<div class="p-3 rounded-xl mb-4" style="background:var(--secondary-bg)">
-          <p class="text-xs text-muted mb-1">💬 Inspiración</p>
-          <p class="text-sm italic text-main">"${esc(dailyQuote.content)}"</p>
-          <p class="text-xs text-muted mt-1">— ${esc(dailyQuote.author)}</p>
-        </div>` : ''}
-        ${getHabits().some(h => h.id === 'read') ? readingCardHTML(dailyApis?.reading) : ''}
+        ${readingCardHTML(dailyApis?.reading)}
         <h4 class="font-semibold text-main mb-2">Reflexión del día</h4>
-        <div class="flex gap-2 mb-3 flex-wrap">${Object.entries(DIFFICULTIES).map(([k,d]) =>
-          `<button onclick="setReflectDiff('${k}')" class="px-2 py-1 rounded-lg text-xs ${diff===k?'btn-primary':'btn-secondary'}">${d.icon}</button>`
-        ).join('')}</div>
+        ${segmentBar(Object.entries(DIFFICULTIES).map(([k, d]) => ({ id: k, label: d.label, icon: d.icon, locked: d.locked, lockTitle: d.lockTitle })), diff, 'setReflectDiff')}
         <p class="text-muted text-sm mb-3 italic">"${prompt}"</p>
         <textarea id="reflection-text" class="input-field min-h-28 resize-none mb-3" placeholder="Escribe libremente..."></textarea>
         <button onclick="saveReflection()" class="btn-primary w-full">Guardar entrada (+${DIFFICULTIES[diff].xp} XP)</button>`
@@ -2235,7 +2441,7 @@ function renderMejora() {
           }).join('')}
         </div>`
         : emptyState({
-          icon: '📝',
+          iconKey: 'spark',
           title: 'Sin entradas aún',
           desc: 'Escribe tu primera reflexión en la pestaña Hoy.',
           ctaLabel: 'Ir a Hoy',
@@ -2243,15 +2449,13 @@ function renderMejora() {
         })
     }
 
-    tabContent = `<div class="diario-layout">
-      <div class="diario-nav-col">
-        <div class="flex flex-col gap-2">
-          ${sectionNav.map(s =>
-            `<button onclick="diarioSection='${s.id}';render()" class="px-3 py-2 rounded-xl text-xs font-medium text-left ${diarioSection===s.id?'btn-primary':'btn-secondary'}">${s.i} ${s.l}</button>`
-          ).join('')}
-        </div>
-      </div>
-      <div class="diario-content-col">${sectionContent}</div>
+    tabContent = `<div class="ds-diario">
+      <div class="ds-diario-nav">${subTabBar(
+        sectionNav.map(s => ({ id: s.id, label: s.l, icon: s.i })),
+        diarioSection,
+        'diarioSection',
+      )}</div>
+      <div class="ds-diario-body">${sectionContent}</div>
     </div>`
   }
 
@@ -2260,17 +2464,20 @@ function renderMejora() {
     { id: 'diario', l: 'Diario', i: '📝' },
   ]
 
+  const habitsChart = mejoraTab === 'habits' && !editingHabits && getHabits().length
+    ? `<div class="mejora-week-chart">${habitChartHTML()}</div>`
+    : ''
+
+  const habitsBody = mejoraTab === 'habits' && habitsChart
+    ? `<div class="mejora-habits-layout">${habitsChart}<div class="mejora-habits-main">${tabContent}</div></div>`
+    : tabContent
+
   return `<div class="animate-fade-in page-shell page-wide page-mejora">
-    <p class="content-lead">Cada hábito tiene nivel, dificultad y racha propia</p>
-    <div class="mejora-dashboard page-dashboard">
-      <div class="mejora-chart">${habitChartHTML()}</div>
-      <div class="mejora-main">
-        <div class="flex gap-2 mb-4 flex-wrap">
-          ${tabs.map(t =>
-            `<button onclick="mejoraTab='${t.id}';editingHabits=false;render()" class="flex-1 py-3 rounded-xl text-sm font-medium ${mejoraTab===t.id?'btn-primary':'btn-secondary'}" style="min-width:5rem">${t.i} ${t.l}</button>`
-          ).join('')}
-        </div>
-        <div class="card">${tabContent}</div>
+    <div class="ds-page ds-page--full">
+      ${tabBar(tabs.map(t => ({ id: t.id, label: t.l, icon: t.i })), mejoraTab, 'mejoraTab', 'editingHabits=false;')}
+      <div class="mejora-tab-panel ds-panel ds-panel--flat">
+        ${mejoraTab === 'habits' ? pageLead('Marca cada hábito al completarlo · XP y racha por hábito') : pageLead('Reflexión, ánimo y revisiones semanales')}
+        ${habitsBody}
       </div>
     </div>
   </div>`
@@ -2278,7 +2485,20 @@ function renderMejora() {
 
 function renderHabitEditor() {
   const habits = getHabits()
+  const existingIds = new Set(habits.map(h => h.id))
+  const suggestions = HABIT_TEMPLATES.filter(t => !existingIds.has(t.id) && !existingIds.has(t.id.replace('tpl_', '')))
   return `<div class="space-y-3">
+    ${suggestions.length ? `<div class="mb-4">
+      <p class="text-sm font-medium text-main mb-2">Plantillas sugeridas</p>
+      <div class="flex flex-wrap gap-2">
+        ${suggestions.slice(0, 12).map(t => {
+          const cat = HABIT_CATEGORIES[t.category] || HABIT_CATEGORIES.salud
+          return `<button type="button" onclick="addHabitTemplate('${t.id}')" class="px-3 py-2 rounded-xl text-xs text-left" style="background:${cat.color}18;border:1px solid ${cat.color}44">
+            ${t.icon} ${esc(t.name)}
+          </button>`
+        }).join('')}
+      </div>
+    </div>` : ''}
     ${habits.map((h, i) => `<div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
       <div class="flex gap-2 mb-2">
         <input value="${esc(h.icon)}" onchange="updateHabitField(${i},'icon',this.value)" class="input-field w-14 text-center text-xl">
@@ -2317,6 +2537,15 @@ window.addHabit = () => {
   h.push({ id: 'custom_' + Date.now(), name: 'Nuevo hábito', icon: '⭐', category: 'productividad', difficulty: 2, xp: 25, type: 'check', target: 1, unit: 'vez' })
   setItem('habits', h); render()
 }
+window.addHabitTemplate = (tplId) => {
+  const tpl = HABIT_TEMPLATES.find(t => t.id === tplId)
+  if (!tpl) return
+  const h = getHabits()
+  if (h.some(x => x.id === tpl.id || x.name === tpl.name)) return
+  h.push({ ...tpl, id: tpl.id.replace('tpl_', '') || tpl.id })
+  setItem('habits', h)
+  render()
+}
 window.adjustHabit = function(id, delta) {
   const habit = getHabits().find(h => h.id === id)
   if (!habit) return
@@ -2336,6 +2565,8 @@ window.toggleHabit = function(id) {
   else {
     const result = completeHabit(habit)
     if (result?.completed) {
+      haptic(20)
+      playHabitDone()
       awardXp('discipline', result.xp, result.name)
       processPlanAwards(checkPlanTask('habit'))
     }
@@ -2354,17 +2585,16 @@ window.saveReflection = function() {
   const text = document.getElementById('reflection-text')?.value?.trim()
   if (!text || text.length < 15) { alert('Escribe al menos 15 caracteres.'); return }
   const diff = getSettings().defaultDifficulty
-  const prompts = REFLECTION_PROMPTS[diff]
-  const prompt = prompts[promptIndex % prompts.length]
+  const prompt = getReflectionPrompt(diff)
   const entries = getItem('reflections', [])
   const mood = getMood()
   entries.unshift({ id: Date.now(), date: new Date().toISOString(), prompt, text, difficulty: diff, mood: mood?.id || null })
   setItem('reflections', entries)
-  promptIndex++; setItem('promptIndex', promptIndex)
   recordActivity('reflection')
   awardXp('wisdom', DIFFICULTIES[diff].xp, 'Reflexión guardada')
   updateStats({ reflections: getStats().reflections + 1 })
   processPlanAwards(checkPlanTask('reflection'))
+  processPlanAwards(checkPlanTask('evening'))
   render()
 }
 window.saveWeeklyReview = function() {
@@ -2388,19 +2618,22 @@ function renderEnfoque() {
     ? ((25*60 - (pomodoro.minutes*60+pomodoro.seconds))/(25*60))*100
     : ((5*60 - (pomodoro.minutes*60+pomodoro.seconds))/(5*60))*100
   const sessions = getItem('pomodoroSessions', 0)
-  return `<div class="animate-fade-in page-shell page-wide page-enfoque">
-    <div class="enfoque-dashboard">
-      <div class="card text-center enfoque-timer">
+  const focusClass = pomodoro.active ? ' focus-active' : ''
+  return `<div class="animate-fade-in page-shell page-wide page-enfoque route-enter${focusClass}">
+    ${pomodoro.active ? '<button onclick="togglePomodoro()" class="btn-secondary focus-exit">← Salir</button>' : ''}
+    <div class="ds-page ds-page--full enfoque-dashboard">
+    ${pageHero('Enfoque profundo', 'Pomodoro · 25 min trabajo + 5 min descanso', sessions, 'sesiones')}
+      <div class="ds-panel text-center enfoque-timer">
         <p class="text-sm text-muted mb-4">${pomodoro.mode === 'work' ? '🍅 Enfoque (25 min)' : '☕ Descanso (5 min)'}</p>
         <div class="relative w-44 h-44 mx-auto mb-8">
           <svg class="w-full h-full" style="transform:rotate(-90deg)" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" stroke-width="6"/>
-            <circle cx="50" cy="50" r="45" fill="none" stroke="${pomodoro.mode==='work'?'#ff8c69':'var(--primary)'}" stroke-width="6" stroke-dasharray="${progress*2.83} 283" stroke-linecap="round"/>
+            <circle id="pomo-progress" cx="50" cy="50" r="45" fill="none" stroke="${pomodoro.mode==='work'?'#ff8c69':'var(--primary)'}" stroke-width="6" stroke-dasharray="${progress*2.83} 283" stroke-linecap="round"/>
           </svg>
-          <div class="absolute inset-0 flex items-center justify-center"><span class="font-display text-3xl font-bold text-main">${String(pomodoro.minutes).padStart(2,'0')}:${String(pomodoro.seconds).padStart(2,'0')}</span></div>
+          <div class="absolute inset-0 flex items-center justify-center"><span id="pomo-timer" class="font-display text-3xl font-bold text-main">${String(pomodoro.minutes).padStart(2,'0')}:${String(pomodoro.seconds).padStart(2,'0')}</span></div>
         </div>
         <div class="flex gap-3 justify-center">
-          <button onclick="togglePomodoro()" class="btn-primary">${pomodoro.active ? 'Pausar' : 'Iniciar'}</button>
+          <button id="pomo-toggle-btn" onclick="togglePomodoro()" class="btn-primary">${pomodoro.active ? 'Pausar' : 'Iniciar'}</button>
           <button onclick="resetPomodoro()" class="btn-secondary">Reiniciar</button>
         </div>
       </div>
@@ -2426,6 +2659,7 @@ window.togglePomodoro = function() {
           const s = getItem('pomodoroSessions', 0) + 1
           setItem('pomodoroSessions', s)
           awardXp('discipline', 20, 'Sesión de enfoque')
+          processPlanAwards(checkPlanTask('focus'))
         } else { pomodoro.mode = 'work'; pomodoro.minutes = 25 }
         pomodoro.seconds = 0
       } else if (pomodoro.seconds === 0) { pomodoro.minutes--; pomodoro.seconds = 59 }
@@ -2441,97 +2675,146 @@ window.resetPomodoro = function() {
 }
 
 // --- Settings ---
+function formatCloudTime(iso) {
+  if (!iso) return 'Nunca'
+  try {
+    return new Date(iso).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return '—'
+  }
+}
+
+function renderCloudAccountPanel() {
+  const cloud = getCloudStatus()
+  if (!cloud.configured) {
+    return `${pageLead('Sincroniza tu progreso entre dispositivos con Supabase.')}
+      ${settingGroup('Configuración pendiente', `
+        <p class="ds-setting-hint">Crea un proyecto en <a href="https://supabase.com" target="_blank" rel="noopener" class="text-link">supabase.com</a>, ejecuta <code>supabase/schema.sql</code> y copia <code>js/supabase-config.example.js</code> → <code>js/supabase-config.local.js</code> con tu URL y anon key.</p>
+      `)}`
+  }
+  if (cloud.signedIn) {
+    return `${pageLead('Tu progreso se guarda en la nube automáticamente.')}
+      ${settingGroup('Cuenta', `
+        <p class="ds-setting-hint">Conectado como <strong>${esc(cloud.email || '')}</strong></p>
+        <p class="ds-setting-hint">Última sync: ${formatCloudTime(cloud.lastSyncedAt)}${cloud.syncing ? ' · sincronizando…' : ''}</p>
+        <div class="flex flex-col gap-2 mt-3">
+          <button type="button" onclick="cloudSyncNow()" class="btn-primary w-full" ${cloud.syncing ? 'disabled' : ''}>☁️ Sincronizar ahora</button>
+          <button type="button" onclick="cloudPullNow()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>⬇️ Traer de la nube</button>
+          <button type="button" onclick="cloudSignOut()" class="btn-ghost w-full">Cerrar sesión</button>
+        </div>
+        <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
+      `)}`
+  }
+  return `${pageLead('Crea una cuenta para no perder tu progreso al cambiar de dispositivo.')}
+    ${settingGroup('Iniciar sesión', `
+      <div class="flex flex-col gap-2">
+        <input id="cloud-email" type="email" class="input-field" placeholder="Correo" autocomplete="email">
+        <input id="cloud-password" type="password" class="input-field" placeholder="Contraseña (mín. 6)" autocomplete="current-password">
+        <button type="button" onclick="cloudSignIn()" class="btn-primary w-full">Entrar</button>
+        <button type="button" onclick="cloudSignUp()" class="btn-secondary w-full">Crear cuenta</button>
+      </div>
+      <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
+      <p class="ds-setting-hint mt-2">Si activas confirmación por correo en Supabase, revisa tu bandeja antes de entrar.</p>
+    `)}`
+}
+
 function renderSettings() {
   const s = getSettings()
-  const content = settingsTab === 'general' ? `<div class="space-y-4">
-    <label class="flex justify-between p-3 rounded-xl" style="background:var(--secondary-bg)"><span>Modo oscuro</span><input type="checkbox" ${s.darkMode?'checked':''} onchange="toggleDark(this.checked)"></label>
-    <label class="flex justify-between p-3 rounded-xl" style="background:var(--secondary-bg)"><span>Sidebar compacto</span><input type="checkbox" ${s.compactSidebar?'checked':''} onchange="toggleCompactSidebar(this.checked)"></label>
-    <label class="flex justify-between p-3 rounded-xl" style="background:var(--secondary-bg)"><span>Sonidos</span><input type="checkbox" ${s.sound?'checked':''} onchange="toggleSound(this.checked)"></label>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <label class="flex justify-between items-center mb-3">
-        <span>Recordatorios del plan</span>
-        <input type="checkbox" ${s.notificationsEnabled?'checked':''} onchange="toggleNotifications(this.checked)">
-      </label>
-      ${!canUseNotifications() ? '<p class="text-xs text-muted">Tu navegador no soporta notificaciones.</p>' :
-        getNotificationPermission() === 'denied' ? '<p class="text-xs text-muted">Permiso bloqueado. Habilítalo en ajustes del navegador.</p>' : `
-      <p class="text-xs text-muted mb-2">Te avisamos si el plan del día no está completo.</p>
-      <select onchange="setReminderHour(parseInt(this.value))" class="input-field" ${!s.notificationsEnabled?'disabled':''}>
-        <option value="">Sin hora fija</option>
-        ${[7,8,9,12,18,19,20,21,22].map(h => `<option value="${h}" ${s.reminderHour===h?'selected':''}>${h}:00</option>`).join('')}
-      </select>`}
-    </div>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <label class="flex justify-between items-center mb-3">
-        <span>Recordatorio de hábitos</span>
-        <input type="checkbox" ${s.habitRemindersEnabled?'checked':''} onchange="toggleHabitReminders(this.checked)" ${!s.notificationsEnabled?'disabled':''}>
-      </label>
-      <p class="text-xs text-muted mb-2">Aviso si faltan hábitos por completar.</p>
-      <select onchange="setHabitReminderHour(parseInt(this.value))" class="input-field" ${!s.notificationsEnabled||!s.habitRemindersEnabled?'disabled':''}>
-        <option value="">Sin hora fija</option>
-        ${[12,17,18,19,20,21].map(h => `<option value="${h}" ${s.habitReminderHour===h?'selected':''}>${h}:00</option>`).join('')}
-      </select>
-    </div>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <label class="flex justify-between items-center">
+  const notifBlock = !canUseNotifications()
+    ? '<p class="ds-setting-hint">Tu navegador no soporta notificaciones.</p>'
+    : getNotificationPermission() === 'denied'
+      ? '<p class="ds-setting-hint">Permiso bloqueado. Habilítalo en ajustes del navegador.</p>'
+      : `<p class="ds-setting-hint">Te avisamos si el plan del día no está completo.</p>
+        <select onchange="setReminderHour(parseInt(this.value))" class="input-field mt-2" ${!s.notificationsEnabled ? 'disabled' : ''}>
+          <option value="">Sin hora fija</option>
+          ${[7, 8, 9, 12, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${s.reminderHour === h ? 'selected' : ''}>${h}:00</option>`).join('')}
+        </select>`
+
+  const content = settingsTab === 'general' ? `
+    ${settingGroup('Interfaz', `
+      ${settingRow('Sidebar compacto', `<input type="checkbox" ${s.compactSidebar ? 'checked' : ''} onchange="toggleCompactSidebar(this.checked)">`)}
+      ${settingRow('Sonidos', `<input type="checkbox" ${s.sound ? 'checked' : ''} onchange="toggleSound(this.checked)">`)}
+      ${settingRow('Reducir animaciones', `<input type="checkbox" ${s.reducedMotion ? 'checked' : ''} onchange="toggleReducedMotion(this.checked)">`, 'Menos movimiento y efectos visuales.')}
+    `)}
+    ${settingGroup('Notificaciones', `
+      <div class="ds-setting-row ds-setting-row--stack">
+        <label class="flex justify-between items-center w-full">
+          <span class="ds-setting-label">Recordatorios del plan</span>
+          <input type="checkbox" ${s.notificationsEnabled ? 'checked' : ''} onchange="toggleNotifications(this.checked)">
+        </label>
+        ${notifBlock}
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <label class="flex justify-between items-center w-full">
+          <span class="ds-setting-label">Recordatorio de hábitos</span>
+          <input type="checkbox" ${s.habitRemindersEnabled ? 'checked' : ''} onchange="toggleHabitReminders(this.checked)" ${!s.notificationsEnabled ? 'disabled' : ''}>
+        </label>
+        <p class="ds-setting-hint">Aviso si faltan hábitos por completar.</p>
+        <select onchange="setHabitReminderHour(parseInt(this.value))" class="input-field" ${!s.notificationsEnabled || !s.habitRemindersEnabled ? 'disabled' : ''}>
+          <option value="">Sin hora fija</option>
+          ${[12, 17, 18, 19, 20, 21].map(h => `<option value="${h}" ${s.habitReminderHour === h ? 'selected' : ''}>${h}:00</option>`).join('')}
+        </select>
+      </div>
+      <div class="ds-setting-row">
         <div>
-          <span>Aviso al atardecer</span>
-          <p class="text-xs text-muted mt-1">~30 min antes del ocaso, invita a meditar.</p>
+          <span class="ds-setting-label">Aviso al atardecer</span>
+          <p class="ds-setting-hint">~30 min antes del ocaso, invita a meditar.</p>
         </div>
-        <input type="checkbox" ${s.sunsetRemindersEnabled !== false ? 'checked' : ''} onchange="toggleSunsetReminders(this.checked)" ${!s.notificationsEnabled?'disabled':''}>
-      </label>
-    </div>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <p class="mb-2">Dificultad por defecto</p>
-      <select onchange="setDefaultDiff(this.value)" class="input-field">
-        ${Object.entries(DIFFICULTIES).map(([k,d]) => {
-          const locked = k === 'experto' && !isUnlocked('diff_expert')
-          return `<option value="${k}" ${s.defaultDifficulty===k?'selected':''} ${locked?'disabled':''}>${locked?'🔒 ':''}${d.icon} ${d.label}</option>`
-        }).join('')}
-      </select>
-    </div>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <p class="mb-2">País (festivos y clima)</p>
-      <select onchange="setCountry(this.value)" class="input-field">
-        ${[
-          ['MX', 'México'], ['ES', 'España'], ['AR', 'Argentina'], ['CO', 'Colombia'],
-          ['CL', 'Chile'], ['PE', 'Perú'], ['US', 'Estados Unidos'],
-        ].map(([code, name]) => `<option value="${code}" ${(s.country||'MX')===code?'selected':''}>${name}</option>`).join('')}
-      </select>
-      <p class="text-xs text-muted mt-2 mb-2">El clima usa tu ubicación si la permites, o la capital del país.</p>
-      <button type="button" onclick="requestLocationRefresh()" class="btn-secondary w-full text-sm">📍 Actualizar ubicación</button>
-    </div>
-    <div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <p class="mb-2">Tema visual <span class="text-xs text-muted">(${getUnlocked().filter(u => u.type === 'theme').length + 1} disponibles)</span></p>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <input type="checkbox" ${s.sunsetRemindersEnabled !== false ? 'checked' : ''} onchange="toggleSunsetReminders(this.checked)" ${!s.notificationsEnabled ? 'disabled' : ''}>
+      </div>
+    `)}
+    ${settingGroup('Preferencias', `
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Dificultad por defecto</span>
+        <select onchange="setDefaultDiff(this.value)" class="input-field">
+          ${Object.entries(DIFFICULTIES).map(([k, d]) => {
+            const locked = k === 'experto' && !isUnlocked('diff_expert')
+            return `<option value="${k}" ${s.defaultDifficulty === k ? 'selected' : ''} ${locked ? 'disabled' : ''}>${locked ? '🔒 ' : ''}${d.icon} ${d.label}</option>`
+          }).join('')}
+        </select>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">País (festivos y clima)</span>
+        <select onchange="setCountry(this.value)" class="input-field">
+          ${[['MX', 'México'], ['ES', 'España'], ['AR', 'Argentina'], ['CO', 'Colombia'], ['CL', 'Chile'], ['PE', 'Perú'], ['US', 'Estados Unidos']]
+            .map(([code, name]) => `<option value="${code}" ${(s.country || 'MX') === code ? 'selected' : ''}>${name}</option>`).join('')}
+        </select>
+        <p class="ds-setting-hint">El clima usa tu ubicación si la permites, o la capital del país.</p>
+        <button type="button" onclick="requestLocationRefresh()" class="btn-secondary w-full text-sm mt-1">📍 Actualizar ubicación</button>
+      </div>
+    `)}
+    ${settingGroup('Tema visual', `
+      <p class="ds-setting-hint" style="margin:0 0 0.5rem">${getUnlocked().filter(u => u.type === 'theme').length + 1} temas disponibles</p>
+      <div class="ds-theme-grid">
         ${Object.entries(THEMES).map(([id, t]) => {
           const unlocked = id === 'default' || isUnlocked(id)
           const active = (s.theme || 'default') === id
           const unlock = UNLOCKS.find(u => u.id === id)
-          return `<button onclick="${unlocked ? `setTheme('${id}')` : ''}" class="py-2 px-3 rounded-xl text-sm ${active ? 'btn-primary' : 'btn-secondary'} ${!unlocked ? 'opacity-40' : ''}">
+          return `<button onclick="${unlocked ? `setTheme('${id}')` : ''}" class="ds-theme-btn ${active ? 'btn-primary is-active' : 'btn-secondary'} ${!unlocked ? 'opacity-40' : ''}">
             ${unlocked ? t.icon : '🔒'} ${t.name}${!unlocked && unlock ? ` (Nv.${unlock.level})` : ''}
           </button>`
         }).join('')}
       </div>
+    `)}
+  ` : settingsTab === 'account' ? renderCloudAccountPanel() : `
+    ${pageLead('Respalda tu progreso, niveles y logros.')}
+    ${settingRow('Respaldo automático semanal', `<input type="checkbox" ${s.autoBackupEnabled ? 'checked' : ''} onchange="toggleAutoBackup(this.checked)">`, 'Descarga un JSON cada 7 días si la app está abierta.')}
+    <div class="flex flex-col gap-2 mt-4">
+      <button onclick="exportData()" class="btn-primary w-full">📤 Exportar todo</button>
+      <button onclick="exportMonthlyReportText()" class="btn-secondary w-full">📄 Informe mensual (.txt)</button>
+      <button onclick="restartTour()" class="btn-ghost w-full">🎯 Repetir tour guiado</button>
+      <label class="btn-secondary w-full block text-center cursor-pointer">📥 Importar<input type="file" accept=".json" onchange="importData(event)" class="hidden"></label>
     </div>
-  </div>` : `<p class="text-muted text-sm mb-4">Respalda tu progreso, niveles y logros.</p>
-    <label class="flex justify-between p-3 rounded-xl mb-4" style="background:var(--secondary-bg)">
-      <span>Respaldo automático semanal</span>
-      <input type="checkbox" ${s.autoBackupEnabled?'checked':''} onchange="toggleAutoBackup(this.checked)">
-    </label>
-    <p class="text-xs text-muted mb-4">Descarga un JSON cada 7 días si la app está abierta.</p>
-    <button onclick="exportData()" class="btn-primary w-full mb-3">📤 Exportar todo</button>
-    <button onclick="exportMonthlyReportText()" class="btn-secondary w-full mb-3">📄 Informe mensual (.txt)</button>
-    <button onclick="restartTour()" class="btn-ghost w-full mb-3">🎯 Repetir tour guiado</button>
-    <label class="btn-secondary w-full block text-center cursor-pointer">📥 Importar<input type="file" accept=".json" onchange="importData(event)" class="hidden"></label>
     <p id="import-status" class="text-sm text-muted mt-3 text-center"></p>`
 
   return `<div class="animate-fade-in page-shell page-wide page-settings">
-    <div class="settings-shell">
-      <div class="flex flex-col gap-2">
-        <button onclick="settingsTab='general';render()" class="py-3 rounded-xl text-sm ${settingsTab==='general'?'btn-primary':'btn-secondary'}">General</button>
-        <button onclick="settingsTab='data';render()" class="py-3 rounded-xl text-sm ${settingsTab==='data'?'btn-primary':'btn-secondary'}">Datos</button>
-      </div>
-      <div class="card">${content}</div>
+    <div class="ds-page ds-page--full">
+      ${tabBar([
+        { id: 'general', label: 'General', icon: '⚙️' },
+        { id: 'account', label: 'Cuenta', icon: '☁️' },
+        { id: 'data', label: 'Datos', icon: '💾' },
+      ], settingsTab, 'settingsTab')}
+      <div class="ds-panel">${content}</div>
     </div>
   </div>`
 }
@@ -2541,6 +2824,7 @@ window.toggleCompactSidebar = (v) => {
   const s = getSettings(); s.compactSidebar = v; saveSettings(s); applyCompactSidebar(v); render()
 }
 window.toggleSound = (v) => { const s = getSettings(); s.sound = v; saveSettings(s) }
+window.toggleReducedMotion = (v) => { const s = getSettings(); s.reducedMotion = v; saveSettings(s) }
 window.toggleHabitReminders = (v) => {
   const s = getSettings(); s.habitRemindersEnabled = v
   if (v && !s.habitReminderHour) s.habitReminderHour = 18
@@ -2555,6 +2839,77 @@ window.toggleSunsetReminders = (v) => {
   render()
 }
 window.toggleAutoBackup = (v) => { const s = getSettings(); s.autoBackupEnabled = v; saveSettings(s) }
+
+function setCloudMsg(msg, ok = true) {
+  const el = document.getElementById('cloud-status-msg')
+  if (el) {
+    el.textContent = msg
+    el.style.color = ok ? '' : 'var(--color-danger, #c44)'
+  }
+}
+
+window.cloudSignIn = async function() {
+  const email = document.getElementById('cloud-email')?.value?.trim()
+  const password = document.getElementById('cloud-password')?.value
+  if (!email || !password) { setCloudMsg('Correo y contraseña requeridos', false); return }
+  try {
+    await signIn(email, password)
+    setCloudMsg('✓ Sesión iniciada')
+    playSuccess()
+    render()
+  } catch (e) {
+    setCloudMsg(e?.message || 'No se pudo iniciar sesión', false)
+  }
+}
+
+window.cloudSignUp = async function() {
+  const email = document.getElementById('cloud-email')?.value?.trim()
+  const password = document.getElementById('cloud-password')?.value
+  if (!email || !password || password.length < 6) {
+    setCloudMsg('Correo y contraseña (mín. 6 caracteres)', false)
+    return
+  }
+  try {
+    const data = await signUp(email, password)
+    if (data.session) {
+      setCloudMsg('✓ Cuenta creada')
+      playSuccess()
+      render()
+    } else {
+      setCloudMsg('Revisa tu correo para confirmar la cuenta')
+    }
+  } catch (e) {
+    setCloudMsg(e?.message || 'No se pudo crear la cuenta', false)
+  }
+}
+
+window.cloudSignOut = async function() {
+  await signOut()
+  setCloudMsg('Sesión cerrada')
+  render()
+}
+
+window.cloudSyncNow = async function() {
+  try {
+    await pushToCloud({ force: true })
+    setCloudMsg('✓ Subido a la nube')
+    playSuccess()
+    render()
+  } catch (e) {
+    setCloudMsg(e?.message || 'Error al sincronizar', false)
+  }
+}
+
+window.cloudPullNow = async function() {
+  try {
+    await pullFromCloud()
+    setCloudMsg('✓ Datos descargados')
+    playSuccess()
+    render(true)
+  } catch (e) {
+    setCloudMsg(e?.message || 'Error al descargar', false)
+  }
+}
 window.exportMonthlyReportText = exportMonthlyReportText
 window.restartTour = function() {
   const s = getSettings(); s.tourComplete = false; saveSettings(s)
@@ -2642,38 +2997,48 @@ window.importData = function(e) {
 
 // --- Router ---
 const routes = {
-  '/': renderHome, '/plan': renderPlan, '/rutina': renderRoutine, '/gimnasia': renderBrainGym,
+  '/': renderHomePage, '/plan': renderPlan, '/rutina': renderRoutine, '/gimnasia': renderBrainGym,
   '/meditacion': renderMeditation, '/mejora': renderMejora, '/enfoque': renderEnfoque,
-  '/ajustes': renderSettings, '/perfil': renderProfile, '/desafios': renderChallenges,
+  '/ajustes': renderSettings, '/perfil': renderProfile, '/desafios': renderPlan,
   '/metas': renderMetas, '/viaje': renderViaje, '/hoy': renderSoloHoy,
 }
 
-window.setOnboardGoal = function(i) { onboardingGoal = i; render() }
+window.setOnboardGoal = function(i) { onboarding.goal = i; render() }
 
 window.toggleOnboardHabit = function(id) {
-  if (onboardingSelectedHabits.includes(id)) onboardingSelectedHabits = onboardingSelectedHabits.filter(h => h !== id)
-  else if (onboardingSelectedHabits.length < 3) onboardingSelectedHabits.push(id)
+  if (onboarding.selectedHabits.includes(id)) onboarding.selectedHabits = onboarding.selectedHabits.filter(h => h !== id)
+  else if (onboarding.selectedHabits.length < 3) onboarding.selectedHabits.push(id)
+  playClick()
+  render()
+}
+
+window.onboardDemoBreath = function() {
+  if (onboarding.demoBreaths >= 3) return
+  onboarding.demoBreaths++
+  haptic(10)
+  playTone(330, 0.12)
   render()
 }
 
 window.onboardNext = function() {
-  if (onboardingStep === 0) {
+  if (onboarding.step === 0) {
     const name = document.getElementById('onboard-name')?.value?.trim()
     const s = getSettings()
     s.userName = name || ''
     saveSettings(s)
   }
-  if (onboardingStep === 1) {
+  if (onboarding.step === 2) {
     const all = getHabits()
-    const selected = all.filter(h => onboardingSelectedHabits.includes(h.id))
+    const selected = all.filter(h => onboarding.selectedHabits.includes(h.id))
     setItem('habits', selected.length ? selected : all.slice(0, 3))
   }
-  onboardingStep++
+  onboarding.step++
+  playClick()
   render()
 }
 
 window.finishOnboarding = async function() {
-  if (onboardingGoal !== null) addGoal(GOAL_TEMPLATES[onboardingGoal])
+  if (onboarding.goal !== null) addGoal(GOAL_TEMPLATES[onboarding.goal])
   const s = getSettings()
   s.onboardingComplete = true
   const reminder = document.getElementById('onboard-reminder')?.value
@@ -2684,17 +3049,90 @@ window.finishOnboarding = async function() {
   }
   saveSettings(s)
   if (s.notificationsEnabled) startReminderChecker(getPlanProgress)
-  onboardingStep = 0
+  onboarding.step = 0
+  resetOnboardingCache()
+  playSuccess()
+  celebrate()
   showToast('¡Tu viaje comienza!', 0, 'discipline')
   location.hash = '/plan'
-  render()
+  render(true)
   setTimeout(() => { if (shouldShowTour()) startTour() }, 600)
 }
 
-function render() {
-  const fullPath = location.hash.slice(1) || '/'
-  const parts = fullPath.split('/').filter(Boolean)
-  const path = '/' + (parts[0] || '')
+function patchLiveUI(path) {
+  if (path === '/meditacion' && medState.session && !medState.completed) {
+    const duration = MED_DURATIONS[medState.difficulty]
+    const total = duration * 60
+    const remaining = total - medState.elapsed
+    const mins = Math.floor(remaining / 60)
+    const secs = (remaining % 60).toString().padStart(2, '0')
+    const timerEl = document.getElementById('med-timer')
+    if (!timerEl) return false
+    if (medState.session === 'breathing') {
+      const scale = medState.phase === 'inhale' ? 1.2 : medState.phase === 'exhale' ? 0.8 : 1.1
+      const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
+      const phaseEl = document.getElementById('med-phase-text')
+      const circleEl = document.getElementById('med-breathe-circle')
+      if (!phaseEl || !circleEl) return false
+      timerEl.textContent = `${mins}:${secs}`
+      phaseEl.textContent = phase[medState.phase]
+      circleEl.style.transform = `scale(${scale})`
+    } else {
+      const steps = medState.steps || []
+      const step = steps[medState.step]
+      const stepEl = document.getElementById('med-step-text')
+      const progressEl = document.getElementById('med-progress-fill')
+      if (!stepEl || !progressEl) return false
+      timerEl.textContent = `${mins}:${secs} · Paso ${medState.step + 1}/${steps.length}`
+      progressEl.style.width = `${(medState.elapsed / total) * 100}%`
+      stepEl.textContent = step?.text || ''
+    }
+    return true
+  }
+  if (path === '/enfoque' && pomodoro.active) {
+    const progress = pomodoro.mode === 'work'
+      ? ((25 * 60 - (pomodoro.minutes * 60 + pomodoro.seconds)) / (25 * 60)) * 100
+      : ((5 * 60 - (pomodoro.minutes * 60 + pomodoro.seconds)) / (5 * 60)) * 100
+    const timerEl = document.getElementById('pomo-timer')
+    const progressEl = document.getElementById('pomo-progress')
+    const toggleEl = document.getElementById('pomo-toggle-btn')
+    if (!timerEl || !progressEl || !toggleEl) return false
+    timerEl.textContent = `${String(pomodoro.minutes).padStart(2, '0')}:${String(pomodoro.seconds).padStart(2, '0')}`
+    progressEl.setAttribute('stroke-dasharray', `${progress * 2.83} 283`)
+    toggleEl.textContent = pomodoro.active ? 'Pausar' : 'Iniciar'
+    return true
+  }
+  if (path === '/gimnasia' && brainState.exercise && patchBrainExerciseUI()) {
+    return true
+  }
+  if (path === '/rutina' && routineState.active && routineState.step === 1) {
+    const b = routineState.breathing
+    const remainingEl = document.getElementById('routine-remaining')
+    const phaseEl = document.getElementById('routine-phase-text')
+    const circleEl = document.getElementById('routine-breathe-circle')
+    if (!remainingEl || !phaseEl || !circleEl) return false
+    const scale = b.phase === 'inhale' ? 1.15 : b.phase === 'exhale' ? 0.85 : 1.05
+    const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
+    remainingEl.textContent = `${b.total - b.elapsed}s restantes`
+    phaseEl.textContent = phase[b.phase]
+    circleEl.style.transform = `scale(${scale})`
+    return true
+  }
+  return false
+}
+
+function renderCore() {
+  const { parts, path } = parsePath()
+  if (path !== '/meditacion') {
+    if (medState.session) {
+      stopMeditationSession()
+      medState.session = null
+      medState.completed = false
+    } else if (medState.ambientPreview || isAmbientPlaying()) {
+      stopAmbientSound()
+      medState.ambientPreview = false
+    }
+  }
   if (path === '/mejora') {
     if (parts[1] === 'diario') {
       mejoraTab = 'diario'
@@ -2703,9 +3141,23 @@ function render() {
     if (mejoraTab === 'journal') mejoraTab = 'diario'
   }
   const content = document.getElementById('app-content')
-  content.classList.remove('route-enter')
+  const sameRoute = path === getLastRenderPath()
+  const livePatch = sameRoute && patchLiveUI(path)
+
+  if (livePatch) {
+    content.classList.add('route-stable')
+    content.classList.remove('route-enter')
+    return
+  }
+
+  content.classList.remove('route-stable', 'route-enter')
   content.innerHTML = (routes[path] || routes['/'])()
-  requestAnimationFrame(() => content.classList.add('route-enter'))
+  if (!sameRoute) {
+    requestAnimationFrame(() => content.classList.add('route-enter'))
+    setLastRenderPath(path)
+  } else {
+    content.classList.add('route-stable')
+  }
 
   setActiveNav(path)
   const progress = getPlanProgress()
@@ -2733,6 +3185,13 @@ function render() {
       : null,
   })
   maybeAutoBackup()
+  renderOnboardingOverlay()
+  updateAppShell(path, {
+    meditation: !!medState.session && path === '/meditacion',
+    pomodoro: pomodoro.active && path === '/enfoque',
+    routine: routineState.active && path === '/rutina',
+    brainExercise: !!brainState.exercise && path === '/gimnasia',
+  })
 }
 
 function showInstallBanner() {
@@ -2767,12 +3226,33 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }
 })
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').catch(() => {})
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('./service-worker.js', { scope: './' }).then(reg => {
+    reg.update().catch(() => {})
+    reg.addEventListener('updatefound', () => {
+      const worker = reg.installing
+      if (!worker) return
+      worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          worker.postMessage({ type: 'SKIP_WAITING' })
+        }
+      })
+    })
+  }).catch(() => {})
+  let swReloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (swReloading) return
+    swReloading = true
+    location.reload()
+  })
 }
 
 // Init
 const initSettings = getSettings()
+if (initSettings.darkMode) {
+  initSettings.darkMode = false
+  saveSettings(initSettings)
+}
 if (initSettings.theme && initSettings.theme !== 'default' && !isUnlocked(initSettings.theme)) {
   initSettings.theme = 'default'
   setItem('settings', initSettings)
@@ -2798,17 +3278,38 @@ async function maybeSendPlanReminderFromApp() {
   maybeSendSunsetReminder()
 }
 
-window.render = render
+initCloudSync().catch(() => {})
+onCloudStatus(() => {
+  if (settingsTab === 'account' && getLastRenderPath() === '/ajustes') scheduleRender()
+})
+
+bindRender(renderCore)
+window.render = (immediate) => scheduleRender(!!immediate)
+window.navigate = navigate
 window.startBrain = startBrain
 window.finishBrain = finishBrain
 window.startMeditation = startMeditation
 window.startRoutine = startRoutine
 window.clearMedTimers = clearMedTimers
+window.stopMeditationSession = stopMeditationSession
 window.brainState = brainState
 window.medState = medState
 
+/** Sincroniza estado de pestañas con onclick inline (módulo ES ≠ window) */
+;[
+  ['mejoraTab', () => mejoraTab, v => { mejoraTab = v }],
+  ['settingsTab', () => settingsTab, v => { settingsTab = v }],
+  ['viajeTab', () => viajeTab, v => { viajeTab = v }],
+  ['metasTab', () => metasTab, v => { metasTab = v }],
+  ['profileTab', () => profileTab, v => { profileTab = v }],
+  ['diarioSection', () => diarioSection, v => { diarioSection = v }],
+  ['editingHabits', () => editingHabits, v => { editingHabits = v }],
+].forEach(([name, get, set]) => {
+  Object.defineProperty(window, name, { get, set, configurable: true })
+})
+
 saveSettings(getSettings())
 initLayout()
-window.addEventListener('hashchange', render)
-render()
+window.addEventListener('hashchange', () => scheduleRender(true))
+scheduleRender(true)
 if (shouldShowTour()) setTimeout(() => startTour(), 900)
