@@ -64,6 +64,9 @@ export const REFLECTION_PROMPTS = {
     '¿Qué parte del día querrías repetir mañana?', '¿Qué te sorprendió de forma buena?',
     '¿Qué hiciste por ti que antes posponías?', '¿Qué risa o ligereza hubo hoy?',
     '¿Qué vista, luz o color te gustó?', '¿Qué te dio energía aunque fuera poco?',
+    '¿Qué conversación te dejó en paz?', '¿Qué habilidad usaste sin pensarlo?',
+    '¿Qué momento de calma creaste tú mismo/a?', '¿Qué pequeño gesto hiciste por alguien?',
+    '¿Qué parte de tu cuerpo agradeces hoy?', '¿Qué te hizo sentir capaz?',
   ],
   medio: [
     '¿Qué aprendí hoy?', '¿Qué haría diferente?', '¿Qué me sacó de mi zona de confort?',
@@ -73,6 +76,9 @@ export const REFLECTION_PROMPTS = {
     '¿Qué hábito me costó más hoy?', '¿Qué me distrajo y cómo puedo reducirlo mañana?',
     '¿Qué feedback recibí o me di a mí mismo/a?', '¿Qué harías si tuvieras el mismo día otra vez?',
     '¿Qué te enseñó un error pequeño?', '¿Qué relación necesita más presencia tuya?',
+    '¿En qué momento te sentiste más presente?', '¿Qué decisión tomaste alineada con tus valores?',
+    '¿Qué aprendiste de Escuela o Calma hoy?', '¿Qué energía traes al trabajo o estudio?',
+    '¿Qué conversación evitaste y por qué?', '¿Qué harías distinto en la misma situación?',
   ],
   dificil: [
     '¿Qué patrón negativo noté hoy?', '¿Cómo reaccioné bajo presión?', '¿Qué miedo me frenó?',
@@ -81,6 +87,9 @@ export const REFLECTION_PROMPTS = {
     '¿Qué creencia sobre el éxito o el fracaso apareció?', '¿Cómo respondí al estrés en el cuerpo?',
     '¿Qué conversación difícil evité?', '¿Qué sacrificaste por comodidad?', '¿Qué resentimiento llevas sin nombrar?',
     '¿Qué parte de ti necesita más compasión?', '¿Qué harías si no tuvieras miedo al juicio?',
+    '¿Qué emoción etiquetaste mal hoy (ira vs miedo)?', '¿Dónde confundiste urgencia con importancia?',
+    '¿Qué límite no pusiste y qué te costó?', '¿Qué patrón de trabajo te agota?',
+    '¿Qué creencia sobre ti mismo/a se activó bajo estrés?', '¿Qué necesitas soltar antes de dormir?',
   ],
   experto: [
     '¿Qué creencia limitante descubrí?', '¿Cómo mis acciones reflejan mis valores?', '¿Qué legado estoy construyendo?',
@@ -90,7 +99,15 @@ export const REFLECTION_PROMPTS = {
     '¿Qué harías si supieras que nadie está mirando?', '¿Qué relación con el tiempo tienes hoy?',
     '¿Qué significa "suficiente" para ti en este momento?', '¿Qué herencia emocional repites o rompes?',
     '¿Qué pregunta deberías hacerte más seguido?', '¿Qué harías distinto si tu yo de 80 años te escribiera una carta?',
+    '¿Qué sistema personal diseñarías si empezaras de cero?', '¿Qué identidad estás evitando encarnar?',
+    '¿Qué verdad sobre tu estrés aún no has aceptado?', '¿Qué legado emocional quieres dejar esta semana?',
+    '¿Qué trade-off entre descanso y ambición estás negociando mal?', '¿Qué harías si el tiempo fuera tu recurso más escaso?',
   ],
+}
+
+export function getWeeklyReviewPrompt(index = 0) {
+  const pool = WEEKLY_REVIEW_PROMPTS
+  return pool[((index % pool.length) + pool.length) % pool.length]
 }
 
 export function getDayOfYear(d = new Date()) {

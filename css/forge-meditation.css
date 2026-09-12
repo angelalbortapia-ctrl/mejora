@@ -95,11 +95,44 @@
 .med-voice-toggle {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
   font-size: 0.8125rem;
   color: var(--m-muted);
   margin-top: 0.5rem;
 }
+
+.med-voice-name {
+  font-size: 0.75rem;
+  color: var(--m-accent);
+  opacity: 0.9;
+}
+
+.med-voice-toggle--off {
+  opacity: 0.65;
+}
+
+.med-voice-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.med-adaptive-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border-radius: var(--m-radius-sm, 8px);
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--m-border);
+  background: rgba(212, 160, 18, 0.08);
+}
+
+.med-adaptive--recovery { border-color: rgba(129, 140, 248, 0.35); background: rgba(129, 140, 248, 0.08); }
+.med-adaptive-text { font-size: 0.8125rem; color: var(--m-muted); margin: 0; line-height: 1.45; }
+.med-adaptive-tag { font-size: 0.65rem; color: var(--m-accent); text-transform: uppercase; letter-spacing: 0.04em; }
 
 .med-complete-card { max-width: 22rem; margin: 0 auto; }
 .med-complete-icon { margin-bottom: 1rem; }

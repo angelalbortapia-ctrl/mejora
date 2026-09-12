@@ -1,8 +1,8 @@
 /** Catálogo — búsqueda y filtros de lecciones */
 
 import { esc } from './core.js'
-import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=78'
-import { FACULTIES } from './school-curriculum.js?v=78'
+import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=81'
+import { FACULTIES } from './school-curriculum.js?v=81'
 
 function getFacultyForLesson(lessonId) {
   const lesson = LESSONS.find(l => l.id === lessonId)

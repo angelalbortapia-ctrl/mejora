@@ -5,7 +5,7 @@ import {
   getPlanProgress, resetAllData,
 } from '../core.js'
 import { guardDifficulty } from '../page-helpers.js'
-import { isUnlocked, applyTheme } from '../unlocks.js'
+import { isUnlocked, applyTheme, THEMES, UNLOCKS, getNextUnlock } from '../unlocks.js'
 import {
   canUseNotifications, getNotificationPermission, requestNotificationPermission, startReminderChecker,
 } from '../notifications.js'
@@ -17,7 +17,7 @@ import { restartOnboarding, resetOnboardingCache } from '../onboarding-ui.js'
 import { startTour } from '../tour.js'
 import { listSectionGuides, startSectionGuide, resetSectionGuides } from '../section-guides.js'
 import { tabBar, settingGroup, settingRow, pageLead } from '../ui.js'
-import { applyCompactSidebar } from '../layout.js?v=78'
+import { applyCompactSidebar } from '../layout.js?v=81'
 import { playSuccess } from '../sounds.js'
 
 let settingsTab = 'general'
@@ -138,7 +138,24 @@ export function renderSettings() {
       </div>
     `)}
     ${settingGroup('Tema visual', `
-      <p class="ds-setting-hint" style="margin:0">FORGE — tema oscuro fijo. Los temas desbloqueables estarán disponibles en una futura actualización.</p>
+      <p class="ds-setting-hint" style="margin:0 0 0.75rem">FORGE es el tema base. Desbloquea más al subir de nivel.</p>
+      <div class="theme-picker-grid">
+        ${Object.entries(THEMES).map(([id, t]) => {
+          const locked = id !== 'default' && !isUnlocked(id)
+          const active = (s.theme || 'default') === id
+          const unlock = UNLOCKS.find(u => u.id === id)
+          return `<button type="button" class="theme-pick-btn ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}"
+            onclick="setTheme('${id}')" ${locked ? 'disabled title="Nv. ' + (unlock?.level || '?') + '"' : ''}>
+            <span class="theme-pick-icon">${t.icon}</span>
+            <span class="theme-pick-label">${t.name}</span>
+            ${locked ? `<span class="theme-pick-lock">Nv.${unlock?.level}</span>` : ''}
+          </button>`
+        }).join('')}
+      </div>
+      ${(() => {
+        const next = getNextUnlock()
+        return next ? `<p class="ds-setting-hint mt-2">Próximo desbloqueo: ${next.icon} ${next.name} (nivel ${next.level})</p>` : ''
+      })()}
     `)}
   ` : settingsTab === 'account' ? renderCloudAccountPanel() : `
     ${pageLead('Respalda tu progreso, niveles y logros.')}

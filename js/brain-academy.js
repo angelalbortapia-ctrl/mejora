@@ -1,8 +1,9 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from './core.js'
-import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=78'
-import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=78'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=81'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=81'
+import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=81'
 
 const ACADEMY_START_KEY = 'academyStart'
 
@@ -13,7 +14,10 @@ export const LESSON_CATEGORIES = {
   emotion: { label: 'Emoción', icon: '🫧', color: '#a78bfa' },
   plasticity: { label: 'Plasticidad', icon: '⚡', color: '#2dd4bf' },
   sleep: { label: 'Sueño', icon: '💤', color: '#818cf8' },
+  apply: { label: 'Aplicación', icon: '🌍', color: '#d4a012' },
 }
+
+const APPLY_LESSON_IDS = new Set(APPLY_LESSONS.map(l => l.id))
 
 export const LESSONS = [
   {
@@ -549,6 +553,7 @@ export const LESSONS = [
     intensity: 'intenso',
   },
   ...SCHOOL_LESSONS,
+  ...APPLY_LESSONS,
 ]
 
 /** Casos legendarios — acceso rápido en Academia */
@@ -870,10 +875,20 @@ export const EXERCISE_REAL_WORLD = {
   switching: 'PFC rostrolateral: alternar modos mentales — creativo ↔ analítico, escuchar ↔ presentar.',
   symbols: 'Velocidad de procesamiento parietal: leer gráficos, tablas, códigos de color en trabajo técnico.',
   logic: 'PFC rostrolateral: razonamiento bajo incertidumbre, debugging, decisiones con información incompleta.',
+  math: 'Giro angular y PFC: cálculo mental bajo presión — presupuestos, propinas, estimaciones rápidas.',
+  memory: 'Hipocampo + PFC: retener secuencias visuales — listas, pasos, instrucciones en orden.',
+  simon: 'Bucle fronto-parietal: span de dígitos — números de teléfono, códigos, datos en cadena.',
+  sequence: 'Corteza prefrontal: detectar patrones — tendencias, errores recurrentes, reglas ocultas.',
 }
 
 export const LAB_EXERCISE_IDS = [
   'nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic',
+  'math', 'memory', 'simon', 'sequence',
+]
+
+export const LAB_EXERCISE_GROUPS = [
+  { id: 'protocols', label: 'Protocolos de laboratorio', ids: ['nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic'] },
+  { id: 'training', label: 'Entrenamiento cognitivo', ids: ['math', 'memory', 'simon', 'sequence'] },
 ]
 
 export function getLessonExercise(lessonId) {
@@ -1018,6 +1033,7 @@ export function getUnlockedLessonCount() {
 }
 
 export function isLessonUnlocked(lessonId) {
+  if (APPLY_LESSON_IDS.has(lessonId)) return true
   if (isLegendaryLesson(lessonId)) return true
   const currentWeek = getAcademyWeekIndex() + 1
   if (isCurriculumLessonUnlocked(lessonId, currentWeek)) return true
@@ -1026,6 +1042,7 @@ export function isLessonUnlocked(lessonId) {
 }
 
 export function getLessonUnlockWeek(lessonId) {
+  if (APPLY_LESSON_IDS.has(lessonId)) return null
   if (isLegendaryLesson(lessonId)) return null
   const idx = LESSONS.findIndex(l => l.id === lessonId)
   if (idx < 0) return null

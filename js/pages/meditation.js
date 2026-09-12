@@ -6,14 +6,16 @@ import { isUnlocked } from '../unlocks.js'
 function guardDifficulty(d) {
   return d === 'experto' && !isUnlocked('diff_expert') ? 'medio' : d
 }
-import { MEDITATIONS, MEDITATION_PROGRAMS } from '../meditations.js?v=78'
+import { MEDITATIONS, MEDITATION_PROGRAMS } from '../meditations.js?v=81'
 import {
   medState, MED_DURATIONS, clearMedTimers, stopMeditationSession,
   startMeditation, startFreeTimer, finishFreeTimer,
   getMeditationStats, getMeditationStreak, getProgramProgress, startMeditationProgram,
   getProgramSessionForToday, getSleepStats, getSleepLog, logSleep, getBreathCoherenceLog,
-  medAmbientVol,
+  medAmbientVol, syncMedVoiceFromSettings, setMedVoiceEnabled, getMedVoiceLabel,
 } from '../meditation-service.js'
+import { initMeditationVoice, isMeditationVoiceSupported, listMeditationVoices, getSelectedVoiceURI, setMeditationVoiceURI } from '../meditation-voice.js?v=81'
+import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '../meditation-adaptive.js'
 import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, resumeAudioContext } from '../ambient-audio.js'
 import { sunsetBannerHTML } from '../apis.js'
 import { icon } from '../icons.js'
@@ -60,10 +62,18 @@ function medAmbientPanelHTML(compact = false) {
         oninput="setMedAmbientVol(Number(this.value)/100)" class="med-ambient-range" aria-label="Volumen ambiente">
       <span id="med-ambient-vol-pct" class="text-xs text-muted">${isSilent ? '—' : `${vol}%`}</span>
     </label>
-    <label class="med-voice-toggle">
-      <input type="checkbox" ${medState.voiceEnabled ? 'checked' : ''} onchange="toggleMedVoice(this.checked)" aria-label="Narrador de voz">
-      <span>Narrador de voz (sistema)</span>
+    <label class="med-voice-toggle ${isMeditationVoiceSupported() ? '' : 'med-voice-toggle--off'}">
+      <input type="checkbox" ${medState.voiceEnabled ? 'checked' : ''} ${isMeditationVoiceSupported() ? '' : 'disabled'}
+        onchange="toggleMedVoice(this.checked)" aria-label="Voz guía natural">
+      <span>Voz guía natural</span>
+      <span class="med-voice-name">${getMedVoiceLabel()}</span>
     </label>
+    ${isMeditationVoiceSupported() && medState.voiceEnabled ? `<label class="med-voice-picker">
+      <span class="text-xs text-muted">Narrador</span>
+      <select class="input-field text-sm" onchange="setMedVoiceURI(this.value)" aria-label="Elegir voz">
+        ${listMeditationVoices().map(v => `<option value="${v.uri}" ${v.uri === getSelectedVoiceURI() ? 'selected' : ''}>${v.label}${v.premium ? ' ★' : ''}</option>`).join('')}
+      </select>
+    </label>` : ''}
   </div>`
 }
 
@@ -100,14 +110,17 @@ function programViewHTML() {
   const id = medState.activeProgram
   const prog = getProgramProgress(id)
   if (!prog) return ''
-  const todaySession = getProgramSessionForToday(id)
+  const adaptive = getAdaptiveProgramSession(id)
+  const todaySession = adaptive.session
+  const diffHint = adaptive.suggestedDifficulty ? `setMedDiff('${adaptive.suggestedDifficulty}');` : ''
   return `<div class="card med-program-active">
     <button type="button" class="school-back" onclick="navigate('/meditacion')">← Volver</button>
     <h2 class="font-display text-xl font-bold text-main mt-2">${prog.program.name}</h2>
     <p class="text-sm text-muted mb-4">${prog.completed}/${prog.program.days} días · ${prog.percent}%</p>
     <div class="progress-track w-full mb-4"><div class="progress-fill h-full" style="width:${prog.percent}%"></div></div>
-    ${todaySession ? `<p class="text-sm text-main mb-3">Hoy: <strong>${todaySession.name}</strong></p>
-      <button type="button" class="btn-primary w-full" onclick="startMeditation('${todaySession.id}')">Iniciar sesión del día</button>`
+    ${getAdaptiveProgramBanner(id)}
+    ${todaySession ? `<p class="text-sm text-main mb-3">Hoy: <strong>${todaySession.name}</strong>${adaptive.mode !== 'normal' ? ' <span class="med-adaptive-tag">adaptativo</span>' : ''}</p>
+      <button type="button" class="btn-primary w-full" onclick="${diffHint}startMeditation('${todaySession.id}')">Iniciar sesión del día</button>`
       : `<p class="text-sm text-muted">Programa completado. Elige otro o repite.</p>`}
   </div>`
 }
@@ -238,6 +251,7 @@ function hubHTML(dailyApis) {
 }
 
 export function renderMeditationPage(dailyApis = null) {
+  syncMedVoiceFromSettings()
   if (medState.completed) return completedHTML()
   if (medState.session || medState.freeTimer?.active) return activeSessionHTML()
   if (medState.view === 'program' && medState.activeProgram) return `<div class="page-shell page-wide page-meditation"><div class="ds-page">${programViewHTML()}</div></div>`
@@ -246,8 +260,11 @@ export function renderMeditationPage(dailyApis = null) {
 }
 
 export function bindMeditationGlobals() {
+  initMeditationVoice()
+  syncMedVoiceFromSettings()
   window.setMedDiff = (d) => { medState.difficulty = guardDifficulty(d); window.render?.() }
-  window.toggleMedVoice = (on) => { medState.voiceEnabled = !!on; window.render?.() }
+  window.toggleMedVoice = (on) => { setMedVoiceEnabled(on); window.render?.() }
+  window.setMedVoiceURI = (uri) => { setMeditationVoiceURI(uri); window.render?.() }
   window.startMedProgram = (id) => { startMeditationProgram(id); window.navigate?.(`/meditacion/programa/${id}`) }
   window.submitSleepLog = () => {
     const h = document.getElementById('sleep-hours')?.value

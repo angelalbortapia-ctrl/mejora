@@ -267,7 +267,7 @@ export function getSettings() {
     theme: 'default', country: 'MX', compactSidebar: false, reducedMotion: false, tourComplete: false,
     autoBackupEnabled: false, lastAutoBackup: null,
     latitude: null, longitude: null, locationName: '', locationAsked: false,
-    medAmbient: 'rain', medAmbientVolume: 0.45,
+    medAmbient: 'rain', medAmbientVolume: 0.45, medVoice: true, medVoiceURI: '',
   })
 }
 

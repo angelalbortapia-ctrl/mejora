@@ -2,12 +2,16 @@
 
 import {
   getToday, toDateStr, getItem, setItem, getStats, updateStats, recordActivity,
-  checkPlanTask, addXp, getSettings, DIFFICULTIES,
+  checkPlanTask, addXp, getSettings, saveSettings, DIFFICULTIES,
 } from './core.js'
-import { MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=78'
+import { MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=81'
 import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound } from './ambient-audio.js'
 import { playTone } from './sounds.js'
-import { forgeSparkAt, pulseElement } from './fx.js'
+import { forgeSparkAt, pulseElement } from './fx.js?v=81'
+import {
+  initMeditationVoice, speakMeditation, speakMeditationIntro, speakBreathCue,
+  stopMeditationVoice, resetBreathCues, getMeditationVoiceName, isMeditationVoiceSupported,
+} from './meditation-voice.js?v=81'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -26,7 +30,7 @@ export const medState = {
   view: 'hub',
   activeProgram: null,
   freeTimer: null,
-  voiceEnabled: false,
+  voiceEnabled: true,
   timerHint: '',
 }
 
@@ -40,8 +44,30 @@ export function clearMedTimers() {
 export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
+  stopMeditationVoice()
   medState.ambientPreview = false
   medState.freeTimer = null
+}
+
+export function syncMedVoiceFromSettings() {
+  const s = getSettings()
+  medState.voiceEnabled = s.medVoice !== false && isMeditationVoiceSupported()
+}
+
+export function setMedVoiceEnabled(on) {
+  const enabled = !!on && isMeditationVoiceSupported()
+  medState.voiceEnabled = enabled
+  const s = getSettings()
+  s.medVoice = enabled
+  saveSettings(s)
+  if (!enabled) stopMeditationVoice()
+  else initMeditationVoice()
+}
+
+export function getMedVoiceLabel() {
+  if (!isMeditationVoiceSupported()) return 'No disponible en este navegador'
+  if (!medState.voiceEnabled) return 'Desactivada'
+  return getMeditationVoiceName()
 }
 
 export function getMeditationSteps(id) {
@@ -203,16 +229,15 @@ export function medAmbientVol(s) {
 }
 
 function speakStep(text) {
-  if (!medState.voiceEnabled || !window.speechSynthesis || !text) return
-  window.speechSynthesis.cancel()
-  const u = new SpeechSynthesisUtterance(text)
-  u.lang = 'es-MX'
-  u.rate = 0.92
-  window.speechSynthesis.speak(u)
+  if (!medState.voiceEnabled || !text) return
+  speakMeditation(text)
 }
 
 export async function startMeditation(id) {
   stopMeditationSession()
+  syncMedVoiceFromSettings()
+  initMeditationVoice()
+  resetBreathCues()
   await resumeAudioContext()
   const diff = medState.difficulty || 'medio'
   const duration = MED_DURATIONS[diff]
@@ -237,15 +262,27 @@ export async function startMeditation(id) {
   const total = duration * 60
 
   if (id === 'breathing' || id === 'box-breath') {
+    if (medState.voiceEnabled) {
+      speakMeditationIntro(id)
+      setTimeout(() => speakBreathCue('inhale'), 2800)
+    }
     medTimers.push(setInterval(() => {
       medState.phase = medState.phase === 'inhale' ? 'hold' : medState.phase === 'hold' ? 'exhale' : 'inhale'
       playTone(medState.phase === 'inhale' ? 330 : 220, 0.15)
+      if (medState.voiceEnabled) speakBreathCue(medState.phase)
       if (typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion')) return
       if (typeof window.render === 'function') window.render()
     }, diff === 'experto' ? 3000 : 4000))
   }
 
-  if (medState.steps[0]?.text) speakStep(medState.steps[0].text)
+  if (medState.steps[0]?.text) {
+    if (medState.voiceEnabled && meta?.name) {
+      setTimeout(() => speakMeditation(`Comenzamos ${meta.name}.`), medState.voiceEnabled ? 400 : 0)
+      setTimeout(() => speakStep(medState.steps[0].text), 2200)
+    } else {
+      speakStep(medState.steps[0].text)
+    }
+  }
 
   medTimers.push(setInterval(() => {
     medState.elapsed++

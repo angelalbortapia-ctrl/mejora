@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const CACHE = 'mejora-v78'
+const CACHE = 'mejora-v81'
 const ASSETS = [
   `${BASE}/manifest.json`,
   `${BASE}/public/favicon.svg`,
@@ -38,9 +38,17 @@ const NETWORK_FIRST = [
   '/js/tour.js',
   '/js/version.js',
   '/js/meditations.js',
+  '/js/school-apply-lessons.js',
   '/js/meditation-service.js',
+  '/js/meditation-voice.js',
+  '/js/coach-engine.js',
+  '/js/meditation-adaptive.js',
+  '/js/pages/brain-gym.js',
   '/js/pages/meditation.js',
   '/js/global-search.js',
+  '/js/fx.js',
+  '/js/awards.js',
+  '/js/app.js',
   '/js/',
 ]
 

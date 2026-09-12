@@ -9,7 +9,7 @@ const STEPS = [
   {
     title: 'Plan del día',
     text: '4 misiones diarias en el banner. Completa las 4 para el bonus +80 XP.',
-    highlight: '.banner-metric-plan',
+    highlight: '.banner-metric-plan, #home-plan-pill',
   },
   {
     title: 'Continuar plan',

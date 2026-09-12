@@ -8,9 +8,9 @@ import {
   HOME_SHORTCUTS, getDailyIntention, MOOD_COACH,
 } from '../coaching.js'
 import { homeInsightHTML } from '../apis.js'
-import { renderHomeNeuroCard } from '../brain-academy.js?v=78'
-import { renderHomeReviewBanner } from '../school.js?v=78'
-import { getNextBestAction } from '../analytics.js'
+import { renderHomeNeuroCard } from '../brain-academy.js?v=81'
+import { renderHomeReviewBanner } from '../school.js?v=81'
+import { getPremiumCoach } from '../coach-engine.js'
 
 function greeting() {
   const h = new Date().getHours()
@@ -24,13 +24,18 @@ function formatDate() {
 }
 
 function nowCardHTML() {
-  const action = getNextBestAction()
-  const done = action.priority === 'done'
-  return `<a href="${action.link}" class="m-now ${done ? 'm-now--done' : ''} no-underline">
-    <p class="m-now-label">${done ? 'Listo por hoy' : 'Empieza por aquí'}</p>
-    <p class="m-now-title">${action.icon} ${action.title}</p>
-    <p class="m-now-desc">${action.desc}</p>
-    <span class="m-now-cta">${action.cta} →</span>
+  const coach = getPremiumCoach()
+  const done = coach.priority === 'done'
+  const chips = coach.chips?.length
+    ? `<div class="m-coach-chips">${coach.chips.map(c => `<span class="m-coach-chip">${c.icon} ${c.label}</span>`).join('')}</div>`
+    : ''
+  return `<a href="${coach.link}" class="m-now m-now--${coach.tone || 'focus'} ${done ? 'm-now--done' : ''} no-underline">
+    <p class="m-now-label">${done ? 'Listo por hoy' : 'Tu coach de hoy'}</p>
+    <p class="m-now-title">${coach.icon} ${coach.title}</p>
+    <p class="m-now-insight">${coach.insight}</p>
+    <p class="m-now-desc">${coach.desc}</p>
+    ${chips}
+    <span class="m-now-cta">${coach.cta} →</span>
   </a>`
 }
 
@@ -110,6 +115,24 @@ function moodSectionHTML(moodPickerHTML) {
   </div>`
 }
 
+function guidesStripHTML() {
+  if (needsOnboarding()) return ''
+  return `<section class="m-section m-guides-strip">
+    <div class="m-section-head">
+      <h2 class="m-section-title">Guías rápidas</h2>
+    </div>
+    <div class="m-guides-btns">
+      <button type="button" class="btn-ghost text-sm" onclick="startSectionGuideFromHome('enfoque')">◎ Enfoque</button>
+      <button type="button" class="btn-ghost text-sm" onclick="startSectionGuideFromHome('calma')">🫧 Calma</button>
+      <a href="#/ajustes" onclick="settingsTab='data';setTimeout(render,0)" class="btn-ghost text-sm no-underline">Todas →</a>
+    </div>
+  </section>`
+}
+
+export function bindHomeGlobals({ startGuide }) {
+  window.startSectionGuideFromHome = (id) => startGuide(id, () => window.render?.(true))
+}
+
 function footerLinksHTML() {
   const goals = syncGoals().filter(g => g.active)
   return `<nav class="m-footer-nav" aria-label="Más secciones">
@@ -133,10 +156,10 @@ export function renderHome({ moodPickerHTML, dailyApis, dailyApisLoading }) {
           <p class="m-home-date">${formatDate()}</p>
           <h1 class="m-home-title">${greeting()}, ${name}</h1>
           <p class="m-home-lead">${getDailyIntention()}</p>
-          ${streak >= 2 || progress.percent > 0 ? `<p class="m-progress-pill">
-            ${streak >= 2 ? `<span>🔥 <strong>${streak}</strong> días seguidos</span>` : ''}
-            ${progress.percent > 0 ? `<span>· Plan <strong>${progress.percent}%</strong></span>` : ''}
-          </p>` : ''}
+          <p class="m-progress-pill" id="home-plan-pill">
+            <span>🔥 <strong>${streak}</strong> días</span>
+            <span>· Plan <strong>${progress.percent}%</strong> (${progress.done}/${progress.total})</span>
+          </p>
         </header>
         ${needsOnboarding() ? '' : nowCardHTML()}
       </div>
@@ -149,6 +172,7 @@ export function renderHome({ moodPickerHTML, dailyApis, dailyApisLoading }) {
         </div>
         <aside class="m-home-side">
           ${habitsRowHTML()}
+          ${guidesStripHTML()}
           ${shortcutsHTML()}
           ${moodSectionHTML(moodPickerHTML)}
         </aside>

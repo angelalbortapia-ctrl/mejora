@@ -49,6 +49,15 @@ const SECTIONS = {
       { title: 'Timer libre', text: 'Meditación sin guía con sonidos ambientales opcionales.', highlight: '.med-timer-card', optional: true },
     ],
   },
+  enfoque: {
+    route: '/enfoque',
+    label: 'Enfoque',
+    steps: [
+      { title: 'Modo enfoque', text: 'Pomodoro de 25 min + descanso de 5. Una tarea, cero notificaciones.', highlight: '.page-enfoque, .enfoque-dashboard' },
+      { title: 'Temporizador', text: 'Inicia, pausa o reinicia. El anillo muestra el tiempo restante del bloque.', highlight: '.enfoque-timer' },
+      { title: 'Sesiones', text: 'Cada bloque completado suma a tu historial y refuerza el hábito de trabajo profundo.', highlight: '.enfoque-info', optional: true },
+    ],
+  },
 }
 
 function sectionSeenKey(id) {

@@ -97,7 +97,93 @@ body.mejora-forge {
 
 .banner-glow { display: none; }
 
-.banner-metrics { display: none !important; }
+.banner-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.banner-metric {
+  background: var(--m-surface-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-sm, 8px);
+  padding: 0.35rem 0.65rem;
+}
+
+.banner-metric-plan { min-width: 7rem; }
+
+.banner-metric-weather { display: none; }
+
+@media (max-width: 900px) {
+  .banner-metrics { display: none !important; }
+}
+
+.m-now-insight {
+  font-size: 0.8125rem;
+  color: var(--m-accent);
+  margin: 0.35rem 0 0.5rem;
+  line-height: 1.45;
+}
+
+.m-coach-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.25rem;
+}
+
+.m-coach-chip {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(212, 160, 18, 0.12);
+  border: 1px solid rgba(212, 160, 18, 0.25);
+  color: var(--m-muted);
+}
+
+.m-now--gentle { border-color: rgba(129, 140, 248, 0.35); }
+.m-now--success { border-color: rgba(61, 143, 106, 0.35); }
+
+.theme-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.theme-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.65rem 0.35rem;
+  border-radius: var(--m-radius-sm, 8px);
+  border: 1px solid var(--m-border);
+  background: var(--m-surface-2, rgba(255,255,255,0.04));
+  color: var(--m-muted);
+  cursor: pointer;
+}
+
+.theme-pick-btn.is-active {
+  border-color: var(--m-accent);
+  color: var(--m-text);
+}
+
+.theme-pick-btn.is-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.theme-pick-icon { font-size: 1.25rem; }
+.theme-pick-label { font-size: 0.7rem; text-align: center; }
+.theme-pick-lock { font-size: 0.6rem; color: var(--m-accent); }
+
+.m-guides-strip { margin-top: 0.5rem; }
+.m-guides-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
 
 .banner-title {
   font-family: var(--m-display) !important;

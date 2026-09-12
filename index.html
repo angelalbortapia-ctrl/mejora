@@ -19,9 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="css/design-system.css?v=78" />
-  <link rel="stylesheet" href="css/forge.css?v=78" />
-  <link rel="stylesheet" href="css/school.css?v=78" />
+  <link rel="stylesheet" href="css/design-system.css?v=81" />
+  <link rel="stylesheet" href="css/forge.css?v=81" />
+  <link rel="stylesheet" href="css/school.css?v=81" />
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -129,11 +129,13 @@
       if (!e.filename?.includes('/js/')) return
       const box = document.createElement('div')
       box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#eceff4;background:#12161c;border:1px solid #3d4a5c;border-radius:8px'
-      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 1rem;line-height:1.5">Usa el servidor local (no abras index.html directo).</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
+      const detail = (e.message || 'Error desconocido').replace(/</g, '&lt;')
+      const file = (e.filename || '').split('/').pop() || 'módulo JS'
+      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 0.75rem;line-height:1.5;color:#c45c5c"><strong>' + file + ':</strong> ' + detail + '</p><p style="margin:0 0 1rem;line-height:1.5;color:#8a8480">Recarga con <strong>Cmd+Shift+R</strong>. Si persiste, reinicia el servidor en el puerto 5173.</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
       document.body.innerHTML = ''
       document.body.appendChild(box)
     })
   </script>
-  <script type="module" src="js/app.js?v=78"></script>
+  <script type="module" src="js/app.js?v=81"></script>
 </body>
 </html>

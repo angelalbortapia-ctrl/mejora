@@ -5,10 +5,37 @@ import {
   getJourneySummary, getJourneyInsight, getHabitTrendWeeks,
   getWeeklySummary, getWeeklyActivityScores, getMilestones,
 } from '../analytics.js'
+import { getWeeklyReviewPrompt } from '../content.js'
+import { getItem, setItem, getWeekNumber } from '../core.js'
+import { getWeeklyReviewSuggestion } from '../coach-engine.js'
 import { tabBar, pageHero, sparklineSVG } from '../ui.js'
 import { heatmapHTML } from '../page-helpers.js'
 
 let viajeTab = 'resumen'
+
+function weeklyReviewKey() {
+  return `weeklyReview_${new Date().getFullYear()}_w${getWeekNumber()}`
+}
+
+export function getWeeklyReviewNote() {
+  return getItem(weeklyReviewKey(), '')
+}
+
+export function saveWeeklyReviewNote(text) {
+  setItem(weeklyReviewKey(), String(text || '').trim())
+}
+
+export function bindJourneyGlobals() {
+  window.saveWeeklyReview = () => {
+    const el = document.getElementById('weekly-review-text')
+    if (el) saveWeeklyReviewNote(el.value)
+    const msg = document.getElementById('weekly-review-saved')
+    if (msg) {
+      msg.hidden = false
+      setTimeout(() => { msg.hidden = true }, 2500)
+    }
+  }
+}
 
 export function getViajeTab() { return viajeTab }
 export function setViajeTab(v) { viajeTab = v }
@@ -24,9 +51,13 @@ export function renderViaje() {
   const max12 = Math.max(...trends12.map(t => t.percent), 1)
 
   const since = new Date(s.firstActivity + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })
+  const reviewPrompt = getWeeklyReviewPrompt(getWeekNumber())
+  const reviewNote = getWeeklyReviewNote()
+  const reviewAction = getWeeklyReviewSuggestion(reviewNote)
   const viajeTabs = tabBar([
     { id: 'resumen', label: 'Resumen', icon: '📊' },
     { id: 'actividad', label: 'Actividad', icon: '📈' },
+    { id: 'repaso', label: 'Repaso', icon: '📝' },
     { id: 'hitos', label: 'Hitos', icon: '🏆' },
   ], viajeTab, 'viajeTab')
 
@@ -118,6 +149,26 @@ export function renderViaje() {
       <a href="#/gimnasia" class="btn-secondary w-full mt-4 block text-center no-underline">Ir a gimnasia →</a>
     </div>`
 
+  const repasoBlock = `
+    <div class="card card-static viaje-weekly-review span-full">
+      <h3 class="section-title">Repaso semanal</h3>
+      <p class="text-sm text-muted mb-4">Semana ${getWeekNumber()} · tómate 5 min para cerrar el ciclo con intención.</p>
+      <p class="text-main font-medium mb-3">${reviewPrompt}</p>
+      <textarea id="weekly-review-text" class="input-field min-h-32 resize-y w-full" placeholder="Escribe tu reflexión de la semana…">${reviewNote}</textarea>
+      <div class="flex gap-2 flex-wrap mt-3">
+        <button type="button" onclick="saveWeeklyReview()" class="btn-primary">Guardar repaso</button>
+        <span id="weekly-review-saved" class="text-sm text-muted self-center" hidden>✓ Guardado</span>
+      </div>
+      <p class="text-xs text-muted mt-4">Tu nota se guarda por semana. El prompt cambia cada semana del año.</p>
+    </div>
+    <div class="card card-static viaje-weekly-action span-full">
+      <h3 class="section-title">Acción para la próxima semana</h3>
+      <p class="text-sm text-muted mb-2">${reviewAction.desc}</p>
+      ${reviewAction.onclick
+        ? `<button type="button" class="btn-primary" onclick="${reviewAction.onclick}">${reviewAction.cta} →</button>`
+        : `<a href="${reviewAction.link}" class="btn-primary no-underline inline-block">${reviewAction.cta} →</a>`}
+    </div>`
+
   const hitosBlock = `
     <div class="viaje-milestones span-full">
       <h3 class="section-title">Hitos del viaje</h3>
@@ -132,6 +183,7 @@ export function renderViaje() {
 
   const tabContent = viajeTab === 'resumen' ? resumenBlock
     : viajeTab === 'actividad' ? actividadBlock
+    : viajeTab === 'repaso' ? repasoBlock
     : hitosBlock
 
   return `<div class="animate-fade-in page-shell page-viaje route-enter">
