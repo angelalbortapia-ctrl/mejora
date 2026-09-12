@@ -94,8 +94,8 @@ import { renderViaje, getViajeTab, setViajeTab, bindJourneyGlobals } from './pag
 import { renderMetas, bindGoalsGlobals, getMetasTab, setMetasTab } from './pages/goals.js?v=120'
 import { renderProfile, getProfileTab, setProfileTab } from './pages/profile.js?v=120'
 import {
-  renderBrainGym, bindBrainGymGlobals, clearEphemeralBrainState, syncGimnasiaRoute, patchBrainExerciseUI, brainState,
-} from './pages/brain-gym.js?v=120'
+  renderBrainGym, bindBrainGymGlobals, clearEphemeralBrainState, syncGimnasiaRoute, patchBrainExerciseUI, patchGimnasiaHubUI, brainState,
+} from './pages/brain-gym.js?v=130'
 import { ensureGeminiConfig } from './gemini-config.js'
 import { ensureAzureConfig } from './azure-config.js'
 import { ensureFishConfig } from './fish-config.js'
@@ -248,20 +248,27 @@ function patchLiveUI(path) {
       const steps = medState.steps || []
       const step = steps[medState.step]
       const stepEl = document.getElementById('med-step-text')
+      const cueEl = document.querySelector('.calma-step-cue')
       const progressEl = document.getElementById('med-progress-fill')
       if (!stepEl || !progressEl) return false
       timerEl.textContent = `${mins}:${secs} · Paso ${medState.step + 1}/${steps.length}`
       progressEl.style.width = `${(medState.elapsed / total) * 100}%`
       const subFill = document.querySelector('.calma-step-subprogress-fill')
       if (subFill && step?.duration) subFill.style.width = `${Math.min(100, (medState.stepElapsed / step.duration) * 100)}%`
-      if (stepEl.textContent !== (step?.text || '')) {
-        stepEl.textContent = step?.text || ''
-        import('./meditation-fx.js?v=120').then(m => m.pulseCalmaStep?.(medState.step)).catch(() => {})
-      }
+      import('./meditation-voice.js?v=127').then(({ getStepInstructionText, getStepCueText }) => {
+        const instruction = getStepInstructionText(step)
+        const cue = getStepCueText(step)
+        if (cueEl) cueEl.textContent = cue
+        if (stepEl.textContent !== instruction) {
+          stepEl.textContent = instruction
+          import('./meditation-fx.js?v=130').then(m => m.pulseCalmaStep?.(medState.step)).catch(() => {})
+        }
+      }).catch(() => {})
     }
     return true
   }
   if (path === '/enfoque' && patchPomodoroUI()) return true
+  if (path === '/gimnasia' && patchGimnasiaHubUI()) return true
   if (path === '/gimnasia' && brainState.exercise && patchBrainExerciseUI()) return true
   if (path === '/rutina' && patchRoutineUI()) return true
   return false
@@ -365,7 +372,7 @@ function renderCore() {
     requestAnimationFrame(() => initLessonReaderScroll?.())
   }
   if (path === '/meditacion') {
-    import('./meditation-fx.js?v=120').then(m => {
+    import('./meditation-fx.js?v=130').then(m => {
       requestAnimationFrame(() => {
         if (medState.completed) m.initCalmaCompleteFX?.()
         else if (medState.session || medState.freeTimer?.active) m.initCalmaSessionFX?.()
@@ -375,6 +382,8 @@ function renderCore() {
         m.bindCalmaCardTilt?.()
       })
     }).catch(() => {})
+  } else if (prevPath === '/meditacion') {
+    import('./meditation-fx.js?v=130').then(m => m.stopCalmaFx?.()).catch(() => {})
   }
 }
 
@@ -440,6 +449,10 @@ async function applyVoiceConfigDefaults() {
   const s = getSettings()
   if (FISH_VOICE_ID && !s.fishVoiceId) {
     s.fishVoiceId = FISH_VOICE_ID
+    saveSettings(s)
+  }
+  if (s.fishSpeed === 0.82) {
+    s.fishSpeed = 0.96
     saveSettings(s)
   }
   if (hasFishTts()) {

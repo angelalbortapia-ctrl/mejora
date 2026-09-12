@@ -134,8 +134,8 @@ export function renderSettings() {
         </select>
       </div>
       <div class="ds-setting-row ds-setting-row--stack">
-        <span class="ds-setting-label">Velocidad (${Math.round((s.fishSpeed ?? 0.82) * 100)}%)</span>
-        <input type="range" min="65" max="100" step="1" value="${Math.round((s.fishSpeed ?? 0.82) * 100)}"
+        <span class="ds-setting-label">Velocidad (${Math.round((s.fishSpeed ?? 0.96) * 100)}%)</span>
+        <input type="range" min="85" max="115" step="1" value="${Math.round((s.fishSpeed ?? 0.96) * 100)}"
           onchange="setFishSpeedSetting(this.value / 100)" class="w-full">
         <p class="ds-setting-hint">82% suele sonar mejor para meditación.</p>
       </div>

@@ -9,16 +9,17 @@ import {
   getSessionAmbient, getProgramCatalog, getProgramDayIntro, getProgramDayPlan,
 } from './meditations.js?v=120'
 import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=124'
-import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=120'
+import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=127'
+import { enrichProgramSession } from './meditation-program-content.js?v=127'
 import { playTone } from './sounds.js'
 import { forgeSparkAt, pulseElement } from './fx.js?v=96'
 import {
   initMeditationVoice, speakMeditation, speakMeditationIntro,
   stopMeditationVoice, pauseMeditationVoice, resumeMeditationVoice, resetBreathCues,
   getMeditationVoiceName, isMeditationVoiceSupported, getStepSpeechText,
-  usesApiMedVoice, warmMeditationVoiceCache, speakGuidedMeditationOpen,
+  usesApiMedVoice, usesFishMedVoice, warmMeditationVoiceCache,
   estimateSpeechDurationSec, isMeditationVoiceSpeaking, setProgramVoiceOverride,
-} from './meditation-voice.js?v=124'
+} from './meditation-voice.js?v=127'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -54,6 +55,9 @@ export const medState = {
 
 /** Ritmo del guion — no comprime el contenido, solo ajusta pausas */
 const STEP_PACE = { facil: 1.12, medio: 1, dificil: 0.94, experto: 0.88 }
+
+/** Segundos de práctica silenciosa después de que termina la voz */
+const STEP_PRACTICE_SEC = { facil: 18, medio: 14, dificil: 11, experto: 9 }
 
 function migrateProgramData(data) {
   if (!data) return null
@@ -94,11 +98,13 @@ export function buildSessionPlan(id, difficulty = 'medio', voiceEnabled = medSta
     return { totalSec: minutes * 60, steps: [], minutes, guided: false, ambient: getSessionAmbient(id) }
   }
 
+  const practiceSec = STEP_PRACTICE_SEC[difficulty] || 14
   const steps = raw.map(s => {
     const text = getStepSpeechText(s)
     const speechSec = voiceEnabled ? estimateSpeechDurationSec(text) : 0
-    const paced = Math.max(32, Math.round(s.duration * pace))
-    return { ...s, duration: Math.max(paced, speechSec) }
+    const paced = Math.max(36, Math.round(s.duration * pace))
+    const voiceFloor = voiceEnabled ? speechSec + practiceSec : 0
+    return { ...s, duration: Math.max(paced, voiceFloor) }
   })
   const totalSec = steps.reduce((a, s) => a + s.duration, 0)
   const minutes = Math.max(1, Math.round(totalSec / 60))
@@ -130,6 +136,7 @@ export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
   stopMeditationVoice()
+  import('./meditation-fx.js?v=130').then(m => m.stopCalmaFx?.()).catch(() => {})
   setProgramVoiceOverride(null)
   medState.ambientPreview = false
   medState.freeTimer = null
@@ -501,18 +508,38 @@ function speakStep(step) {
   if (!medState.voiceEnabled || !step || medState.paused) return
   const text = getStepSpeechText(step)
   if (!text) return
-  speakMeditation(text, { interrupt: true, pauseMs: usesApiMedVoice() ? 2400 : undefined })
+  const pauseMs = usesFishMedVoice() ? 900 : usesApiMedVoice() ? 2000 : undefined
+  speakMeditation(text, { interrupt: true, pauseMs })
 }
+
+function canAdvanceGuidedStep(step) {
+  if (!step || medState.stepElapsed < step.duration) return false
+  if (medState.voiceEnabled && isMeditationVoiceSpeaking()) return false
+  return true
+}
+
+const BREATH_VOICE_CUES = [
+  'Sigue el círculo. Exhala un poco más largo que inhalar.',
+  'Mandíbula suelta. Hombros lejos de las orejas.',
+  'No fuerces el ritmo. Solo acompaña la respiración.',
+  'Si la mente se va, vuelve al aire. Sin regaño.',
+]
 
 function attachMeditationTimers(sessionId) {
   const total = medState.totalSec || (medState.completedMin * 60)
   const phaseMs = getBreathPhaseMs()
+  let breathCycles = 0
 
   if (sessionId === 'breathing' || sessionId === 'box-breath') {
     medTimers.push(setInterval(() => {
       if (medState.paused) return
       medState.phase = medState.phase === 'inhale' ? 'hold' : medState.phase === 'hold' ? 'exhale' : 'inhale'
       playTone(medState.phase === 'inhale' ? 330 : 220, 0.12)
+      breathCycles++
+      if (medState.voiceEnabled && breathCycles > 0 && breathCycles % 5 === 0) {
+        const cue = BREATH_VOICE_CUES[(breathCycles / 5 - 1) % BREATH_VOICE_CUES.length]
+        speakMeditation(cue, { interrupt: false, pauseMs: 1800 })
+      }
       if (typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion')) return
       if (typeof window.render === 'function') window.render()
     }, phaseMs))
@@ -525,11 +552,7 @@ function attachMeditationTimers(sessionId) {
       medState.stepElapsed++
       const step = medState.steps[medState.step]
       const lastIdx = medState.steps.length - 1
-      if (step && medState.stepElapsed >= step.duration) {
-        if (medState.voiceEnabled && isMeditationVoiceSpeaking()) {
-          medState.totalSec++
-          return
-        }
+      if (canAdvanceGuidedStep(step)) {
         if (medState.step < lastIdx) {
           medState.step++
           medState.stepElapsed = 0
@@ -600,14 +623,28 @@ export async function startMeditation(id, options = {}) {
   if (options.fromProgram) {
     const dayNum = getProgramDayNumber(options.fromProgram)
     intro = getProgramDayIntro(options.fromProgram, dayNum)
-    if (isGeminiProgramsEnabled()) {
-      const baseSteps = getMeditationSteps(id)
-      if (baseSteps.length) {
+    const baseSteps = getMeditationSteps(id)
+    if (baseSteps.length) {
+      if (isGeminiProgramsEnabled()) {
         const enhanced = await prepareProgramSessionContent(options.fromProgram, id)
-        intro = enhanced.intro || intro
-        stepsOverride = enhanced.steps
-        contentSource = enhanced.source || 'static'
+        if (enhanced.source === 'gemini' || enhanced.source === 'cache') {
+          intro = enhanced.intro || intro
+          stepsOverride = enhanced.steps
+          contentSource = enhanced.source
+        } else {
+          const enriched = enrichProgramSession(options.fromProgram, dayNum, intro, baseSteps)
+          intro = enriched.intro
+          stepsOverride = enriched.steps
+          contentSource = 'program'
+        }
+      } else {
+        const enriched = enrichProgramSession(options.fromProgram, dayNum, intro, baseSteps)
+        intro = enriched.intro
+        stepsOverride = enriched.steps
+        contentSource = 'program'
       }
+    } else if (!baseSteps.length && intro) {
+      contentSource = 'program'
     }
   }
 
@@ -640,17 +677,21 @@ export async function startMeditation(id, options = {}) {
   await restoreSessionAmbient(id)
 
   if (medState.voiceEnabled) {
+    const warmTexts = [intro, ...medState.steps.map(getStepSpeechText)].filter(Boolean)
+    if (warmTexts.length) warmMeditationVoiceCache(warmTexts)
     if (id === 'breathing' || id === 'box-breath') {
-      speakMeditationIntro(intro)
-    } else if (medState.steps[0]) {
-      const firstVoice = getStepSpeechText(medState.steps[0])
-      const warmTexts = [intro, ...medState.steps.map(getStepSpeechText)].filter(Boolean)
-      warmMeditationVoiceCache(warmTexts)
-      speakGuidedMeditationOpen(intro, firstVoice)
+      if (intro) await speakMeditationIntro(intro)
+    } else if (intro) {
+      const introPause = usesFishMedVoice() ? 700 : usesApiMedVoice() ? 2400 : 2000
+      await speakMeditation(intro, { interrupt: true, pauseMs: introPause })
     }
   }
 
   attachMeditationTimers(id)
+
+  if (medState.voiceEnabled && medState.steps[0] && id !== 'breathing' && id !== 'box-breath') {
+    speakStep(medState.steps[0])
+  }
 }
 
 export function hasGeminiProgramContent() {

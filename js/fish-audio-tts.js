@@ -88,8 +88,8 @@ export function getFishModel() {
 
 export function getFishSpeed() {
   const s = Number(getSettings().fishSpeed)
-  if (!Number.isFinite(s)) return 0.82
-  return Math.max(0.65, Math.min(1.05, s))
+  if (!Number.isFinite(s)) return 0.96
+  return Math.max(0.85, Math.min(1.15, s))
 }
 
 export function setFishApiKey(key) {
@@ -115,8 +115,9 @@ export function setFishModel(id) {
 
 export function setFishSpeed(speed) {
   const s = getSettings()
-  s.fishSpeed = Math.max(0.65, Math.min(1.05, Number(speed) || 0.82))
+  s.fishSpeed = Math.max(0.85, Math.min(1.15, Number(speed) || 0.96))
   saveSettings(s)
+  audioCache.clear()
 }
 
 function cacheKey(text) {
@@ -165,20 +166,22 @@ async function requestFishAudio(text) {
     body: JSON.stringify({
       text: humanizeForSpeech(text),
       reference_id: voiceId,
-      temperature: 0.55,
-      top_p: 0.7,
+      temperature: 0.72,
+      top_p: 0.78,
       prosody: {
         speed: getFishSpeed(),
         volume: 0,
         normalize_loudness: true,
       },
       format: 'mp3',
+      sample_rate: 44100,
       mp3_bitrate: 192,
       latency: 'normal',
-      normalize: false,
+      normalize: true,
       chunk_length: 300,
+      min_chunk_length: 50,
       condition_on_previous_chunks: true,
-      repetition_penalty: 1.15,
+      repetition_penalty: 1.1,
     }),
   })
 
@@ -314,29 +317,60 @@ export async function playFishBuffer(buffer) {
   })
 }
 
+const PHRASE_MAX_CHARS = 280
+
+function endPhrase(s) {
+  const t = s.trim()
+  return /[.!?…]$/.test(t) ? t : `${t}.`
+}
+
+/** Bloques largos = menos cortes = prosodia más natural (menos robótica) */
 function splitPhrases(text) {
   const clean = humanizeForSpeech(text)
   if (!clean) return []
+  if (clean.length <= PHRASE_MAX_CHARS) return [endPhrase(clean)]
 
-  const raw = clean
-    .split(/(?<=[.!?…])\s+/)
-    .map(p => p.trim())
-    .filter(p => p.length > 1)
+  const sentences = clean.split(/(?<=[.!?…])\s+/).map(s => s.trim()).filter(s => s.length > 1)
+  const chunks = []
+  let buf = ''
 
-  const merged = []
-  for (const phrase of raw) {
-    const wordCount = phrase.replace(/[.!?…]+$/, '').split(/\s+/).length
-    if (wordCount <= 4 && merged.length) {
-      merged[merged.length - 1] = `${merged[merged.length - 1].replace(/[.!?…]+$/, '')}, ${phrase.charAt(0).toLowerCase()}${phrase.slice(1)}`
+  for (const sentence of sentences) {
+    const next = buf ? `${buf} ${sentence}` : sentence
+    if (next.length <= PHRASE_MAX_CHARS) {
+      buf = next
+      continue
+    }
+    if (buf) chunks.push(endPhrase(buf))
+    if (sentence.length <= PHRASE_MAX_CHARS) {
+      buf = sentence
     } else {
-      merged.push(phrase)
+      const parts = sentence.split(/,\s+/).filter(Boolean)
+      let partBuf = ''
+      for (const part of parts) {
+        const candidate = partBuf ? `${partBuf}, ${part}` : part
+        if (candidate.length <= PHRASE_MAX_CHARS) partBuf = candidate
+        else {
+          if (partBuf) chunks.push(endPhrase(partBuf))
+          partBuf = part
+        }
+      }
+      buf = partBuf
     }
   }
-
-  return merged.map(p => (/[.!?…]$/.test(p) ? p : `${p}.`))
+  if (buf) chunks.push(endPhrase(buf))
+  return chunks.length ? chunks : [endPhrase(clean)]
 }
 
-async function speakPhrasesFish(phrases, { interrupt = true, pauseMs = 2200 } = {}) {
+function fishPauseMs(phrase, index, total, override) {
+  if (override != null) return override
+  if (total <= 1) return 350
+  if (index === total - 1) return 500
+  const words = phrase.replace(/[.!?…]+$/, '').split(/\s+/).length
+  if (words < 12) return 750
+  return 1050
+}
+
+async function speakPhrasesFish(phrases, { interrupt = true, pauseMs } = {}) {
   if (!phrases.length) return
   if (interrupt) stopFishSpeech()
 
@@ -357,7 +391,8 @@ async function speakPhrasesFish(phrases, { interrupt = true, pauseMs = 2200 } = 
       return
     }
     if (i < phrases.length) {
-      await new Promise(r => { phraseTimer = setTimeout(r, pauseMs) })
+      const gap = fishPauseMs(phrases[i - 1], i - 1, phrases.length, pauseMs)
+      await new Promise(r => { phraseTimer = setTimeout(r, gap) })
       if (gen !== speechGeneration) return
     }
   }
@@ -391,14 +426,13 @@ export async function speakFishMeditation(text, { interrupt = true, pauseMs } = 
   }
   if (speaking && interrupt) stopFishSpeech()
 
-  const gap = pauseMs ?? (phrases.length > 2 ? 2600 : 2200)
-  await speakPhrasesFish(phrases, { interrupt, pauseMs: gap })
+  await speakPhrasesFish(phrases, { interrupt, pauseMs })
 }
 
 export async function speakFishSequence(texts) {
   for (const text of texts) {
     if (!text) continue
-    await speakFishMeditation(text, { interrupt: false, pauseMs: 2600 })
+    await speakFishMeditation(text, { interrupt: false, pauseMs: 900 })
   }
 }
 

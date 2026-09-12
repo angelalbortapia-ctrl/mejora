@@ -24,7 +24,8 @@ import {
   getMeditationVoiceHint, renderMeditationVoiceOptions,
   usesAzureMedVoice, usesGeminiMedVoice, usesFishMedVoice,
   listAzureVoiceOptions, listGeminiVoiceOptions,
-} from '../meditation-voice.js?v=124'
+  getStepInstructionText, getStepCueText,
+} from '../meditation-voice.js?v=127'
 import {
   listFishVoiceOptions, getFishVoiceId, getFishSpeed, setFishVoiceId, setFishSpeed,
 } from '../fish-audio-tts.js?v=124'
@@ -285,7 +286,7 @@ function medAmbientPanelHTML() {
     <label class="med-voice-rate">
       <span class="text-xs text-muted">Velocidad de voz</span>
       <div class="med-voice-rate-row">
-        <input type="range" min="${usesFishMedVoice() ? 65 : 42}" max="${usesFishMedVoice() ? 100 : 72}" value="${usesFishMedVoice() ? Math.round(getFishSpeed() * 100) : Math.round(getMedVoiceRate() * 100)}"
+        <input type="range" min="${usesFishMedVoice() ? 85 : 42}" max="${usesFishMedVoice() ? 115 : 72}" value="${usesFishMedVoice() ? Math.round(getFishSpeed() * 100) : Math.round(getMedVoiceRate() * 100)}"
           oninput="${usesFishMedVoice() ? `setFishSpeed(Number(this.value)/100); document.getElementById('med-voice-rate-pct')?.textContent=Math.round(Number(this.value))+'%'` : `setMedVoiceRate(Number(this.value)/100); document.getElementById('med-voice-rate-pct')?.textContent=Math.round(Number(this.value))+'%'`}"
           class="med-ambient-range" aria-label="Velocidad de voz">
         <span id="med-voice-rate-pct" class="text-xs text-muted">${usesFishMedVoice() ? Math.round(getFishSpeed() * 100) : Math.round(getMedVoiceRate() * 100)}%</span>
@@ -602,14 +603,17 @@ function activeSessionHTML() {
         ${plan?.intention ? `<p class="calma-session-day-intent">${plan.intention}</p>` : ''}
       </div>`
     })() : ''
+    const stepCue = getStepCueText(step)
+    const stepInstruction = getStepInstructionText(step)
     stageInner = `
       ${progKicker}
       <p id="med-timer" class="calma-session-timer-sm">${mins}:${secs} restantes · Paso ${medState.step + 1}/${steps.length}</p>
       <article class="lesson-section-card calma-step-card is-active is-revealed">
         <span class="lesson-section-watermark" aria-hidden="true">${String(medState.step + 1).padStart(2, '0')}</span>
         <div class="lesson-section-inner">
-          <p class="lesson-block-label">Ahora</p>
-          <p id="med-step-text" class="calma-step-text lesson-hero-hook">${esc(step?.text || '')}</p>
+          <p class="lesson-block-label">Instrucción</p>
+          ${stepCue ? `<p class="calma-step-cue">${esc(stepCue)}</p>` : ''}
+          <p id="med-step-text" class="calma-step-text calma-step-instruction lesson-hero-hook">${esc(stepInstruction)}</p>
         </div>
       </article>
       <div class="calma-step-progress" title="Progreso de la sesión"><div id="med-progress-fill" class="lesson-reader-progress-fill calma-step-progress-fill" style="width:${(medState.elapsed/total)*100}%"></div></div>

@@ -1278,13 +1278,30 @@ body.calma-mode .app-content {
   transition: width 0.3s linear;
 }
 
-.calma-step-text {
+.calma-step-cue {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--m-accent, #6ee7b7);
+  margin: 0 0 0.65rem;
+  opacity: 0.9;
+}
+
+.calma-step-text,
+.calma-step-instruction {
   font-family: var(--m-display);
   font-size: clamp(1.1rem, 3.5vw, 1.45rem);
   line-height: 1.45;
-  max-width: 28ch;
+  max-width: 34ch;
   margin: 0 auto 1.5rem;
   color: var(--m-text);
+}
+
+.calma-step-instruction {
+  font-family: var(--m-body, inherit);
+  font-size: clamp(1rem, 3.2vw, 1.22rem);
+  line-height: 1.55;
+  font-weight: 400;
 }
 
 .calma-session-hint { font-size: 0.75rem; color: var(--m-muted); margin: 0.75rem 0 0; }

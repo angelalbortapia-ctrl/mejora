@@ -1,7 +1,7 @@
 #!/bin/bash
 cd "$(dirname "$0")" || exit 1
 PORT=5173
-URL="http://127.0.0.1:${PORT}/?v=126"
+URL="http://127.0.0.1:${PORT}/?v=131"
 LOG="${TMPDIR:-/tmp}/mejora-server.log"
 PYTHON="/usr/bin/python3"
 SERVER="${PWD}/scripts/mejora-dev-server.py"

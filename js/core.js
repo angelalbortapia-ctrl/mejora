@@ -269,7 +269,7 @@ export function getSettings() {
     latitude: null, longitude: null, locationName: '', locationAsked: false,
     medAmbient: 'off', medAmbientVolume: 0.28, medVoice: true, medVoiceURI: '', medVoiceRate: 0.48,
     medVoiceEngine: 'browser',
-    fishApiKey: '', fishVoiceId: '', fishModel: 's2.1-pro-free', fishSpeed: 0.82,
+    fishApiKey: '', fishVoiceId: '', fishModel: 's2.1-pro-free', fishSpeed: 0.96,
     azureSpeechKey: '', azureSpeechRegion: 'eastus', azureVoice: 'es-MX-DaliaNeural',
     geminiApiKey: '', geminiVoice: 'Despina',
   })

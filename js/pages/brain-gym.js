@@ -96,79 +96,68 @@ function renderBrainExercise() {
   return ''
 }
 
-function renderBrainGym() {
-  if (brainState.reviewFlow) {
-    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
-      <div class="ds-page ds-page--full">${renderReviewQuizFlow(brainState.reviewFlow)}</div>
-    </div>`
-  }
-  if (brainState.session?.phase === 'debrief') return renderSessionDebrief()
-  if (brainState.session?.phase === 'intro' && !brainState.exercise) return renderSessionIntro()
-  if (brainState.exercise) return renderBrainExercise()
+const BRAIN_TAB_RESET = 'brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.schoolSection=\'curriculum\';brainState.activePaper=null;'
 
+function brainTabDefs() {
+  return [
+    { id: 'school', label: 'Escuela', icon: '🏫' },
+    { id: 'academy', label: 'Catálogo', icon: '📚' },
+    { id: 'lab', label: 'Laboratorio', icon: '🔬' },
+    { id: 'program', label: 'Programa', icon: '📋' },
+  ]
+}
+
+function renderBrainTabsHtml() {
+  return tabBar(
+    brainTabDefs(),
+    brainState.brainView || 'school',
+    'brainState.brainView',
+    BRAIN_TAB_RESET,
+  )
+}
+
+function brainHubShellClass() {
+  const view = brainState.brainView || 'school'
+  const parts = ['page-shell', 'page-wide', 'page-brain']
+  if (view === 'school' || view === 'academy') parts.push('page-school')
+  if (view === 'lab') parts.push('brain-lab')
+  return parts.join(' ')
+}
+
+function brainHubPageClass() {
+  const view = brainState.brainView || 'school'
+  const parts = ['ds-page', 'ds-page--full']
+  if (view === 'school' || view === 'academy') parts.push('brain-campus')
+  return parts.join(' ')
+}
+
+function renderBrainHubBody() {
   const stats = getProgramStats()
   const domains = getDomainProgress()
   const todaySession = getTodaysSession()
   const diff = brainState.difficulty
   const d = DIFFICULTIES[diff]
+  const view = brainState.brainView || 'school'
 
-  const brainTabs = tabBar([
-    { id: 'school', label: 'Escuela', icon: '🏫' },
-    { id: 'academy', label: 'Catálogo', icon: '📚' },
-    { id: 'lab', label: 'Laboratorio', icon: '🔬' },
-    { id: 'program', label: 'Programa', icon: '📋' },
-  ], brainState.brainView || 'school', 'brainState.brainView', 'brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.schoolSection=\'curriculum\';brainState.activePaper=null;')
-
-  if (brainState.brainView === 'school') {
+  if (view === 'school') {
     if (brainState.activePaper) {
       const paper = getPaper(brainState.activePaper)
-      return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
-        <div class="ds-page ds-page--full brain-campus">
-        ${brainTabs}
-        ${paper ? wrapSchoolPage(renderPaperDetail(paper, brainState.paperMeta), 'library', { stats: getSchoolStats() }) : ''}
-        </div>
-      </div>`
+      return paper
+        ? wrapSchoolPage(renderPaperDetail(paper, brainState.paperMeta), 'library', { stats: getSchoolStats() })
+        : ''
     }
-    if (brainState.activeLesson) {
-      if (brainState.lessonFlow?.id === brainState.activeLesson) {
-        return `<div class="animate-fade-in page-shell page-wide page-brain">
-          <div class="ds-page ds-page--full">${brainTabs}${renderLessonPostFlow(brainState.lessonFlow)}</div>
-        </div>`
-      }
-      const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
-      return lesson ? renderLessonFull(lesson) : ''
-    }
-    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
-      <div class="ds-page ds-page--full brain-campus">
-      ${brainTabs}
-      ${renderSchoolHub(brainState.schoolFaculty, brainState.schoolSection, {
-        pubmed: brainState.pubmed,
-        libraryFilter: brainState.libraryFilter,
-      })}
-      </div>
-    </div>`
+    return renderSchoolHub(brainState.schoolFaculty, brainState.schoolSection, {
+      pubmed: brainState.pubmed,
+      libraryFilter: brainState.libraryFilter,
+    })
   }
 
-  if (brainState.brainView === 'academy') {
-    if (brainState.activeLesson) {
-      if (brainState.lessonFlow?.id === brainState.activeLesson) {
-        return `<div class="animate-fade-in page-shell page-wide page-brain">
-          <div class="ds-page ds-page--full">${renderLessonPostFlow(brainState.lessonFlow)}</div>
-        </div>`
-      }
-      const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
-      return lesson ? renderLessonFull(lesson) : ''
-    }
+  if (view === 'academy') {
     const weekly = getWeeklyLessonMeta()
-    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
-      <div class="ds-page ds-page--full brain-campus">
-      ${brainTabs}
-      ${renderCatalogPage(brainState.catalogFilter, weekly)}
-      </div>
-    </div>`
+    return renderCatalogPage(brainState.catalogFilter, weekly)
   }
 
-  if (brainState.brainView === 'lab') {
+  if (view === 'lab') {
     const games = getLabExercises()
     const labSections = LAB_EXERCISE_GROUPS.map(g => {
       const items = g.ids.map(id => EXERCISES[id]).filter(Boolean)
@@ -177,21 +166,13 @@ function renderBrainGym() {
         <div class="brain-games-grid">${items.map(renderLabGameCard).join('')}</div>
       </div>`
     }).join('')
-    return `<div class="animate-fade-in page-shell page-wide page-brain brain-lab">
-      <div class="ds-page ds-page--full">
-      ${brainTabs}
-      ${pageHero('Laboratorio', '12 ejercicios · protocolos + entrenamiento cognitivo', games.length, 'disponibles')}
+    return `${pageHero('Laboratorio', '12 ejercicios · protocolos + entrenamiento cognitivo', games.length, 'disponibles')}
       <p class="ds-lead span-full">Protocolos con respaldo en neuroimagen y entrenamiento de velocidad, memoria y patrones.</p>
       ${difficultyPicker(diff, 'setBrainDiff')}
-      ${labSections}
-      </div>
-    </div>`
+      ${labSections}`
   }
 
-  return `<div class="animate-fade-in page-shell page-brain">
-    <div class="ds-page ds-page--full">
-    ${brainTabs}
-    ${pageHero('Entrenamiento', 'Sesión guiada de paradigmas cognitivos', stats.doneToday ? '✓' : '○', 'sesión hoy')}
+  return `${pageHero('Entrenamiento', 'Sesión guiada de paradigmas cognitivos', stats.doneToday ? '✓' : '○', 'sesión hoy')}
 
     <div class="brain-dashboard">
     <div class="card program-hero card-static brain-hero">
@@ -238,9 +219,73 @@ function renderBrainGym() {
     </div>
     </div>
 
-    </div>
+    </div>`
+}
+
+function renderBrainHubShell({ animate = true } = {}) {
+  const anim = animate && !document.getElementById('brain-gym-hub') ? 'animate-fade-in' : ''
+  return `<div id="brain-gym-shell" class="${anim} ${brainHubShellClass()}">
+    <div class="${brainHubPageClass()}" id="brain-gym-page">
+      <div id="brain-gym-tabs-wrap">${renderBrainTabsHtml()}</div>
+      <div id="brain-gym-hub">${renderBrainHubBody()}</div>
     </div>
   </div>`
+}
+
+function isBrainHubMode() {
+  return !brainState.exercise
+    && !brainState.reviewFlow
+    && !brainState.activeLesson
+    && !(brainState.session?.phase === 'debrief')
+    && !(brainState.session?.phase === 'intro' && !brainState.exercise)
+}
+
+export function patchGimnasiaHubUI() {
+  if (!isBrainHubMode()) return false
+  const shell = document.getElementById('brain-gym-shell')
+  const tabsWrap = document.getElementById('brain-gym-tabs-wrap')
+  const hub = document.getElementById('brain-gym-hub')
+  const page = document.getElementById('brain-gym-page')
+  if (!shell || !tabsWrap || !hub || !page) return false
+
+  shell.className = brainHubShellClass()
+  page.className = brainHubPageClass()
+  tabsWrap.innerHTML = renderBrainTabsHtml()
+  hub.innerHTML = renderBrainHubBody()
+  return true
+}
+
+function renderBrainGym() {
+  if (brainState.reviewFlow) {
+    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
+      <div class="ds-page ds-page--full">${renderReviewQuizFlow(brainState.reviewFlow)}</div>
+    </div>`
+  }
+  if (brainState.session?.phase === 'debrief') return renderSessionDebrief()
+  if (brainState.session?.phase === 'intro' && !brainState.exercise) return renderSessionIntro()
+  if (brainState.exercise) return renderBrainExercise()
+
+  if (brainState.brainView === 'school' && brainState.activeLesson) {
+    if (brainState.lessonFlow?.id === brainState.activeLesson) {
+      return `<div class="animate-fade-in page-shell page-wide page-brain">
+        <div class="ds-page ds-page--full">${renderBrainTabsHtml()}${renderLessonPostFlow(brainState.lessonFlow)}</div>
+      </div>`
+    }
+    const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
+    return lesson ? renderLessonFull(lesson) : ''
+  }
+
+  if (brainState.brainView === 'academy' && brainState.activeLesson) {
+    if (brainState.lessonFlow?.id === brainState.activeLesson) {
+      return `<div class="animate-fade-in page-shell page-wide page-brain">
+        <div class="ds-page ds-page--full">${renderLessonPostFlow(brainState.lessonFlow)}</div>
+      </div>`
+    }
+    const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
+    return lesson ? renderLessonFull(lesson) : ''
+  }
+
+  return renderBrainHubShell()
 }
 
 function renderSessionIntro() {
@@ -1325,4 +1370,4 @@ export function bindBrainGymGlobals() {
   window.endExerciseBlock = endExerciseBlock
 }
 
-export { brainState, renderBrainGym, patchBrainExerciseUI, startBrain, finishBrain, endExerciseBlock }
+export { brainState, renderBrainGym, patchBrainExerciseUI, patchGimnasiaHubUI, startBrain, finishBrain, endExerciseBlock }

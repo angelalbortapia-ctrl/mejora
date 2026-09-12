@@ -459,7 +459,7 @@ export function estimateSpeechDurationSec(text) {
     const phrase = phrases[i]
     const words = phrase.replace(/[.!?…]+$/, '').split(/\s+/).filter(Boolean).length
     let wpm = 108
-    if (engine === 'fish') wpm = 88
+    if (engine === 'fish') wpm = 102
     else if (engine === 'azure') wpm = 94
     else if (engine === 'gemini') wpm = 98
     else wpm = Math.max(68, 82 * (rate / 0.52))
@@ -659,4 +659,23 @@ export function resetBreathCues() {
 export function getStepSpeechText(step) {
   if (!step) return ''
   return step.voice || step.text || ''
+}
+
+/** Texto principal en pantalla — instrucción completa, no solo el titular */
+export function getStepInstructionText(step) {
+  if (!step) return ''
+  const voice = String(step.voice || '').trim()
+  const text = String(step.text || '').trim()
+  if (voice && voice.length > text.length + 8) return voice
+  return voice || text
+}
+
+/** Titular breve del paso (si difiere de la instrucción) */
+export function getStepCueText(step) {
+  if (!step) return ''
+  const voice = String(step.voice || '').trim()
+  const text = String(step.text || '').trim()
+  if (!text || text === voice) return ''
+  if (text.length > 84) return ''
+  return text
 }
