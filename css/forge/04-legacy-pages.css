@@ -2068,7 +2068,7 @@ html.reduce-motion .app-aurora-orb {
   grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
   gap: 0.45rem;
   margin-bottom: 0.85rem;
-  max-height: 11rem;
+  max-height: 15rem;
   overflow-y: auto;
   padding-right: 0.15rem;
 }

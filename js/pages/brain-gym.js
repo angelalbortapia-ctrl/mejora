@@ -15,7 +15,7 @@ import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
   initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
 } from '../brain-exercises.js'
-import { tabBar, subTabBar, pageHero } from '../ui.js?v=81'
+import { tabBar, subTabBar, pageHero } from '../ui.js?v=82'
 import { playTone, playClick } from '../sounds.js'
 import { showToast, awardXp, processPlanAwards } from '../awards.js'
 import { guardDifficulty } from '../page-helpers.js'
@@ -24,16 +24,16 @@ import {
   getDailyLesson, getWeeklyLesson, getWeeklyLessonMeta, LESSONS, LAB_EXERCISE_IDS, LAB_EXERCISE_GROUPS, EXERCISE_REAL_WORLD,
   renderLessonCard, renderLessonFull, renderNeuroPunchBanner, renderDebateBanner, renderLegendaryHall,
   renderHomeNeuroCard, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
-  getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson,
-} from '../brain-academy.js?v=81'
+  getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson, getLessonBonusXp,
+} from '../brain-academy.js?v=87'
 import {
   renderSchoolHub, completeLessonReview, renderHomeReviewBanner,
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats,
-} from '../school.js?v=81'
-import { renderCatalogPage } from '../school-catalog.js?v=81'
-import { wrapSchoolPage } from '../school-shell.js?v=81'
-import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '../school-library.js?v=81'
-import { downloadFacultyCertificate, checkAndIssueCertificates } from '../school-certificates.js?v=81'
+} from '../school.js?v=82'
+import { renderCatalogPage } from '../school-catalog.js?v=82'
+import { wrapSchoolPage } from '../school-shell.js?v=82'
+import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '../school-library.js?v=82'
+import { downloadFacultyCertificate, checkAndIssueCertificates } from '../school-certificates.js?v=82'
 
 function render(immediate = false) {
   if (typeof window.render === 'function') window.render(immediate)
@@ -136,9 +136,7 @@ function renderBrainGym() {
         </div>`
       }
       const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
-      return `<div class="animate-fade-in page-shell page-wide page-brain">
-        <div class="ds-page ds-page--full">${brainTabs}${lesson ? renderLessonFull(lesson) : ''}</div>
-      </div>`
+      return lesson ? renderLessonFull(lesson) : ''
     }
     return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
       <div class="ds-page ds-page--full brain-campus">
@@ -159,9 +157,7 @@ function renderBrainGym() {
         </div>`
       }
       const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
-      return `<div class="animate-fade-in page-shell page-wide page-brain">
-        <div class="ds-page ds-page--full">${lesson ? renderLessonFull(lesson) : ''}</div>
-      </div>`
+      return lesson ? renderLessonFull(lesson) : ''
     }
     const weekly = getWeeklyLessonMeta()
     return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
@@ -963,6 +959,8 @@ window.completeLesson = function(id) {
   markLessonComplete(id)
   if (!wasDone) {
     awardXp('mental', 30, 'Lección de academia')
+    const bonus = getLessonBonusXp()
+    if (bonus > 0) awardXp('mental', bonus, `Dominio de lección (+${bonus})`)
     recordActivity('brain')
     processPlanAwards(checkPlanTask('brain'))
   }

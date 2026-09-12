@@ -276,6 +276,18 @@
   color: var(--text);
 }
 
+.ds-setting-steps {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.15rem;
+  line-height: 1.55;
+}
+
+.ds-setting-steps a {
+  color: var(--forge-accent, #6ee7b7);
+}
+
 .ds-setting-hint {
   font-size: 0.75rem;
   color: var(--text-muted);

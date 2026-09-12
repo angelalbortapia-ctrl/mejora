@@ -1,235 +1,166 @@
-/** Sesiones de meditación — Calma FORGE */
+/** Sesiones Calma — protocolos con guion hablado */
+
+import { PROGRAM_DEFINITIONS } from './meditation-programs-data.js?v=120'
+import { MEDITATION_STEPS } from './meditation-steps-content.js?v=120'
+
+export { MEDITATION_STEPS }
+
+export const MED_CATEGORIES = {
+  breath: { label: 'Respiración', icon: '◎', color: '#6ee7b7' },
+  body: { label: 'Cuerpo', icon: '⬡', color: '#93c5fd' },
+  focus: { label: 'Enfoque', icon: '◆', color: '#d4a012' },
+  stress: { label: 'Regulación', icon: '⚡', color: '#f9a8d4' },
+  sleep: { label: 'Sueño', icon: '☾', color: '#a78bfa' },
+  restore: { label: 'Recuperación', icon: '⛊', color: '#34d399' },
+}
 
 export const MEDITATIONS = [
-  { id: 'breathing', name: 'Respiración táctica', icon: '◎', desc: 'Ancla el sistema nervioso en 3 minutos.', type: 'breathing', neuro: 'Exhalar largo activa nervio vago — baja cortisol en segundos.' },
-  { id: 'box-breath', name: 'Respiración cuadrada', icon: '▣', desc: '4-4-4-4. Control bajo presión.', type: 'breathing', neuro: 'Ritmo simétrico estabiliza variabilidad cardíaca (coherencia).' },
-  { id: 'body-scan', name: 'Escaneo corporal', icon: '⬡', desc: 'Mapa del cuerpo sin juicio.', type: 'steps', stepsKey: 'bodyScan', neuro: 'Entrena interocepción en ínsula antes de que escale la tensión.' },
-  { id: 'release', name: 'Soltar tensión', icon: '▽', desc: 'Mandíbula, hombros, puños — suelta.', type: 'steps', stepsKey: 'release', neuro: 'Relajar músculo esquelético señala seguridad al tronco encefálico.' },
-  { id: 'prefocus', name: 'Pre-enfoque', icon: '◆', desc: '5 min antes de ejecutar.', type: 'steps', stepsKey: 'prefocus', neuro: 'Activa red atencional dorsal; apaga rumiación (red por defecto).' },
-  { id: 'presleep', name: 'Protocolo de sueño', icon: '☾', desc: 'Baja revoluciones antes de dormir.', type: 'steps', stepsKey: 'presleep', neuro: 'Prepara ondas lentas (N3) y limpieza glinfática nocturna.' },
-  { id: 'gratitude', name: 'Recalibración', icon: '◇', desc: 'Tres hechos concretos del día.', type: 'steps', stepsKey: 'gratitude', neuro: 'Refuerza corteza prefrontal medial; reduce reactividad amigdalar.' },
-  { id: 'walk', name: 'Caminata táctica', icon: '➤', desc: 'Paso lento, mente en los pies.', type: 'steps', stepsKey: 'walk', neuro: 'Movimiento bilateral regula sistema nervioso autónomo.' },
-  { id: 'reset', name: 'Reset de 90 segundos', icon: '⟲', desc: 'Corte de emergencia entre tareas.', type: 'steps', stepsKey: 'reset', neuro: 'Micro-pausa restablece atención sostenida (estudios Pomodoro).' },
-  { id: 'stress', name: 'Bajo fuego', icon: '⚡', desc: 'Cuando la presión sube.', type: 'steps', stepsKey: 'stress', neuro: 'Down-regula amígdala con exhalación prolongada y grounding.' },
-  { id: 'recovery', name: 'Recuperación activa', icon: '⛊', desc: 'Post-entreno o día intenso.', type: 'steps', stepsKey: 'recovery', neuro: 'Parasimpático dominante acelera recuperación muscular y mental.' },
-  { id: 'focus-deep', name: 'Enfoque profundo', icon: '◎', desc: 'Bloque largo sin distracción.', type: 'steps', stepsKey: 'focusDeep', neuro: 'Estado flow: dopamina estable + noradrenalina moderada.' },
-  { id: 'morning', name: 'Arranque matutino', icon: '↑', desc: 'Primeros 5 min del día.', type: 'steps', stepsKey: 'morning', neuro: 'Sincroniza ritmo circadiano y cortisol matutino saludable.' },
-  { id: 'loving', name: 'Compás táctico', icon: '◈', desc: 'Regulación emocional dirigida.', type: 'steps', stepsKey: 'loving', neuro: 'Ínsula + cíngulo — empatía sin perder límites.' },
-  { id: 'grounding-54321', name: 'Anclaje 5-4-3-2-1', icon: '⬢', desc: 'Grounding sensorial cuando la mente acelera.', type: 'steps', stepsKey: 'grounding54321', neuro: 'Corteza prefrontal + tálamo — vuelve al presente vía sentidos.' },
-  { id: 'anxiety-wave', name: 'Ola de ansiedad', icon: '〜', desc: 'Surfear la urgencia sin luchar.', type: 'steps', stepsKey: 'anxietyWave', neuro: 'Amígdala down-regulada con aceptación + respiración larga.' },
-  { id: 'self-compassion', name: 'Autocrítica suave', icon: '♡', desc: 'Habla contigo como con un amigo.', type: 'steps', stepsKey: 'selfCompassion', neuro: 'PFC medial + ínsula — reduce autocrítica rígida.' },
-  { id: 'meeting-prep', name: 'Antes de reunión', icon: '◉', desc: '3 min para entrar con presencia.', type: 'steps', stepsKey: 'meetingPrep', neuro: 'Activa atención ejecutiva sin activar amenaza.' },
-  { id: 'after-work', name: 'Cierre laboral', icon: '▾', desc: 'Suelta el día antes de casa.', type: 'steps', stepsKey: 'afterWork', neuro: 'Transición corteza ejecutiva → modo recuperación.' },
-  { id: 'power-nap', name: 'Siesta consciente', icon: '◌', desc: '10–15 min sin perder el día.', type: 'steps', stepsKey: 'powerNap', neuro: 'Micro-sueño N1/N2 — alerta sin somnolencia profunda.' },
-  { id: 'transition-breath', name: 'Entre tareas', icon: '⇄', desc: 'Puente de 2 min entre bloques.', type: 'steps', stepsKey: 'transitionBreath', neuro: 'Reduce costo de cambio de tarea (switching).' },
-  { id: 'social-reset', name: 'Post-interacción', icon: '◫', desc: 'Después de conversación difícil.', type: 'steps', stepsKey: 'socialReset', neuro: 'Regula sistema social + rumiación post-evento.' },
-  { id: 'digital-detox', name: 'Post-pantalla', icon: '⊘', desc: 'Baja estimulación tras scroll.', type: 'steps', stepsKey: 'digitalDetox', neuro: 'Reduce dopamina errática — transición a calma.' },
-  { id: 'panic-anchor', name: 'Ancla de pánico', icon: '⚓', desc: 'Cuando el cuerpo dispara alarma.', type: 'steps', stepsKey: 'panicAnchor', neuro: 'Exhalación + contacto físico — nervio vago de emergencia.' },
+  { id: 'breathing', name: 'Ancla respiratoria', icon: '◎', category: 'breath', desc: 'Tres minutos para bajar el pulso.', hook: 'El exhalar largo le habla al nervio vago: el cuerpo entiende que puede soltar.', type: 'breathing', neuro: 'Exhalación prolongada → parasimpático.' },
+  { id: 'box-breath', name: 'Ritmo cuadrado', icon: '▣', category: 'breath', desc: 'Cuatro tiempos iguales. Estabilidad bajo presión.', hook: 'Cuando todo acelera, la simetría del ritmo devuelve coherencia al sistema.', type: 'breathing', neuro: 'HRV y ritmo cardíaco más estables.' },
+  { id: 'body-scan', name: 'Mapa corporal', icon: '⬡', category: 'body', desc: 'Recorrer el cuerpo sin corregir nada.', hook: 'La tensión suele vivir donde no miramos. Hoy solo observas.', type: 'steps', stepsKey: 'bodyScan', neuro: 'Ínsula e interocepción.' },
+  { id: 'release', name: 'Soltar carga', icon: '▽', category: 'body', desc: 'Mandíbula, hombros, manos.', hook: 'No es relajarte a la fuerza. Es dejar de sostener lo que ya no necesitas.', type: 'steps', stepsKey: 'release', neuro: 'Señal de seguridad al tronco encefálico.' },
+  { id: 'prefocus', name: 'Antes de ejecutar', icon: '◆', category: 'focus', desc: 'Una tarea. Un bloque. Sin ruido.', hook: 'La claridad no viene de hacer más. Viene de elegir una sola cosa.', type: 'steps', stepsKey: 'prefocus', neuro: 'Red atencional dorsal activa.' },
+  { id: 'presleep', name: 'Bajar revoluciones', icon: '☾', category: 'sleep', desc: 'Transición hacia el descanso.', hook: 'El día ya terminó. El cuerpo puede aprender a creerlo.', type: 'steps', stepsKey: 'presleep', neuro: 'Ondas lentas y sueño profundo.' },
+  { id: 'gratitude', name: 'Tres hechos reales', icon: '◇', category: 'restore', desc: 'Lo concreto que sí pasó hoy.', hook: 'La mente amplifica lo que falta. Esto entrena lo que funcionó.', type: 'steps', stepsKey: 'gratitude', neuro: 'PFC medial y regulación emocional.' },
+  { id: 'walk', name: 'Paso consciente', icon: '➤', category: 'body', desc: 'Mente en los pies, no en el feed.', hook: 'Cada paso es un ancla. No tienes que llegar a ningún lado.', type: 'steps', stepsKey: 'walk', neuro: 'Regulación autonómica bilateral.' },
+  { id: 'reset', name: 'Puente de dos minutos', icon: '⟲', category: 'focus', desc: 'Entre una tarea y la siguiente.', hook: 'Cierra el capítulo anterior antes de abrir el siguiente.', type: 'steps', stepsKey: 'reset', neuro: 'Menor costo de cambio de tarea.' },
+  { id: 'stress', name: 'Cuando sube la presión', icon: '⚡', category: 'stress', desc: 'Urgencia sin pánico.', hook: 'La urgencia es una sensación, no una orden. Puedes sentirla sin obedecerla.', type: 'steps', stepsKey: 'stress', neuro: 'Amígdala down-regulada.' },
+  { id: 'recovery', name: 'Modo restaurar', icon: '⛊', category: 'restore', desc: 'Después del esfuerzo.', hook: 'Recuperar no es flojera. Es parte del rendimiento.', type: 'steps', stepsKey: 'recovery', neuro: 'Parasimpático dominante.' },
+  { id: 'focus-deep', name: 'Bloque profundo', icon: '◎', category: 'focus', desc: 'Entrar sin distracción.', hook: 'Diez respiraciones sin moverte. Eso es el umbral del flow.', type: 'steps', stepsKey: 'focusDeep', neuro: 'Dopamina estable, atención sostenida.' },
+  { id: 'morning', name: 'Primeros minutos', icon: '↑', category: 'focus', desc: 'Antes del teléfono.', hook: 'El día se inclina hacia lo primero que alimentas. Elige con calma.', type: 'steps', stepsKey: 'morning', neuro: 'Ritmo circadiano y cortisol.' },
+  { id: 'loving', name: 'Tono amable', icon: '◈', category: 'restore', desc: 'Hablar contigo sin dureza.', hook: 'La voz con la que te hablas se convierte en tu clima interno.', type: 'steps', stepsKey: 'loving', neuro: 'Ínsula y cíngulo anterior.' },
+  { id: 'grounding-54321', name: 'Anclaje sensorial', icon: '⬢', category: 'stress', desc: '5-4-3-2-1. Volver al presente.', hook: 'Cuando la mente corre, los sentidos te devuelven al aquí.', type: 'steps', stepsKey: 'grounding54321', neuro: 'PFC y tálamo — presente.' },
+  { id: 'anxiety-wave', name: 'Surfear la ola', icon: '〜', category: 'stress', desc: 'Dejar que pase sin pelear.', hook: 'Lo que resistes persiste. Lo que permites... se mueve.', type: 'steps', stepsKey: 'anxietyWave', neuro: 'Aceptación y respiración larga.' },
+  { id: 'self-compassion', name: 'Menos autocrítica', icon: '♡', category: 'restore', desc: 'El trato que mereces.', hook: 'Si un amigo fallara igual, ¿qué le dirías? Eso también es para ti.', type: 'steps', stepsKey: 'selfCompassion', neuro: 'Reduce rigidez autocrítica.' },
+  { id: 'meeting-prep', name: 'Antes de entrar', icon: '◉', category: 'focus', desc: 'Presencia sin defensa.', hook: 'No necesitas impresionar. Necesitas estar ahí.', type: 'steps', stepsKey: 'meetingPrep', neuro: 'Atención ejecutiva sin amenaza.' },
+  { id: 'after-work', name: 'Soltar el día', icon: '▾', category: 'sleep', desc: 'Cierre antes de casa.', hook: 'Lo que no cierras, lo cargas en la cena. Suelta el trabajo aquí.', type: 'steps', stepsKey: 'afterWork', neuro: 'Transición ejecutiva → recuperación.' },
+  { id: 'power-nap', name: 'Descanso breve', icon: '◌', category: 'sleep', desc: 'Diez minutos sin perderte.', hook: 'No tienes que dormir. Solo dejar que el sistema baje un poco.', type: 'steps', stepsKey: 'powerNap', neuro: 'Micro-sueño N1/N2.' },
+  { id: 'transition-breath', name: 'Entre bloques', icon: '⇄', category: 'focus', desc: 'Puente de dos minutos.', hook: 'Una respiración entre tareas vale más que abrir otra pestaña.', type: 'steps', stepsKey: 'transitionBreath', neuro: 'Reduce switching cost.' },
+  { id: 'social-reset', name: 'Después de hablar', icon: '◫', category: 'stress', desc: 'Volver a tu centro.', hook: 'No reescenas la conversación. Solo vuelves a ti.', type: 'steps', stepsKey: 'socialReset', neuro: 'Regula rumiación social.' },
+  { id: 'digital-detox', name: 'Post-pantalla', icon: '⊘', category: 'restore', desc: 'Bajar estimulación.', hook: 'Tus ojos y tu sistema nervioso necesitan un margen antes del siguiente scroll.', type: 'steps', stepsKey: 'digitalDetox', neuro: 'Transición dopaminérgica.' },
+  { id: 'panic-anchor', name: 'Ancla de emergencia', icon: '⚓', category: 'stress', desc: 'Cuando el cuerpo dispara.', hook: 'Esto es intenso, pero estás a salvo en este momento. Vamos paso a paso.', type: 'steps', stepsKey: 'panicAnchor', neuro: 'Vago + grounding físico.' },
 ]
 
-export const MEDITATION_PROGRAMS = [
+export const MEDITATION_INTROS = {
+  breathing: 'No tienes que hacerlo perfecto. Solo quédate donde estás y deja que el círculo marque el ritmo. Tres minutos bastan.',
+  'box-breath': 'Cuatro tiempos iguales: inhala, sostén, exhala, pausa. Cuando todo acelera, la simetría devuelve orden al cuerpo.',
+  'body-scan': 'No hay nada que arreglar en estos minutos. Solo recorrer el cuerpo con curiosidad, de pies a cabeza.',
+  release: 'La tensión suele vivir donde no miramos. Hoy sueltas mandíbula, hombros y manos, sin tener que entender por qué.',
+  prefocus: 'Antes de abrir otra pestaña: una sola tarea. Visualiza los primeros dos minutos. Eso es todo por ahora.',
+  presleep: 'El día ya terminó. Lo pendiente tendrá su turno mañana. Ahora el cuerpo puede empezar a creerlo.',
+  gratitude: 'La mente amplifica lo que falta. Hoy entrenas lo contrario: tres cosas reales de hoy, sin inflarlas.',
+  walk: 'No tienes que llegar a ningún lado. Camina lento y deja la mente en los pies.',
+  reset: 'Cierra el capítulo anterior. Nombra el siguiente. Dos minutos que valen más que abrir otra app.',
+  stress: 'La presión es real. Y también lo es que puedes respirar dentro de ella, sin apagar el motor.',
+  recovery: 'Estos minutos no son para rendir. Son para que el cuerpo recupere lo que gastó.',
+  'focus-deep': 'Quita una distracción física. Diez respiraciones quietas. Eso es el umbral del enfoque.',
+  morning: 'Antes del teléfono: tres respiraciones y una misión para el día. Una sola.',
+  loving: 'La voz con la que te hablas se vuelve tu clima interno. Hoy, un tono más amable.',
+  'grounding-54321': 'Cuando la mente corre al futuro, los sentidos te devuelven al cuerpo. Cinco, cuatro, tres, dos, uno.',
+  'anxiety-wave': 'Lo que resistes persiste. Hoy practicas dejar que la ola suba y baje sin ahogarte.',
+  'self-compassion': 'Si un amigo estuviera en lo mismo, ¿qué le dirías? Ese mismo trato es para ti.',
+  'meeting-prep': 'No necesitas impresionar. Necesitas estar presente, escuchar y responder con calma.',
+  'after-work': 'Lo que no cierras aquí, lo cargas en la cena. Deja el trabajo en este momento.',
+  'power-nap': 'No tienes que dormir. Solo dejar que el sistema baje un poco. Diez minutos cuentan.',
+  'transition-breath': 'Entre una tarea y otra: cierra la anterior, respira, abre la siguiente sin el teléfono.',
+  'social-reset': 'La conversación ya pasó. No la reescribes. Vuelves a ti con tres respiraciones.',
+  'digital-detox': 'Tus ojos y tu sistema nervioso necesitan un margen antes del siguiente scroll.',
+  'panic-anchor': 'Esto se siente muy fuerte. Estás a salvo en este momento. Vamos paso a paso, juntos.',
+}
+
+export function getMeditationIntro(id) {
+  const meta = getMeditationById(id)
+  return MEDITATION_INTROS[id] || (meta ? `Comenzamos ${meta.name.toLowerCase()}.` : '')
+}
+
+export const SESSION_AMBIENT = {
+  breathing: 'zen',
+  'box-breath': 'zen',
+  'body-scan': 'om',
+  release: 'forest',
+  prefocus: 'cafe',
+  presleep: 'om',
+  gratitude: 'shrine',
+  walk: 'bamboo',
+  reset: 'stream',
+  stress: 'tormenta',
+  recovery: 'lago',
+  'focus-deep': 'cafe',
+  morning: 'amanecer',
+  loving: 'shrine',
+  'grounding-54321': 'chimes',
+  'anxiety-wave': 'ocean',
+  'self-compassion': 'zen',
+  'meeting-prep': 'cafe',
+  'after-work': 'night',
+  'power-nap': 'rain',
+  'transition-breath': 'chimes',
+  'social-reset': 'lago',
+  'digital-detox': 'wind',
+  'panic-anchor': 'om',
+}
+
+export const MEDITATION_PROGRAMS = PROGRAM_DEFINITIONS.map(p => ({
+  id: p.id,
+  name: p.name,
+  days: p.days.length,
+  desc: p.purpose,
+  purpose: p.purpose,
+  promise: p.promise,
+  audience: p.audience,
+  schedule: p.days.map(d => d.sessionId),
+  dayPlan: p.days,
+}))
+
+export const PROGRAM_CATALOG = Object.fromEntries(PROGRAM_DEFINITIONS.map(p => [
+  p.id,
   {
-    id: 'calm-7',
-    name: 'Base 7 días',
-    days: 7,
-    desc: 'Instala el hábito. Una sesión diaria, sin excusas.',
-    schedule: ['breathing', 'release', 'prefocus', 'body-scan', 'gratitude', 'presleep', 'reset'],
+    icon: p.icon,
+    tagline: p.tagline,
+    focus: p.focus,
+    level: p.level,
+    levelColor: p.levelColor,
+    ambient: p.ambient,
+    minutesPerDay: p.minutesPerDay,
+    outcome: p.promise,
+    purpose: p.purpose,
+    audience: p.audience,
+    phases: p.phases,
   },
-  {
-    id: 'calm-21',
-    name: 'Disciplina 21 días',
-    days: 21,
-    desc: 'Consolidación neurológica. Rotación de protocolos.',
-    schedule: [
-      'breathing', 'prefocus', 'stress', 'body-scan', 'recovery', 'walk', 'presleep',
-      'box-breath', 'morning', 'release', 'focus-deep', 'gratitude', 'reset', 'stress',
-      'prefocus', 'recovery', 'body-scan', 'loving', 'presleep', 'walk', 'breathing',
-    ],
-  },
-  {
-    id: 'calm-30',
-    name: 'Dominio 30 días',
-    days: 30,
-    desc: 'Control total bajo presión. Currículo completo.',
-    schedule: [
-      'morning', 'prefocus', 'stress', 'body-scan', 'recovery', 'focus-deep', 'presleep',
-      'breathing', 'box-breath', 'release', 'walk', 'gratitude', 'reset', 'loving',
-      'stress', 'recovery', 'prefocus', 'body-scan', 'focus-deep', 'presleep',
-      'morning', 'breathing', 'stress', 'release', 'walk', 'gratitude', 'reset',
-      'recovery', 'focus-deep', 'presleep',
-    ],
-  },
-  {
-    id: 'calm-stress-14',
-    name: 'Estrés 14 días',
-    days: 14,
-    desc: 'Protocolo antiestrés: grounding, respiración y regulación progresiva.',
-    schedule: [
-      'breathing', 'grounding-54321', 'stress', 'release', 'anxiety-wave', 'box-breath',
-      'self-compassion', 'panic-anchor', 'recovery', 'transition-breath', 'after-work',
-      'walk', 'digital-detox', 'presleep',
-    ],
-  },
-]
+]))
+
+export function getProgramCatalog(programId) {
+  return PROGRAM_CATALOG[programId] || null
+}
+
+export function getProgramDayPlan(programId, dayNumber) {
+  const prog = MEDITATION_PROGRAMS.find(p => p.id === programId)
+  if (!prog?.dayPlan?.length) return null
+  const idx = Math.max(0, Math.min(prog.dayPlan.length - 1, (dayNumber || 1) - 1))
+  return { ...prog.dayPlan[idx], day: idx + 1 }
+}
+
+export function getProgramDayIntro(programId, dayNumber) {
+  const plan = getProgramDayPlan(programId, dayNumber)
+  if (plan?.intro) return plan.intro
+  const sid = plan?.sessionId
+  return sid ? getMeditationIntro(sid) : ''
+}
+
+export function getSessionAmbient(sessionId) {
+  return SESSION_AMBIENT[sessionId] || 'forest'
+}
+
+export function getAmbientLabel(ambientId) {
+  const labels = {
+    rain: 'Lluvia', ocean: 'Olas', forest: 'Bosque', wind: 'Viento', stream: 'Arroyo',
+    fire: 'Fogata', night: 'Noche', cascada: 'Cascada', amanecer: 'Amanecer', cafe: 'Café',
+    lago: 'Lago', tormenta: 'Tormenta', jardin: 'Jardín',
+    zen: 'Jardín zen', om: 'Om profundo', chimes: 'Cuencos', bamboo: 'Agua zen', shrine: 'Santuario',
+  }
+  return labels[ambientId] || ambientId
+}
 
 export function getMeditationById(id) {
   return MEDITATIONS.find(m => m.id === id) || null
-}
-
-export const MEDITATION_STEPS = {
-  bodyScan: [
-    { text: 'Cierra los ojos. Tres respiraciones por la nariz.', duration: 35 },
-    { text: 'Dedos de los pies. Temperatura y contacto.', duration: 40 },
-    { text: 'Tobillos, pantorrillas, rodillas.', duration: 45 },
-    { text: 'Muslos, cadera, abdomen bajo.', duration: 40 },
-    { text: 'Abdomen con cada respiración.', duration: 45 },
-    { text: 'Pecho, espalda, hombros.', duration: 45 },
-    { text: 'Brazos, manos. Mandíbula suelta.', duration: 40 },
-    { text: 'Cuello, mandíbula, frente.', duration: 40 },
-    { text: 'Cuerpo entero. Sin corregir, solo observar.', duration: 35 },
-    { text: 'Mueve dedos. Abre los ojos cuando estés listo.', duration: 30 },
-  ],
-  gratitude: [
-    { text: 'Tres respiraciones. Postura firme.', duration: 30 },
-    { text: 'Un hecho concreto de hoy que funcionó.', duration: 50 },
-    { text: 'Alguien que te sostuvo, aunque sea mínimo.', duration: 50 },
-    { text: 'Algo de tu cuerpo que cumplió su trabajo hoy.', duration: 50 },
-    { text: 'Un momento de calma, aunque haya durado poco.', duration: 45 },
-    { text: 'Lleva esa lista contigo al siguiente bloque.', duration: 40 },
-  ],
-  release: [
-    { text: 'Inhala. Exhala soltando hombros.', duration: 35 },
-    { text: 'Cada exhalación suelta una carga leve.', duration: 50 },
-    { text: 'Puños apretados 5 segundos… suelta.', duration: 40 },
-    { text: 'Mandíbula, lengua, cejas — todo flojo.', duration: 45 },
-    { text: 'No resuelves todo ahora. Solo estás aquí.', duration: 50 },
-    { text: 'Tres respiraciones. Más espacio interior.', duration: 35 },
-  ],
-  presleep: [
-    { text: 'Pantallas fuera. Oscuridad.', duration: 35 },
-    { text: '4 segundos entra, 6 salen.', duration: 55 },
-    { text: 'Cuenta del 10 al 1 solo al exhalar.', duration: 60 },
-    { text: 'Lugar seguro y aburrido — sin historia.', duration: 55 },
-    { text: 'El día terminó. Mañana se ejecuta.', duration: 45 },
-    { text: 'Cuerpo pesado. Mente lenta.', duration: 40 },
-  ],
-  prefocus: [
-    { text: 'Tres respiraciones. Una tarea, no diez.', duration: 35 },
-    { text: 'Nombra la única tarea que importa ahora.', duration: 45 },
-    { text: 'Visualiza los primeros 2 minutos. Solo empezar.', duration: 50 },
-    { text: 'Distracciones pasan — no te arrastran.', duration: 50 },
-    { text: 'Inhala energía, exhala duda.', duration: 40 },
-    { text: 'Ejecuta.', duration: 25 },
-  ],
-  walk: [
-    { text: 'Peso en ambos pies. 20 segundos.', duration: 30 },
-    { text: 'Camina lento. Talón al suelo.', duration: 50 },
-    { text: 'Respiración con el paso si ayuda.', duration: 50 },
-    { text: 'Mente divaga → vuelve a los pies.', duration: 50 },
-    { text: 'Detente. Tres respiraciones.', duration: 35 },
-  ],
-  loving: [
-    { text: 'Respiración estable. Tu nombre.', duration: 35 },
-    { text: '"Que esté bien. Que ejecute con calma."', duration: 50 },
-    { text: 'Alguien clave. Mismo deseo, sin drama.', duration: 50 },
-    { text: 'Si aparece tensión, solo suelta — sin forzar.', duration: 50 },
-    { text: 'Exhalación larga. Listo.', duration: 30 },
-  ],
-  reset: [
-    { text: 'Para. Hombros atrás. Una inhalación.', duration: 20 },
-    { text: 'Exhala el bloque anterior. Ya pasó.', duration: 25 },
-    { text: 'Nombra la siguiente acción en una frase.', duration: 25 },
-    { text: 'Tres respiraciones cuadradas: 4-4-4-4.', duration: 30 },
-  ],
-  stress: [
-    { text: 'Pies en el suelo. Presión real, aquí.', duration: 30 },
-    { text: 'Exhala más largo que inhalar. Repite.', duration: 45 },
-    { text: 'Hombros lejos de las orejas.', duration: 40 },
-    { text: 'La urgencia es sensación, no orden.', duration: 45 },
-    { text: 'Una decisión a la vez.', duration: 40 },
-  ],
-  recovery: [
-    { text: 'Respiración nasal lenta.', duration: 35 },
-    { text: 'Escanea dónde hay fatiga sin juzgar.', duration: 50 },
-    { text: 'Cada exhalación es recuperación.', duration: 45 },
-    { text: 'No planifiques. Solo restaura.', duration: 40 },
-  ],
-  focusDeep: [
-    { text: 'Elimina una distracción física ahora.', duration: 30 },
-    { text: 'Un objetivo. Escríbelo mentalmente.', duration: 45 },
-    { text: '10 respiraciones sin moverte.', duration: 60 },
-    { text: 'Compromiso: bloque sin interrupciones.', duration: 40 },
-  ],
-  morning: [
-    { text: 'Antes del teléfono. Tres respiraciones.', duration: 30 },
-    { text: '¿Cuál es la misión del día?', duration: 45 },
-    { text: 'Cuerpo activo: estira brazos y espalda.', duration: 40 },
-    { text: 'Ejecuta el primer paso en los próximos 5 min.', duration: 35 },
-  ],
-  grounding54321: [
-    { text: '5 cosas que ves ahora. Nómbralas.', duration: 45 },
-    { text: '4 cosas que puedes tocar. Nota textura y temperatura.', duration: 45 },
-    { text: '3 sonidos a tu alrededor.', duration: 40 },
-    { text: '2 olores o sabores si los hay.', duration: 35 },
-    { text: '1 respiración larga. Estás aquí.', duration: 30 },
-  ],
-  anxietyWave: [
-    { text: 'Nota dónde sientes la urgencia en el cuerpo.', duration: 40 },
-    { text: 'Nómbrala: “esto es ansiedad, no peligro real”.', duration: 45 },
-    { text: 'Imagina la sensación como una ola que sube… y baja.', duration: 50 },
-    { text: 'Exhala más largo que inhalar. Repite.', duration: 45 },
-    { text: 'Quédate en el presente. Un paso a la vez.', duration: 35 },
-  ],
-  selfCompassion: [
-    { text: 'Piensa en algo que hiciste mal o te pesa hoy.', duration: 40 },
-    { text: '¿Qué le dirías a un amigo en lo mismo?', duration: 50 },
-    { text: 'Dímelo en voz baja, en segunda persona.', duration: 45 },
-    { text: 'Mano en el pecho. Respiración suave.', duration: 40 },
-    { text: 'Mereces el mismo trato que le diste.', duration: 35 },
-  ],
-  meetingPrep: [
-    { text: 'Tres respiraciones. Hombros abajo.', duration: 25 },
-    { text: '¿Cuál es tu único objetivo en esta reunión?', duration: 40 },
-    { text: 'Visualiza escuchando con atención, no solo hablando.', duration: 40 },
-    { text: 'Entra con calma, no con defensa.', duration: 30 },
-  ],
-  afterWork: [
-    { text: 'Cierra pestañas mentales del trabajo.', duration: 35 },
-    { text: 'Tres exhalaciones largas. Suelta la mandíbula.', duration: 45 },
-    { text: 'Nombra una cosa que sí avanzó hoy.', duration: 40 },
-    { text: 'El resto queda para mañana. Permiso para parar.', duration: 40 },
-  ],
-  powerNap: [
-    { text: 'Acuéstate o reclínate. Ojos cerrados.', duration: 30 },
-    { text: 'Relaja mandíbula, hombros, manos.', duration: 40 },
-    { text: 'Cuenta exhalaciones del 10 al 1.', duration: 90 },
-    { text: 'Si no duermes, el descanso igual cuenta.', duration: 30 },
-    { text: 'Mueve dedos. Vuelve despacio.', duration: 25 },
-  ],
-  transitionBreath: [
-    { text: 'Termina mentalmente la tarea anterior.', duration: 25 },
-    { text: 'Cuatro respiraciones cuadradas: 4-4-4-4.', duration: 40 },
-    { text: 'Nombra la siguiente tarea en una frase.', duration: 30 },
-    { text: 'Empieza sin revisar el teléfono.', duration: 25 },
-  ],
-  socialReset: [
-    { text: 'Suelta hombros. No reescenas la conversación.', duration: 35 },
-    { text: '¿Qué sentiste? Sin juzgar.', duration: 40 },
-    { text: '¿Qué necesitabas en ese momento?', duration: 45 },
-    { text: 'Tres respiraciones. Vuelves a ti.', duration: 35 },
-  ],
-  digitalDetox: [
-    { text: 'Aparta el teléfono. Manos en muslos.', duration: 30 },
-    { text: 'Mira un punto lejano 20 segundos.', duration: 25 },
-    { text: 'Nota ojos, cuello, mandíbula.', duration: 40 },
-    { text: 'Cinco respiraciones lentas por la nariz.', duration: 45 },
-    { text: 'Elige: calma, movimiento o agua antes de volver.', duration: 35 },
-  ],
-  panicAnchor: [
-    { text: 'Pies en el suelo. Presión real.', duration: 25 },
-    { text: 'Exhala como si soplaras una vela lenta.', duration: 35 },
-    { text: 'Nombra 3 objetos que ves.', duration: 35 },
-    { text: 'Manos en frío o agua si puedes.', duration: 30 },
-    { text: 'Esto pasará. Tu cuerpo está a salvo ahora.', duration: 40 },
-  ],
 }

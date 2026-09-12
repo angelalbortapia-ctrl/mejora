@@ -22,7 +22,7 @@ body.onboarding-open {
   overflow: hidden;
 }
 
-body.onboarding-open .app-main {
+body.onboarding-open:has(.onboarding-overlay.is-active) .app-main {
   pointer-events: none;
 }
 

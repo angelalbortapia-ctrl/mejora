@@ -1,5 +1,1343 @@
-/* Calma FORGE */
+/* Calma FORGE — inmersivo v2 */
 
+/* ── Shell (como lector de clases) ── */
+body.calma-mode .sidebar,
+body.calma-mode .bottom-nav,
+body.calma-mode .app-banner,
+body.calma-mode .app-aurora {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.calma-mode .app-main { margin-left: 0 !important; }
+
+body.calma-mode .app-content {
+  min-height: 100vh;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.calma-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  background: var(--m-bg, #080809);
+  padding-bottom: 4rem;
+}
+
+.calma-viewport--session {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .calma-viewport--session {
+    grid-template-columns: 1fr 16rem;
+    grid-template-rows: auto 1fr;
+  }
+  .calma-session-chrome { grid-column: 1 / -1; }
+  .calma-session-rail {
+    grid-row: 2;
+    grid-column: 2;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    overflow-y: auto;
+    padding: 1rem;
+  }
+}
+
+.calma-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(110, 231, 183, 0.08), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(129, 140, 248, 0.06), transparent 50%);
+  animation: calma-aurora-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes calma-aurora-drift {
+  from { opacity: 0.7; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.04) translateY(-1%); }
+}
+
+/* ── Hero ── */
+.calma-hero {
+  position: relative;
+  padding: clamp(2rem, 6vw, 4.5rem) clamp(1.25rem, 5vw, 3.5rem) clamp(2.5rem, 5vw, 3.5rem);
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.calma-fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.calma-fx-orbs { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+
+.calma-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: calma-orb-float 12s ease-in-out infinite;
+}
+
+.calma-orb--1 { width: 280px; height: 280px; top: -10%; left: -5%; background: rgba(110, 231, 183, 0.18); }
+.calma-orb--2 { width: 200px; height: 200px; top: 20%; right: 5%; background: rgba(129, 140, 248, 0.12); animation-delay: -4s; }
+.calma-orb--3 { width: 160px; height: 160px; bottom: 0; left: 40%; background: rgba(110, 231, 183, 0.1); animation-delay: -7s; }
+
+@keyframes calma-orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(12px, -18px) scale(1.06); }
+}
+
+.calma-hero-mesh {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black 25%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.calma-hero-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 40%, rgba(110, 231, 183, 0.2), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 15%, rgba(129, 140, 248, 0.1), transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.calma-hero-fade {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 5rem;
+  background: linear-gradient(to bottom, transparent, var(--m-bg, #080809));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.calma-hero-inner { position: relative; z-index: 3; max-width: 52rem; }
+
+.calma-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.calma-hero-kicker {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(110, 231, 183, 0.9);
+}
+
+.calma-hero-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.calma-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--m-muted);
+}
+
+.calma-pill--xp { color: rgba(110, 231, 183, 0.95); border-color: rgba(110, 231, 183, 0.25); }
+
+.calma-hero-title {
+  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+  max-width: 18ch;
+  background: linear-gradient(135deg, #fff 0%, rgba(200, 255, 230, 0.85) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.calma-hero-hook {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  line-height: 1.55;
+  color: var(--m-muted);
+  margin: 0 0 1.5rem;
+  max-width: 42ch;
+}
+
+.calma-hero-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.calma-cta-primary {
+  padding: 0.75rem 1.35rem;
+  border-radius: 999px;
+  border: none;
+  font-family: var(--m-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #04120c;
+  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  box-shadow: 0 0 24px rgba(110, 231, 183, 0.35);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.calma-cta-primary:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(110, 231, 183, 0.45); }
+
+.calma-cta-ghost {
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--m-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.calma-cta-ghost:hover { border-color: rgba(110, 231, 183, 0.35); background: rgba(110, 231, 183, 0.08); }
+
+/* ── Body layout ── */
+.calma-body {
+  position: relative;
+  z-index: 2;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.calma-body--narrow { max-width: 36rem; margin: 0 auto; }
+
+.calma-body-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 960px) {
+  .calma-body-grid { grid-template-columns: 1fr 18rem; align-items: start; }
+}
+
+.calma-glass-panel {
+  padding: 1.1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.calma-glass-panel.is-revealed,
+.calma-session-card.is-revealed,
+.calma-program-card.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+.calma-rail { display: flex; flex-direction: column; gap: 1rem; }
+
+.calma-rail-title { font-size: 0.9rem; font-weight: 700; margin: 0 0 0.25rem; }
+.calma-rail-sub { font-size: 0.75rem; color: var(--m-muted); margin: 0 0 0.75rem; }
+
+.calma-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.calma-quick-btn {
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 231, 183, 0.2);
+  background: rgba(110, 231, 183, 0.06);
+  color: var(--m-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.calma-quick-btn:hover { background: rgba(110, 231, 183, 0.12); border-color: rgba(110, 231, 183, 0.4); }
+
+/* ── Featured ── */
+.calma-featured-card { margin-bottom: 1.5rem; }
+
+.calma-featured-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(110, 231, 183, 0.85);
+  margin: 0 0 0.5rem;
+}
+
+.calma-featured-title { font-family: var(--m-display); font-size: 1.35rem; font-weight: 700; margin: 0 0 0.35rem; }
+.calma-featured-sub { font-size: 0.875rem; color: var(--m-muted); margin: 0 0 0.75rem; line-height: 1.45; }
+
+.calma-featured-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.calma-featured-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
+  border-radius: 999px;
+}
+
+.calma-featured-cta {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  background: rgba(110, 231, 183, 0.1);
+  color: var(--m-text);
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.calma-featured-cta:hover { background: rgba(110, 231, 183, 0.18); }
+
+.calma-neuro-chip {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(110, 231, 183, 0.85);
+  margin: 0.5rem 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(110, 231, 183, 0.06);
+  border-left: 2px solid rgba(110, 231, 183, 0.4);
+}
+
+/* ── Sections ── */
+.calma-section { margin-bottom: 2rem; }
+
+.calma-section-title {
+  font-family: var(--m-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.calma-section-sub { font-size: 0.8125rem; color: var(--m-muted); margin: 0 0 1rem; line-height: 1.45; }
+
+/* ── Session cards ── */
+.calma-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.65rem;
+}
+
+.calma-session-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 1rem;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s, background 0.2s;
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.calma-session-card:hover {
+  border-color: rgba(110, 231, 183, 0.35);
+  background: rgba(110, 231, 183, 0.05);
+}
+
+.calma-session-card-icon {
+  font-family: var(--m-display);
+  font-size: 1.5rem;
+  color: rgba(110, 231, 183, 0.9);
+  line-height: 1;
+}
+
+.calma-session-card-body { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+
+.calma-session-card-type {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--m-muted);
+}
+
+.calma-session-card-name { font-weight: 700; font-size: 0.9rem; }
+.calma-session-card-desc { font-size: 0.75rem; color: var(--m-muted); line-height: 1.35; }
+
+.calma-session-card-meta {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(110, 231, 183, 0.8);
+  white-space: nowrap;
+  padding-top: 0.15rem;
+}
+
+/* ── Programs ── */
+.calma-program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.65rem;
+}
+
+.calma-program-card {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s;
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.calma-program-card:hover { border-color: rgba(110, 231, 183, 0.35); }
+
+.calma-program-days {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(110, 231, 183, 0.85);
+}
+
+.calma-program-name { display: block; font-weight: 700; margin: 0.35rem 0 0.2rem; font-size: 0.9rem; }
+.calma-program-desc { display: block; font-size: 0.75rem; color: var(--m-muted); line-height: 1.35; }
+
+.calma-program-progress {
+  display: block;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0.65rem 0 0.35rem;
+  overflow: hidden;
+}
+
+.calma-program-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
+  border-radius: 999px;
+}
+
+.calma-program-meta { font-size: 0.68rem; color: var(--m-muted); }
+
+.calma-program-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.calma-program-catalog-card {
+  padding: 1.1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+  text-align: left;
+}
+
+.calma-program-catalog-card.is-active {
+  border-color: rgba(110, 231, 183, 0.4);
+  box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.12);
+}
+
+.calma-program-catalog-head {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.calma-program-catalog-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.calma-program-catalog-level {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--level-color, #6ee7b7);
+  margin-bottom: 0.2rem;
+}
+
+.calma-program-catalog-name {
+  font-family: var(--m-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+}
+
+.calma-program-catalog-tagline {
+  font-size: 0.8rem;
+  color: var(--m-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.calma-program-catalog-purpose {
+  font-size: 0.82rem;
+  color: var(--m-text);
+  line-height: 1.45;
+  margin: 0 0 0.35rem;
+}
+
+.calma-program-catalog-audience {
+  font-size: 0.72rem;
+  color: var(--m-muted);
+  line-height: 1.4;
+  margin: 0 0 0.65rem;
+  font-style: italic;
+}
+
+.calma-featured-day-title,
+.calma-program-today-title,
+.calma-program-day-title,
+.calma-session-day-title {
+  font-weight: 700;
+  color: var(--m-text);
+  line-height: 1.3;
+}
+
+.calma-featured-day-title {
+  font-size: 1rem;
+  margin: 0.65rem 0 0.2rem;
+}
+
+.calma-featured-day-intent,
+.calma-program-today-intent,
+.calma-program-day-intent,
+.calma-session-day-intent {
+  font-size: 0.78rem;
+  color: var(--m-muted);
+  line-height: 1.4;
+}
+
+.calma-featured-day-intent { margin: 0 0 0.75rem; }
+
+.calma-program-today-kicker {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--m-muted);
+  margin: 0 0 0.25rem;
+}
+
+.calma-program-today-title {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+}
+
+.calma-program-today-intent {
+  margin: 0 0 0.5rem;
+}
+
+.calma-program-day-title {
+  font-size: 0.88rem;
+  margin: 0.1rem 0;
+}
+
+.calma-program-day-intent {
+  font-size: 0.72rem;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.calma-session-program {
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.calma-session-day-title {
+  font-size: 1rem;
+  margin: 0.15rem 0;
+}
+
+.calma-session-day-intent {
+  font-size: 0.78rem;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.calma-gemini-note {
+  font-size: 0.72rem;
+  color: #a5b4fc;
+  margin: 0.5rem 0 0;
+  line-height: 1.4;
+}
+
+.calma-gemini-preparing {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 12, 18, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.calma-gemini-preparing-card {
+  text-align: center;
+  padding: 1.5rem 1.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(165, 180, 252, 0.25);
+  background: rgba(20, 26, 38, 0.95);
+  max-width: 20rem;
+}
+
+.calma-gemini-preparing-icon {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.calma-gemini-preparing-title {
+  font-weight: 700;
+  color: var(--m-text);
+  margin: 0 0 0.25rem;
+}
+
+.calma-gemini-preparing-sub {
+  font-size: 0.78rem;
+  color: var(--m-muted);
+  margin: 0;
+}
+
+.calma-program-catalog-outcome {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--m-text);
+  margin: 0 0 0.65rem;
+}
+
+.calma-program-catalog-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.calma-program-phase-chip {
+  font-size: 0.68rem;
+  padding: 0.28rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--m-muted);
+}
+
+.calma-program-phase-chip strong { color: var(--m-text); }
+
+.calma-program-catalog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.68rem;
+  color: var(--m-muted);
+  margin-bottom: 0.5rem;
+}
+
+.calma-program-catalog-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.calma-program-today-chip {
+  font-size: 0.72rem;
+  color: rgba(110, 231, 183, 0.9);
+}
+
+.calma-program-catalog-cta {
+  margin-left: auto;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  background: rgba(110, 231, 183, 0.1);
+  color: var(--m-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.calma-program-catalog-cta:hover { background: rgba(110, 231, 183, 0.18); }
+
+.calma-program-hero {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.calma-program-hero-icon { font-size: 2.25rem; line-height: 1; }
+
+.calma-program-catalog-phases--detail {
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.calma-program-phase-block p {
+  font-size: 0.75rem;
+  color: var(--m-muted);
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.calma-session-ambient-tag {
+  display: inline-block;
+  margin-top: 0.45rem;
+  font-size: 0.65rem;
+  color: var(--m-muted);
+  opacity: 0.85;
+}
+
+.calma-program-card.is-active {
+  border-color: rgba(110, 231, 183, 0.45);
+  background: rgba(110, 231, 183, 0.07);
+  box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.12);
+}
+
+.calma-program-card.is-finished { opacity: 0.85; }
+
+.calma-featured-card--done {
+  border-color: rgba(110, 231, 183, 0.25);
+}
+
+.calma-program-today {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(110, 231, 183, 0.06);
+  border: 1px solid rgba(110, 231, 183, 0.18);
+  margin-bottom: 1rem;
+}
+
+.calma-program-today--done {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.calma-program-today-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0 0 0.35rem;
+}
+
+.calma-program-today-session,
+.calma-program-today-sub,
+.calma-program-today-note {
+  font-size: 0.8rem;
+  color: var(--m-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.calma-program-today-note {
+  margin-top: 0.65rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.calma-program-timeline-wrap { margin-top: 1.25rem; }
+
+.calma-program-timeline-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--m-muted);
+  margin: 0 0 0.75rem;
+}
+
+.calma-program-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.calma-program-day {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.calma-program-day.is-done {
+  background: rgba(52, 211, 153, 0.05);
+  border-color: rgba(52, 211, 153, 0.15);
+}
+
+.calma-program-day.is-today {
+  background: rgba(110, 231, 183, 0.08);
+  border-color: rgba(110, 231, 183, 0.3);
+}
+
+.calma-program-day.is-upcoming { opacity: 0.55; }
+
+.calma-program-day-dot {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--m-muted);
+}
+
+.calma-program-day.is-done .calma-program-day-dot {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
+.calma-program-day.is-today .calma-program-day-dot {
+  background: rgba(110, 231, 183, 0.25);
+  color: #ecfdf5;
+}
+
+.calma-program-day-body { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+
+.calma-program-day-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--m-muted);
+}
+
+.calma-program-day-session {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.calma-program-day-meta {
+  font-size: 0.68rem;
+  color: var(--m-muted);
+}
+
+.med-diff-block { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.med-diff-hint {
+  font-size: 0.72rem;
+  color: var(--m-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.calma-complete-program {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(110, 231, 183, 0.06);
+  border: 1px solid rgba(110, 231, 183, 0.2);
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.calma-complete-program-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(110, 231, 183, 0.9);
+  margin: 0 0 0.5rem;
+}
+
+.calma-complete-program-meta,
+.calma-complete-program-next,
+.calma-complete-program-done {
+  font-size: 0.8rem;
+  color: var(--m-muted);
+  margin: 0.5rem 0 0;
+  line-height: 1.4;
+}
+
+.calma-complete-program-done {
+  color: #6ee7b7;
+  font-weight: 600;
+}
+
+/* ── Active session ── */
+.calma-session-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem clamp(1rem, 3vw, 2rem);
+  background: rgba(8, 8, 9, 0.8);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calma-chrome-back { font-size: 0.8125rem !important; padding: 0.4rem 0.65rem !important; }
+
+/* Barra superior — siempre visible (el menú inferior se oculta en Calma) */
+.calma-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0.55rem clamp(1rem, 3vw, 2rem);
+  padding-top: max(0.55rem, env(safe-area-inset-top, 0px));
+  background: rgba(8, 8, 9, 0.94);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calma-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  color: #f0f0f2 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.calma-exit-btn:hover,
+.calma-exit-btn:focus-visible {
+  background: rgba(110, 231, 183, 0.16) !important;
+  border-color: rgba(110, 231, 183, 0.45) !important;
+  color: #a7f3d0 !important;
+  outline: none;
+}
+
+.calma-session-chrome .calma-exit-btn {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.85rem !important;
+}
+
+.calma-chrome-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--m-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calma-chrome-progress {
+  display: none;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 4rem;
+}
+
+@media (min-width: 640px) { .calma-chrome-progress { display: block; } }
+
+.calma-chrome-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
+  transition: width 0.3s linear;
+}
+
+.calma-chrome-pause,
+.calma-chrome-ambient {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  background: rgba(110, 231, 183, 0.1);
+  color: var(--m-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.calma-chrome-ambient[aria-pressed="true"] {
+  background: rgba(110, 231, 183, 0.22);
+  border-color: rgba(110, 231, 183, 0.55);
+}
+
+.calma-chrome-ambient:hover,
+.calma-chrome-pause:hover { transform: scale(1.05); }
+
+/* Dock de ambiente en sesión */
+.calma-ambient-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 0.65rem clamp(0.75rem, 3vw, 1.25rem) max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.calma-ambient-dock-bar,
+.calma-ambient-dock-picker {
+  pointer-events: auto;
+}
+
+.calma-ambient-dock-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 14px;
+  background: rgba(12, 12, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.calma-ambient-mute,
+.calma-ambient-expand {
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--m-text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calma-ambient-mute[aria-pressed="true"] {
+  border-color: rgba(110, 231, 183, 0.4);
+  background: rgba(110, 231, 183, 0.12);
+}
+
+.calma-ambient-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--m-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calma-ambient-vol {
+  flex: 1;
+  min-width: 4.5rem;
+  max-width: 7rem;
+  accent-color: var(--calma-accent, #6ee7b7);
+}
+
+.calma-ambient-vol-pct {
+  font-size: 0.68rem;
+  color: var(--m-muted);
+  min-width: 2rem;
+  text-align: right;
+}
+
+.calma-ambient-voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--m-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.calma-ambient-voice-toggle input { accent-color: var(--calma-accent, #6ee7b7); }
+
+.calma-ambient-dock-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.55rem;
+  border-radius: 12px;
+  background: rgba(12, 12, 14, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(8px);
+  transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.25s ease, margin 0.25s;
+}
+
+.calma-ambient-dock-picker.is-open {
+  max-height: 12rem;
+  opacity: 1;
+  transform: none;
+  overflow-y: auto;
+}
+
+.calma-ambient-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--m-muted);
+  font-size: 0.62rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.calma-ambient-chip-icon { font-size: 1.1rem; line-height: 1; }
+
+.calma-ambient-chip.is-active {
+  border-color: rgba(110, 231, 183, 0.45);
+  background: rgba(110, 231, 183, 0.12);
+  color: var(--m-text);
+}
+
+.calma-ambient-chip:hover { transform: translateY(-1px); }
+
+.calma-viewport--session .calma-session-stage {
+  padding-bottom: 5.5rem;
+}
+
+@media (min-width: 900px) {
+  .calma-ambient-dock {
+    left: auto;
+    right: 1rem;
+    bottom: 1rem;
+    width: min(22rem, calc(100% - 2rem));
+  }
+}
+
+.calma-session-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.calma-session-stage.is-paused { opacity: 0.88; }
+
+.calma-session-kicker { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--m-muted); margin: 0 0 0.5rem; }
+
+.calma-session-timer {
+  font-family: var(--m-display);
+  font-size: clamp(3rem, 10vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+  margin: 0 0 1.5rem;
+  color: var(--m-text);
+}
+
+.calma-session-timer-sm {
+  font-family: var(--m-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--m-muted);
+  margin: 0 0 1rem;
+}
+
+.calma-breathe-wrap {
+  position: relative;
+  width: min(16rem, 70vw);
+  height: min(16rem, 70vw);
+  margin: 0 auto 1.25rem;
+}
+
+.calma-breathe-ring,
+.calma-session-stage .med-timer-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(110, 231, 183, 0.28), rgba(129, 140, 248, 0.06));
+  border: 2px solid rgba(110, 231, 183, 0.4);
+  box-shadow: 0 0 80px rgba(110, 231, 183, 0.2), inset 0 0 40px rgba(110, 231, 183, 0.08);
+}
+
+.calma-phase-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--m-display);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.calma-step-progress {
+  width: min(24rem, 90%);
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 auto 1.5rem;
+  overflow: hidden;
+}
+
+.calma-step-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
+  transition: width 0.3s linear;
+}
+
+.calma-step-subprogress {
+  width: min(16rem, 70%);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  margin: -1rem auto 1.5rem;
+  overflow: hidden;
+}
+
+.calma-step-subprogress-fill {
+  height: 100%;
+  background: rgba(110, 231, 183, 0.45);
+  transition: width 0.3s linear;
+}
+
+.calma-step-text {
+  font-family: var(--m-display);
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  line-height: 1.45;
+  max-width: 28ch;
+  margin: 0 auto 1.5rem;
+  color: var(--m-text);
+}
+
+.calma-session-hint { font-size: 0.75rem; color: var(--m-muted); margin: 0.75rem 0 0; }
+.calma-session-error { font-size: 0.875rem; color: var(--m-danger, #f87171); margin-top: 0.75rem; }
+
+.calma-session-rail .med-ambient-panel--compact {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+@media (max-width: 899px) {
+  .calma-session-rail {
+    padding: 0.75rem 1rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+}
+
+/* ── Complete ── */
+.calma-viewport--complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.calma-complete-card {
+  position: relative;
+  text-align: center;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(110, 231, 183, 0.2);
+  max-width: 22rem;
+  width: 100%;
+}
+
+.calma-complete-glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(110, 231, 183, 0.15), transparent 60%);
+  pointer-events: none;
+}
+
+.calma-complete-title { font-family: var(--m-display); font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem; }
+.calma-complete-sub { color: var(--m-muted); margin: 0 0 1rem; }
+.calma-complete-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; margin-bottom: 1.5rem; }
+
+/* ── Legacy compat ── */
 .med-hero { border-top: 2px solid var(--m-accent) !important; }
 
 .med-stats-bar {
@@ -117,6 +1455,83 @@
   flex-direction: column;
   gap: 0.25rem;
   margin-top: 0.5rem;
+}
+
+.med-voice-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.med-voice-rate-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.med-voice-rate-row .med-ambient-range { flex: 1; min-width: 6rem; }
+
+.med-ambient-panel--session .med-voice-toggle {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--forge-border) 55%, transparent);
+}
+
+.med-session-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.med-pause-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 10rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 999px;
+  border: 2px solid rgba(110, 231, 183, 0.45);
+  background: rgba(110, 231, 183, 0.12);
+  color: var(--m-text);
+  font-family: var(--m-display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.med-pause-btn:hover {
+  background: rgba(110, 231, 183, 0.2);
+  border-color: var(--m-accent);
+}
+
+.med-pause-btn.is-paused {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+.med-pause-icon { font-size: 1.1rem; line-height: 1; }
+
+.med-paused-label {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--m-accent);
+}
+
+.page-meditation .exercise-stage.is-paused {
+  opacity: 0.92;
+}
+
+.page-meditation .exercise-stage.is-paused .meditation-ring,
+.page-meditation .exercise-stage.is-paused .breathe-circle {
+  animation-play-state: paused;
 }
 
 .med-adaptive-banner {
@@ -240,4 +1655,522 @@ body.mejora-forge .bottom-nav {
 
 @media (max-width: 640px) {
   .med-stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Calma × Escuela (oro FORGE, mismas clases) ── */
+.calma-viewport.lesson-reader-viewport {
+  min-height: 100vh;
+  max-height: none;
+  background: var(--m-bg, #080809);
+  pointer-events: auto;
+}
+
+/* Clickeable siempre — no esperar reveal observer */
+.calma-viewport .calma-protocol-card,
+.calma-viewport .school-focus,
+.calma-viewport .calma-program-card,
+.calma-viewport .calma-quick-btn,
+.calma-viewport .school-panel,
+.calma-viewport .calma-glass-panel,
+.calma-viewport .lesson-footer-cta,
+.calma-viewport .calma-cta-ghost {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+body.onboarding-open .calma-viewport {
+  pointer-events: auto;
+}
+
+body.onboarding-open .calma-viewport * {
+  pointer-events: auto;
+}
+
+.calma-rail.lesson-rail-glass {
+  opacity: 1;
+  transform: none;
+}
+
+.calma-hero.lesson-reader-hero {
+  --lesson-accent: var(--m-accent, #d4a012);
+}
+
+.calma-header-metrics {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.calma-hero-hook.lesson-hero-hook {
+  color: var(--m-accent, #d4a012) !important;
+  max-width: 40ch;
+}
+
+.calma-hero-lead.lesson-hero-lead {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.68);
+  border-left: 3px solid var(--m-accent, #d4a012);
+  padding-left: 1rem;
+  margin: 0 0 1.25rem;
+  max-width: 44ch;
+}
+
+.calma-hero-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+
+.calma-cta-primary.lesson-footer-cta {
+  border: 1px solid rgba(212, 160, 18, 0.45) !important;
+  background: linear-gradient(135deg, rgba(212, 160, 18, 0.22), rgba(212, 160, 18, 0.08)) !important;
+  color: var(--m-text) !important;
+  box-shadow: 0 0 24px rgba(212, 160, 18, 0.15);
+}
+
+.calma-cta-ghost {
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--m-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calma-cta-ghost:hover { border-color: rgba(212, 160, 18, 0.35); color: var(--m-text); }
+
+.calma-focus.school-focus {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.calma-focus-tag {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.calma-protocol-card.academy-lesson-card {
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.calma-protocol-card.academy-lesson-card:hover {
+  border-color: rgba(212, 160, 18, 0.35) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.calma-neuro-chip {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: rgba(212, 160, 18, 0.9);
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(212, 160, 18, 0.08);
+  border-left: 2px solid rgba(212, 160, 18, 0.45);
+}
+
+.calma-body.lesson-reader-body {
+  position: relative;
+  z-index: 2;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 3.5rem) 4rem;
+}
+
+.calma-rail.school-aside.lesson-rail-glass {
+  position: sticky;
+  top: 0.75rem;
+}
+
+.calma-viewport--session {
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  background: var(--m-bg, #080809);
+}
+
+@media (min-width: 900px) {
+  .calma-viewport--session {
+    grid-template-columns: 1fr 17rem;
+    grid-template-rows: auto 1fr;
+  }
+  .calma-viewport--session .lesson-reader-chrome { grid-column: 1 / -1; }
+  .calma-viewport--session .lesson-reader-progress-top { grid-column: 1 / -1; }
+  .calma-session-rail { grid-row: 2; grid-column: 2; overflow-y: auto; padding: 1rem; border-left: 1px solid rgba(255,255,255,0.05); }
+}
+
+.calma-session-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.calma-step-card.lesson-section-card {
+  width: min(32rem, 92vw);
+  margin: 0 auto 1rem;
+}
+
+.calma-step-card .calma-step-text {
+  font-size: clamp(1.15rem, 3.5vw, 1.5rem) !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  -webkit-text-fill-color: initial !important;
+  color: var(--m-accent, #d4a012) !important;
+}
+
+.calma-breathe-wrap {
+  position: relative;
+  width: min(18rem, 75vw);
+  height: min(18rem, 75vw);
+  margin: 0 auto 1rem;
+}
+
+.calma-breathe-ring {
+  box-shadow: 0 0 80px rgba(212, 160, 18, 0.2), inset 0 0 40px rgba(212, 160, 18, 0.08) !important;
+  border-color: rgba(212, 160, 18, 0.4) !important;
+  background: radial-gradient(circle, rgba(212, 160, 18, 0.22), rgba(212, 160, 18, 0.04)) !important;
+}
+
+.calma-phase-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--m-display);
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-weight: 700;
+}
+
+.calma-chrome-pause {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 160, 18, 0.35);
+  background: rgba(212, 160, 18, 0.1);
+  color: var(--m-text);
+  cursor: pointer;
+}
+
+.calma-pause-btn {
+  border-color: rgba(212, 160, 18, 0.4) !important;
+  background: rgba(212, 160, 18, 0.1) !important;
+}
+
+.calma-aurora.lesson-fx-aurora {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(212, 160, 18, 0.07), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(129, 140, 248, 0.05), transparent 50%);
+}
+
+body.mejora-forge .calma-viewport .school-focus {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border-strong) !important;
+  border-top: 2px solid var(--m-accent) !important;
+}
+
+body.mejora-forge .calma-viewport .school-panel {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border-strong) !important;
+}
+
+/* ══════════════════════════════════════════
+   Calma FX v3 — inmersivo
+   ══════════════════════════════════════════ */
+
+.calma-fx-stack {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.calma-fx-canvas--live {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.85;
+}
+
+.calma-fx-orb-field { position: absolute; inset: 0; overflow: hidden; }
+
+.calma-fx-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: calma-orb-drift 14s ease-in-out infinite;
+}
+
+.calma-fx-orb--a {
+  width: 320px; height: 320px;
+  top: -8%; left: -6%;
+  background: color-mix(in srgb, var(--calma-accent, #6ee7b7) 22%, transparent);
+}
+
+.calma-fx-orb--b {
+  width: 240px; height: 240px;
+  top: 35%; right: -4%;
+  background: rgba(129, 140, 248, 0.14);
+  animation-delay: -5s;
+}
+
+.calma-fx-orb--c {
+  width: 200px; height: 200px;
+  bottom: -5%; left: 38%;
+  background: color-mix(in srgb, var(--calma-accent, #6ee7b7) 14%, transparent);
+  animation-delay: -9s;
+}
+
+@keyframes calma-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(18px, -22px) scale(1.07); }
+  66% { transform: translate(-12px, 14px) scale(0.96); }
+}
+
+.calma-fx-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.calma-fx-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.calma-viewport.calma-fx-active .calma-aurora {
+  background:
+    radial-gradient(ellipse 90% 55% at 15% 0%, color-mix(in srgb, var(--calma-accent, #6ee7b7) 14%, transparent), transparent 58%),
+    radial-gradient(ellipse 70% 45% at 85% 100%, rgba(129, 140, 248, 0.08), transparent 52%);
+}
+
+.calma-viewport--session {
+  background: radial-gradient(ellipse 120% 80% at 50% 30%, color-mix(in srgb, var(--calma-accent, #6ee7b7) 6%, #080809), #080809);
+}
+
+.calma-viewport.is-mounted .calma-body,
+.calma-viewport.is-mounted .calma-hero-inner,
+.calma-viewport.is-mounted .calma-session-stage,
+.calma-viewport.is-mounted .calma-complete-card {
+  animation: calma-mount-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes calma-mount-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Cards con profundidad */
+.calma-protocol-card,
+.calma-program-catalog-card,
+.calma-featured-card {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.18s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  overflow: hidden;
+}
+
+.calma-protocol-card::before,
+.calma-program-catalog-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--calma-accent, #6ee7b7) 40%, transparent), transparent 50%, rgba(129, 140, 248, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+
+.calma-protocol-card:hover,
+.calma-program-catalog-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 32px color-mix(in srgb, var(--calma-accent, #6ee7b7) 12%, transparent);
+  border-color: color-mix(in srgb, var(--calma-accent, #6ee7b7) 35%, transparent) !important;
+}
+
+.calma-protocol-card:hover::before,
+.calma-program-catalog-card:hover::before { opacity: 1; }
+
+.calma-featured-card.calma-featured-glow {
+  box-shadow: 0 0 48px color-mix(in srgb, var(--calma-accent, #6ee7b7) 15%, transparent);
+}
+
+.calma-featured-card.calma-featured-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.07) 50%, transparent 62%);
+  animation: calma-shimmer 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes calma-shimmer {
+  0%, 100% { transform: translateX(-120%); }
+  50% { transform: translateX(120%); }
+}
+
+.calma-fx-reveal {
+  animation: calma-card-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+@keyframes calma-card-reveal {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Sesión — anillo vivo */
+.calma-ring-alive {
+  animation: calma-ring-pulse 4s ease-in-out infinite;
+}
+
+.calma-ring-alive::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: conic-gradient(from 0deg, var(--calma-accent, #6ee7b7), transparent 40%, rgba(129, 140, 248, 0.5), transparent 80%, var(--calma-accent, #6ee7b7)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: calma-ring-spin 10s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes calma-ring-pulse {
+  0%, 100% { box-shadow: 0 0 60px color-mix(in srgb, var(--calma-accent, #6ee7b7) 25%, transparent); }
+  50% { box-shadow: 0 0 100px color-mix(in srgb, var(--calma-accent, #6ee7b7) 40%, transparent); }
+}
+
+@keyframes calma-ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+.calma-breathe-ring,
+.calma-session-stage .med-timer-ring {
+  position: relative;
+}
+
+/* Paso del guion */
+.calma-step-card {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--calma-accent, #6ee7b7) 22%, transparent) !important;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.calma-step-card.calma-step-enter {
+  animation: calma-step-in 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes calma-step-in {
+  0% { opacity: 0; transform: translateY(20px) scale(0.96); filter: blur(4px); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+.calma-step-progress-fill {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--calma-accent, #6ee7b7) 50%, transparent);
+}
+
+.calma-progress-top,
+.calma-chrome-progress-fill {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--calma-accent, #6ee7b7) 40%, transparent);
+}
+
+/* Completado */
+.calma-complete-card.calma-complete-pop {
+  animation: calma-complete-in 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes calma-complete-in {
+  0% { opacity: 0; transform: scale(0.88); }
+  60% { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.calma-viewport--complete .calma-complete-card {
+  position: relative;
+  z-index: 2;
+  border-color: color-mix(in srgb, var(--calma-accent, #6ee7b7) 35%, transparent);
+  box-shadow: 0 0 60px color-mix(in srgb, var(--calma-accent, #6ee7b7) 18%, transparent);
+}
+
+/* Programas catalog */
+.calma-program-catalog-card {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  backdrop-filter: blur(14px);
+}
+
+.calma-program-catalog-card.is-active {
+  background: linear-gradient(155deg, color-mix(in srgb, var(--calma-accent, #6ee7b7) 8%, transparent), rgba(255, 255, 255, 0.02));
+}
+
+.calma-program-day.is-today {
+  animation: calma-today-pulse 3s ease-in-out infinite;
+}
+
+@keyframes calma-today-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--calma-accent, #6ee7b7) 15%, transparent); }
+}
+
+.calma-quick-btn {
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+}
+
+.calma-quick-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.calma-cta-primary,
+.calma-featured-cta {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.calma-cta-primary:hover,
+.calma-featured-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--calma-accent, #6ee7b7) 20%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calma-fx-reveal,
+  .calma-step-enter,
+  .calma-complete-pop,
+  .calma-ring-alive,
+  .calma-program-day.is-today { animation: none !important; }
+  .calma-protocol-card,
+  .calma-program-catalog-card { transform: none !important; }
 }

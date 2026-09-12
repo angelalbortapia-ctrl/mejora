@@ -9,7 +9,7 @@ import { HABIT_CATEGORIES, HABIT_TEMPLATES } from '../content.js'
 import { emptyState, pageLead } from '../ui.js'
 import { habitChartHTML } from '../page-helpers.js'
 import { awardXp, processPlanAwards } from '../awards.js'
-import { forgeSparkAt, pulseElement, haptic } from '../fx.js?v=81'
+import { forgeSparkAt, pulseElement, haptic } from '../fx.js?v=82'
 import { playHabitDone } from '../sounds.js'
 
 let editingHabits = false

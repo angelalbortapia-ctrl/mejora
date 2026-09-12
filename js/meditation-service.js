@@ -4,14 +4,21 @@ import {
   getToday, toDateStr, getItem, setItem, getStats, updateStats, recordActivity,
   checkPlanTask, addXp, getSettings, saveSettings, DIFFICULTIES,
 } from './core.js'
-import { MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=81'
-import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound } from './ambient-audio.js'
-import { playTone } from './sounds.js'
-import { forgeSparkAt, pulseElement } from './fx.js?v=81'
 import {
-  initMeditationVoice, speakMeditation, speakMeditationIntro, speakBreathCue,
-  stopMeditationVoice, resetBreathCues, getMeditationVoiceName, isMeditationVoiceSupported,
-} from './meditation-voice.js?v=81'
+  MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById, getMeditationIntro,
+  getSessionAmbient, getProgramCatalog, getProgramDayIntro, getProgramDayPlan,
+} from './meditations.js?v=120'
+import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=124'
+import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=120'
+import { playTone } from './sounds.js'
+import { forgeSparkAt, pulseElement } from './fx.js?v=96'
+import {
+  initMeditationVoice, speakMeditation, speakMeditationIntro,
+  stopMeditationVoice, pauseMeditationVoice, resumeMeditationVoice, resetBreathCues,
+  getMeditationVoiceName, isMeditationVoiceSupported, getStepSpeechText,
+  usesApiMedVoice, warmMeditationVoiceCache, speakGuidedMeditationOpen,
+  estimateSpeechDurationSec, isMeditationVoiceSpeaking, setProgramVoiceOverride,
+} from './meditation-voice.js?v=124'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -20,6 +27,7 @@ export const medState = {
   difficulty: 'medio',
   completed: false,
   completedMin: 0,
+  totalSec: 0,
   phase: 'inhale',
   elapsed: 0,
   step: 0,
@@ -27,11 +35,88 @@ export const medState = {
   steps: [],
   sessionName: '',
   ambientPreview: false,
+  ambientType: null,
+  ambientAuto: false,
+  ambientDockOpen: false,
+  ambientMuted: null,
   view: 'hub',
   activeProgram: null,
+  programContext: null,
+  lastCompletion: null,
   freeTimer: null,
   voiceEnabled: true,
   timerHint: '',
+  paused: false,
+  geminiPreparing: false,
+  contentSource: null,
+  sessionIntro: null,
+}
+
+/** Ritmo del guion — no comprime el contenido, solo ajusta pausas */
+const STEP_PACE = { facil: 1.12, medio: 1, dificil: 0.94, experto: 0.88 }
+
+function migrateProgramData(data) {
+  if (!data) return null
+  if (data.completedSessions) return data
+  const days = data.completedDays || []
+  return {
+    ...data,
+    completedSessions: days.map((date, i) => ({ day: i + 1, date, sessionId: null, minutes: 0 })),
+    lastCompletedDate: days[days.length - 1] || null,
+    currentDay: days.length + 1,
+  }
+}
+
+function loadProgramData(programId) {
+  const raw = getItem('meditationPrograms', {})[programId]
+  return migrateProgramData(raw)
+}
+
+function saveProgramData(programId, data) {
+  const p = getItem('meditationPrograms', {})
+  p[programId] = data
+  setItem('meditationPrograms', p)
+}
+
+/** Duración calibrada: guion + voz + pausas de integración */
+export function buildSessionPlan(id, difficulty = 'medio', voiceEnabled = medState.voiceEnabled, stepsOverride = null) {
+  const meta = getMeditationById(id)
+  const pace = STEP_PACE[difficulty] || 1
+
+  if (!meta || meta.type === 'breathing') {
+    const minutes = MED_DURATIONS[difficulty] || 5
+    return { totalSec: minutes * 60, steps: [], minutes, guided: false, ambient: getSessionAmbient(id) }
+  }
+
+  const raw = stepsOverride || getMeditationSteps(id)
+  if (!raw.length) {
+    const minutes = MED_DURATIONS[difficulty] || 5
+    return { totalSec: minutes * 60, steps: [], minutes, guided: false, ambient: getSessionAmbient(id) }
+  }
+
+  const steps = raw.map(s => {
+    const text = getStepSpeechText(s)
+    const speechSec = voiceEnabled ? estimateSpeechDurationSec(text) : 0
+    const paced = Math.max(32, Math.round(s.duration * pace))
+    return { ...s, duration: Math.max(paced, speechSec) }
+  })
+  const totalSec = steps.reduce((a, s) => a + s.duration, 0)
+  const minutes = Math.max(1, Math.round(totalSec / 60))
+  return { totalSec, steps, minutes, guided: true, ambient: getSessionAmbient(id) }
+}
+
+export function getSessionDurationMinutes(id, difficulty = medState.difficulty || 'medio') {
+  return buildSessionPlan(id, difficulty).minutes
+}
+
+export function getNaturalSessionMinutes(id) {
+  return buildSessionPlan(id, 'medio').minutes
+}
+
+/** Milisegundos por fase respiratoria — más lento = más calmado */
+export function getBreathPhaseMs() {
+  const map = { facil: 7000, medio: 6500, dificil: 6000, experto: 5500 }
+  return map[medState.difficulty] || 6500
 }
 
 let medTimers = []
@@ -45,8 +130,48 @@ export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
   stopMeditationVoice()
+  setProgramVoiceOverride(null)
   medState.ambientPreview = false
   medState.freeTimer = null
+  medState.paused = false
+  medState.geminiPreparing = false
+  medState.contentSource = null
+  medState.sessionIntro = null
+}
+
+export function pauseMeditationSession() {
+  if (!medState.session && !medState.freeTimer?.active) return
+  if (medState.paused) return
+  medState.paused = true
+  clearMedTimers()
+  pauseAmbientSound()
+  pauseMeditationVoice()
+  if (typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion')) return
+  if (typeof window.render === 'function') window.render()
+}
+
+export function resumeMeditationSession() {
+  if (!medState.paused) return
+  medState.paused = false
+  if (medState.freeTimer?.active) attachFreeTimerInterval()
+  else if (medState.session) {
+    attachMeditationTimers(medState.session)
+  }
+  resumeAmbientSound()
+  if (medState.voiceEnabled) {
+    const step = medState.steps?.[medState.step]
+    if (step) setTimeout(() => speakStep(step), 500)
+    else if (medState.session === 'breathing' || medState.session === 'box-breath') {
+      setTimeout(() => speakMeditationIntro(getMeditationIntro(medState.session)), 500)
+    }
+  }
+  if (typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion')) return
+  if (typeof window.render === 'function') window.render()
+}
+
+export function toggleMeditationPause() {
+  if (medState.paused) resumeMeditationSession()
+  else pauseMeditationSession()
 }
 
 export function syncMedVoiceFromSettings() {
@@ -55,7 +180,8 @@ export function syncMedVoiceFromSettings() {
 }
 
 export function setMedVoiceEnabled(on) {
-  const enabled = !!on && isMeditationVoiceSupported()
+  if (!isMeditationVoiceSupported()) return
+  const enabled = !!on
   medState.voiceEnabled = enabled
   const s = getSettings()
   s.medVoice = enabled
@@ -65,9 +191,36 @@ export function setMedVoiceEnabled(on) {
 }
 
 export function getMedVoiceLabel() {
-  if (!isMeditationVoiceSupported()) return 'No disponible en este navegador'
+  if (!isMeditationVoiceSupported()) return 'No disponible'
   if (!medState.voiceEnabled) return 'Desactivada'
+  if (!getMeditationVoiceName() || getMeditationVoiceName() === 'Sin voz de calidad') return 'Cargando…'
   return getMeditationVoiceName()
+}
+
+async function restoreSessionAmbient(sessionId) {
+  const settings = getSettings()
+  const sid = sessionId || medState.session
+  let type = settings.medAmbient
+  if (!type || type === 'off' || type === 'auto') {
+    type = getSessionAmbient(sid)
+    medState.ambientAuto = true
+  } else {
+    medState.ambientAuto = false
+  }
+  const vol = medAmbientVol(settings)
+  try {
+    const ok = await startAmbientSound(type, vol)
+    medState.ambientPreview = ok
+    medState.ambientType = ok ? type : null
+    if (ok && medState.ambientAuto) {
+      const s = getSettings()
+      s.medAmbientSession = type
+      saveSettings(s)
+    }
+  } catch (_) {
+    medState.ambientPreview = false
+    medState.ambientType = null
+  }
 }
 
 export function getMeditationSteps(id) {
@@ -121,17 +274,60 @@ function logMeditationSession({ sessionId, minutes, kind = 'guided' }) {
   log[today].sessions.push({ id: sessionId || kind, minutes, kind, at: Date.now() })
   log[today].minutes += minutes
   saveMeditationLog(log)
+}
 
-  const prog = getActiveProgramProgress()
-  if (prog?.active) {
-    const p = getItem('meditationPrograms', {})
-    const key = prog.active
-    if (!p[key]) p[key] = { started: getToday(), completedDays: [] }
-    if (!p[key].completedDays.includes(today)) {
-      p[key].completedDays.push(today)
-      setItem('meditationPrograms', p)
-    }
+function advanceProgramDay(programId, sessionId, minutes) {
+  const program = MEDITATION_PROGRAMS.find(p => p.id === programId)
+  if (!program) return null
+
+  const data = loadProgramData(programId) || { started: getToday(), completedSessions: [], currentDay: 1 }
+  const completed = data.completedSessions?.length || 0
+  if (completed >= program.days) return null
+  if (data.lastCompletedDate === getToday()) return null
+
+  const today = getToday()
+  const scheduledSessionId = program.schedule[completed] || sessionId
+  data.completedSessions.push({
+    day: completed + 1,
+    date: today,
+    sessionId,
+    scheduledSessionId,
+    minutes,
+  })
+  data.lastCompletedDate = today
+  data.currentDay = completed + 2
+  data.completedDays = data.completedSessions.map(s => s.date)
+  saveProgramData(programId, data)
+
+  const newCompleted = completed + 1
+  const nextId = program.schedule[newCompleted]
+  const dayPlan = getProgramDayPlan(programId, newCompleted)
+  const nextPlan = nextId ? getProgramDayPlan(programId, newCompleted + 1) : null
+  return {
+    programId,
+    programName: program.name,
+    day: newCompleted,
+    dayTitle: dayPlan?.title || null,
+    totalDays: program.days,
+    percent: Math.round((newCompleted / program.days) * 100),
+    done: newCompleted >= program.days,
+    nextSession: nextId ? getMeditationById(nextId) : null,
+    nextDayTitle: nextPlan?.title || null,
   }
+}
+
+function tryAdvanceProgram(sessionId, minutes) {
+  const ctx = medState.programContext
+  if (!ctx?.programId) return null
+
+  const prog = getProgramProgress(ctx.programId)
+  if (!prog || prog.done || prog.doneToday) return null
+
+  const scheduledId = prog.program.schedule[prog.completed]
+  const eligible = ctx.fromProgramUI || sessionId === scheduledId
+  if (!eligible) return null
+
+  return advanceProgramDay(ctx.programId, sessionId, minutes)
 }
 
 export function completeMeditationSession({ sessionId, minutes, kind = 'guided' }) {
@@ -152,17 +348,69 @@ function processPlanAwards(awarded) {
 
 /** Programas 7 / 21 / 30 días */
 export function getProgramProgress(programId) {
-  const data = getItem('meditationPrograms', {})[programId]
+  const data = loadProgramData(programId)
   const program = MEDITATION_PROGRAMS.find(p => p.id === programId)
   if (!program) return null
-  const completed = data?.completedDays?.length || 0
+  const completedSessions = data?.completedSessions || []
+  const completed = completedSessions.length
+  const currentDay = Math.min(completed + 1, program.days)
+  const today = getToday()
   return {
     program,
     started: data?.started || null,
-    completedDays: data?.completedDays || [],
+    completedSessions,
+    completedDays: completedSessions.map(s => s.date),
     completed,
+    currentDay,
     percent: Math.round((completed / program.days) * 100),
     done: completed >= program.days,
+    lastCompletedDate: data?.lastCompletedDate || null,
+    doneToday: data?.lastCompletedDate === today,
+  }
+}
+
+export function getProgramTimeline(programId) {
+  const prog = getProgramProgress(programId)
+  if (!prog) return []
+  return prog.program.schedule.map((sessionId, i) => {
+    const day = i + 1
+    const record = prog.completedSessions.find(s => s.day === day)
+    const meta = getMeditationById(sessionId)
+    const plan = getProgramDayPlan(programId, day)
+    return {
+      day,
+      sessionId,
+      session: meta,
+      title: plan?.title || meta?.name || sessionId,
+      intention: plan?.intention || meta?.desc || '',
+      skill: plan?.skill || '',
+      phase: plan?.phase || '',
+      done: i < prog.completed,
+      isToday: !prog.done && !prog.doneToday && day === prog.currentDay,
+      record,
+      ambient: getSessionAmbient(sessionId),
+    }
+  })
+}
+
+export function getProgramTodayPlan(programId) {
+  const dayNum = getProgramDayNumber(programId)
+  return getProgramDayPlan(programId, dayNum)
+}
+
+export function getProgramCatalogInfo(programId) {
+  const prog = MEDITATION_PROGRAMS.find(p => p.id === programId)
+  const catalog = getProgramCatalog(programId)
+  if (!prog || !catalog) return null
+  return {
+    ...catalog,
+    id: programId,
+    days: prog.days,
+    name: prog.name,
+    desc: prog.desc,
+    purpose: prog.purpose || catalog.purpose,
+    promise: prog.promise || catalog.outcome,
+    audience: prog.audience || catalog.audience,
   }
 }
 
@@ -173,20 +421,41 @@ export function getActiveProgramProgress() {
 }
 
 export function startMeditationProgram(programId) {
-  const p = getItem('meditationPrograms', {})
-  if (!p[programId]) p[programId] = { started: getToday(), completedDays: [] }
-  setItem('meditationPrograms', p)
+  const existing = loadProgramData(programId)
+  if (!existing) {
+    saveProgramData(programId, {
+      started: getToday(),
+      completedSessions: [],
+      completedDays: [],
+      currentDay: 1,
+      lastCompletedDate: null,
+    })
+  }
   setItem('meditationProgramsActive', programId)
   medState.activeProgram = programId
   medState.view = 'program'
 }
 
+export function isProgramCompletedToday(programId) {
+  return !!getProgramProgress(programId)?.doneToday
+}
+
+export function getProgramDayNumber(programId) {
+  const prog = getProgramProgress(programId)
+  if (!prog || prog.done) return prog?.program?.days || 0
+  if (prog.doneToday) return prog.completed
+  return prog.currentDay
+}
+
 export function getProgramSessionForToday(programId) {
   const prog = getProgramProgress(programId)
-  if (!prog) return null
-  const dayIndex = prog.completedDays.length
-  const sessionId = prog.program.schedule[dayIndex % prog.program.schedule.length]
-  return getMeditationById(sessionId)
+  if (!prog || prog.done || prog.doneToday) return null
+  const sessionId = prog.program.schedule[prog.completed]
+  return sessionId ? getMeditationById(sessionId) : null
+}
+
+export function startProgramSession(programId, sessionId) {
+  return startMeditation(sessionId, { fromProgram: programId })
 }
 
 /** Sueño */
@@ -223,96 +492,70 @@ export function logBreathCoherence(score) {
 }
 
 export function medAmbientVol(s) {
-  const v = Number(s?.medAmbientVolume ?? 0.45)
+  const v = Number(s?.medAmbientVolume ?? 0.28)
   if (v <= 0) return 0
-  return Math.max(0.2, Math.min(1, v))
+  return Math.max(0.12, Math.min(0.65, v))
 }
 
-function speakStep(text) {
-  if (!medState.voiceEnabled || !text) return
-  speakMeditation(text)
+function speakStep(step) {
+  if (!medState.voiceEnabled || !step || medState.paused) return
+  const text = getStepSpeechText(step)
+  if (!text) return
+  speakMeditation(text, { interrupt: true, pauseMs: usesApiMedVoice() ? 2400 : undefined })
 }
 
-export async function startMeditation(id) {
-  stopMeditationSession()
-  syncMedVoiceFromSettings()
-  initMeditationVoice()
-  resetBreathCues()
-  await resumeAudioContext()
-  const diff = medState.difficulty || 'medio'
-  const duration = MED_DURATIONS[diff]
-  const meta = getMeditationById(id)
-  medState.session = id
-  medState.completed = false
-  medState.completedMin = duration
-  medState.phase = 'inhale'
-  medState.elapsed = 0
-  medState.step = 0
-  medState.stepElapsed = 0
-  medState.steps = getMeditationSteps(id)
-  medState.sessionName = meta?.name || 'Meditación'
-  medState.freeTimer = null
+function attachMeditationTimers(sessionId) {
+  const total = medState.totalSec || (medState.completedMin * 60)
+  const phaseMs = getBreathPhaseMs()
 
-  const settings = getSettings()
-  if (settings.sound) await playSingingBowl('start')
-  if (settings.medAmbient && settings.medAmbient !== 'off') {
-    await startAmbientSound(settings.medAmbient, medAmbientVol(settings))
-  }
-
-  const total = duration * 60
-
-  if (id === 'breathing' || id === 'box-breath') {
-    if (medState.voiceEnabled) {
-      speakMeditationIntro(id)
-      setTimeout(() => speakBreathCue('inhale'), 2800)
-    }
+  if (sessionId === 'breathing' || sessionId === 'box-breath') {
     medTimers.push(setInterval(() => {
+      if (medState.paused) return
       medState.phase = medState.phase === 'inhale' ? 'hold' : medState.phase === 'hold' ? 'exhale' : 'inhale'
-      playTone(medState.phase === 'inhale' ? 330 : 220, 0.15)
-      if (medState.voiceEnabled) speakBreathCue(medState.phase)
+      playTone(medState.phase === 'inhale' ? 330 : 220, 0.12)
       if (typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion')) return
       if (typeof window.render === 'function') window.render()
-    }, diff === 'experto' ? 3000 : 4000))
-  }
-
-  if (medState.steps[0]?.text) {
-    if (medState.voiceEnabled && meta?.name) {
-      setTimeout(() => speakMeditation(`Comenzamos ${meta.name}.`), medState.voiceEnabled ? 400 : 0)
-      setTimeout(() => speakStep(medState.steps[0].text), 2200)
-    } else {
-      speakStep(medState.steps[0].text)
-    }
+    }, phaseMs))
   }
 
   medTimers.push(setInterval(() => {
+    if (medState.paused) return
     medState.elapsed++
     if (medState.steps?.length) {
       medState.stepElapsed++
       const step = medState.steps[medState.step]
-      if (step && medState.stepElapsed >= step.duration && medState.step < medState.steps.length - 1) {
-        medState.step++
-        medState.stepElapsed = 0
-        speakStep(medState.steps[medState.step]?.text)
+      const lastIdx = medState.steps.length - 1
+      if (step && medState.stepElapsed >= step.duration) {
+        if (medState.voiceEnabled && isMeditationVoiceSpeaking()) {
+          medState.totalSec++
+          return
+        }
+        if (medState.step < lastIdx) {
+          medState.step++
+          medState.stepElapsed = 0
+          const next = medState.steps[medState.step]
+          if (medState.voiceEnabled && usesApiMedVoice()) {
+            const warm = medState.steps.slice(medState.step + 1, medState.step + 4).map(getStepSpeechText)
+            warmMeditationVoiceCache(warm)
+          }
+          speakStep(next)
+        } else {
+          finishMeditationTimer(sessionId)
+          return
+        }
       }
+    } else if (medState.elapsed >= total) {
+      finishMeditationTimer(sessionId)
     }
-    if (medState.elapsed >= total) {
-      finishMeditationTimer(id, duration)
-    } else if (!(typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion'))) {
+    if (!(typeof window.patchLiveUI === 'function' && window.patchLiveUI('/meditacion'))) {
       if (typeof window.render === 'function') window.render()
     }
   }, 1000))
-
-  if (typeof window.navigate === 'function') window.navigate(`/meditacion/sesion/${id}`)
-  else if (typeof window.render === 'function') window.render()
 }
 
-export function startFreeTimer(minutes = 10) {
-  stopMeditationSession()
-  medState.freeTimer = { active: true, targetMin: minutes, elapsed: 0, open: minutes <= 0 }
-  medState.session = 'free-timer'
-  medState.sessionName = minutes > 0 ? `Timer ${minutes} min` : 'Timer libre'
-
+function attachFreeTimerInterval() {
   medTimers.push(setInterval(() => {
+    if (medState.paused || !medState.freeTimer?.active) return
     medState.freeTimer.elapsed++
     const target = medState.freeTimer.targetMin * 60
     if (!medState.freeTimer.open && medState.freeTimer.elapsed >= target) {
@@ -321,17 +564,125 @@ export function startFreeTimer(minutes = 10) {
       if (typeof window.render === 'function') window.render()
     }
   }, 1000))
+}
+
+export async function prepareProgramSessionContent(programId, sessionId) {
+  const dayNum = getProgramDayNumber(programId)
+  const baseIntro = getProgramDayIntro(programId, dayNum)
+  const baseSteps = getMeditationSteps(sessionId)
+  if (!isGeminiProgramsEnabled()) {
+    return { intro: baseIntro, steps: baseSteps, source: 'static' }
+  }
+  medState.geminiPreparing = true
+  if (typeof window.render === 'function') window.render(true)
+  try {
+    return await prefetchGeminiDayContent(programId, dayNum, sessionId, baseSteps, baseIntro)
+  } finally {
+    medState.geminiPreparing = false
+  }
+}
+
+export async function startMeditation(id, options = {}) {
+  stopMeditationSession()
+  syncMedVoiceFromSettings()
+  initMeditationVoice()
+  resetBreathCues()
+
+  const diff = medState.difficulty || 'medio'
+  let intro = getMeditationIntro(id)
+  let stepsOverride = null
+  let contentSource = 'static'
+
+  medState.programContext = options.fromProgram
+    ? { programId: options.fromProgram, fromProgramUI: true }
+    : null
+
+  if (options.fromProgram) {
+    const dayNum = getProgramDayNumber(options.fromProgram)
+    intro = getProgramDayIntro(options.fromProgram, dayNum)
+    if (isGeminiProgramsEnabled()) {
+      const baseSteps = getMeditationSteps(id)
+      if (baseSteps.length) {
+        const enhanced = await prepareProgramSessionContent(options.fromProgram, id)
+        intro = enhanced.intro || intro
+        stepsOverride = enhanced.steps
+        contentSource = enhanced.source || 'static'
+      }
+    }
+  }
+
+  const plan = buildSessionPlan(id, diff, medState.voiceEnabled, stepsOverride)
+  const meta = getMeditationById(id)
+  medState.session = id
+  medState.completed = false
+  medState.lastCompletion = null
+  medState.completedMin = plan.minutes
+  medState.totalSec = plan.totalSec
+  medState.phase = 'inhale'
+  medState.elapsed = 0
+  medState.step = 0
+  medState.stepElapsed = 0
+  medState.steps = plan.steps
+  medState.sessionName = meta?.name || 'Meditación'
+  medState.sessionIntro = intro
+  medState.contentSource = contentSource
+  medState.freeTimer = null
+  medState.paused = false
+  medState.view = 'session'
+
+  if (typeof window.navigate === 'function') window.navigate(`/meditacion/sesion/${id}`)
+  else if (typeof window.render === 'function') window.render(true)
+
+  await resumeAudioContext()
+
+  const settings = getSettings()
+  if (settings.sound) await playSingingBowl('start')
+  await restoreSessionAmbient(id)
+
+  if (medState.voiceEnabled) {
+    if (id === 'breathing' || id === 'box-breath') {
+      speakMeditationIntro(intro)
+    } else if (medState.steps[0]) {
+      const firstVoice = getStepSpeechText(medState.steps[0])
+      const warmTexts = [intro, ...medState.steps.map(getStepSpeechText)].filter(Boolean)
+      warmMeditationVoiceCache(warmTexts)
+      speakGuidedMeditationOpen(intro, firstVoice)
+    }
+  }
+
+  attachMeditationTimers(id)
+}
+
+export function hasGeminiProgramContent() {
+  return hasGeminiContent()
+}
+
+export async function startFreeTimer(minutes = 10) {
+  stopMeditationSession()
+  medState.freeTimer = { active: true, targetMin: minutes, elapsed: 0, open: minutes <= 0 }
+  medState.session = 'free-timer'
+  medState.sessionName = minutes > 0 ? `Timer ${minutes} min` : 'Timer libre'
+  medState.paused = false
+
+  await resumeAudioContext()
+  await restoreSessionAmbient()
+  attachFreeTimerInterval()
 
   if (typeof window.navigate === 'function') window.navigate('/meditacion/timer')
   else if (typeof window.render === 'function') window.render()
 }
 
-function finishMeditationTimer(sessionId, duration) {
+function finishMeditationTimer(sessionId) {
   clearMedTimers()
   stopAmbientSound()
   if (getSettings().sound) playSingingBowl('end')
-  completeMeditationSession({ sessionId, minutes: duration, kind: 'guided' })
+  const minutes = Math.max(1, Math.round(medState.elapsed / 60))
+  medState.completedMin = minutes
+  const programAdvance = tryAdvanceProgram(sessionId, minutes)
+  medState.lastCompletion = { programAdvance, sessionId, minutes }
+  completeMeditationSession({ sessionId, minutes, kind: 'guided' })
   medState.completed = true
+  medState.programContext = null
   if (typeof window.render === 'function') window.render()
   requestAnimationFrame(() => {
     const ring = document.querySelector('.meditation-ring, .breathe-circle')
@@ -367,6 +718,10 @@ export function finishFreeTimer() {
 }
 
 export function syncMeditationFromRoute(sub = []) {
+  if (sub[0] === 'sesion' && sub[1]) {
+    medState.view = 'session'
+    return
+  }
   if (sub[0] === 'programa' && sub[1]) {
     medState.view = 'program'
     medState.activeProgram = sub[1]

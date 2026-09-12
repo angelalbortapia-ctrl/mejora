@@ -35,6 +35,16 @@ export function playSuccess() {
   setTimeout(() => playTone(880, 0.14), 80)
 }
 
+export function playLevelUp() {
+  if (!getSettings().sound) return
+  ;[523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.1), i * 70))
+}
+
+export function playStreak() {
+  playTone(740, 0.08)
+  setTimeout(() => playTone(988, 0.1), 60)
+}
+
 export function playHabitDone() {
   playTone(587, 0.1)
   setTimeout(() => playTone(784, 0.12), 70)

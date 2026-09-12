@@ -8,7 +8,7 @@ import {
 } from './analytics.js'
 import { MOOD_COACH, getDailyIntention } from './coaching.js'
 import { getWeeklyReviewPrompt } from './content.js'
-import { getMeditationStreak, getActiveProgramProgress } from './meditation-service.js'
+import { getMeditationStreak, getActiveProgramProgress } from './meditation-service.js?v=120'
 import { isSessionDoneToday } from './brain-program.js'
 
 function timeOfDay() {

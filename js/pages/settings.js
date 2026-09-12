@@ -17,8 +17,18 @@ import { restartOnboarding, resetOnboardingCache } from '../onboarding-ui.js'
 import { startTour } from '../tour.js'
 import { listSectionGuides, startSectionGuide, resetSectionGuides } from '../section-guides.js'
 import { tabBar, settingGroup, settingRow, pageLead } from '../ui.js'
-import { applyCompactSidebar } from '../layout.js?v=81'
+import { applyCompactSidebar } from '../layout.js?v=82'
 import { playSuccess } from '../sounds.js'
+import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '../gemini-tts.js?v=122'
+import { hasGeminiContent } from '../gemini-meditation-content.js?v=122'
+import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '../azure-tts.js?v=122'
+import { isAzureConfigFilePresent } from '../azure-config.js'
+import {
+  listFishVoiceOptions, setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed,
+  hasFishTts, hasFishApiKey, getFishVoiceId, refreshFishVoiceList, FISH_TTS_MODELS,
+} from '../fish-audio-tts.js?v=124'
+import { ensureFishConfig, isFishConfigFilePresent } from '../fish-config.js'
+import { previewMeditationVoice } from '../meditation-voice.js?v=124'
 
 let settingsTab = 'general'
 
@@ -85,6 +95,94 @@ export function renderSettings() {
         </select>`
 
   const content = settingsTab === 'general' ? `
+    ${settingGroup('Calma · Voz guía', `
+      <p class="ds-setting-hint"><strong>Fish Audio:</strong> elige una voz de la <strong>biblioteca</strong> (sin grabar), diseña una con texto, o clona desde un audio. <a href="https://fish.audio/discover" target="_blank" rel="noopener">fish.audio/discover</a></p>
+      ${hasFishTts() ? `<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Fish Audio listo${isFishConfigFilePresent() ? ' · key en archivo local' : ''}${s.medVoiceEngine === 'fish' ? ' · motor activo' : ' — elige motor Fish abajo'}</p>` : ''}
+      <p class="ds-setting-hint"><strong>Microsoft Azure:</strong> 500k caracteres/mes gratis (Dalia, Jorge…). <a href="https://azure.microsoft.com/free/" target="_blank" rel="noopener">Cuenta gratis</a> → recurso <em>Speech</em>.</p>
+      ${hasAzureTts() ? `<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Azure detectado${isAzureConfigFilePresent() ? ' · key en archivo local' : ''}${s.medVoiceEngine === 'azure' ? ' · motor activo' : ''}</p>
+      <p class="ds-setting-hint">Uso este mes: <strong>${formatAzureUsagePanel()}</strong></p>
+      <p class="ds-setting-hint">Tope automático en <strong>${Math.round(AZURE_USAGE_CAP / 1000)}k</strong> caracteres. ${isAzureQuotaExhausted() ? 'Azure pausado hasta el próximo mes.' : ''}</p>` : ''}
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Motor de voz</span>
+        <select onchange="setMedVoiceEngine(this.value)" class="input-field">
+          <option value="fish" ${(s.medVoiceEngine || (hasFishTts() ? 'fish' : hasAzureTts() ? 'azure' : 'browser')) === 'fish' ? 'selected' : ''}>Fish Audio (recomendado)</option>
+          <option value="azure" ${s.medVoiceEngine === 'azure' ? 'selected' : ''}>Microsoft Azure Neural</option>
+          <option value="browser" ${s.medVoiceEngine === 'browser' ? 'selected' : ''}>Navegador / Google</option>
+          <option value="gemini" ${s.medVoiceEngine === 'gemini' ? 'selected' : ''}>Gemini TTS (experimental)</option>
+        </select>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Fish Audio API key</span>
+        <input type="password" class="input-field" placeholder="Bearer token de fish.audio → API Keys"
+          value="${esc(s.fishApiKey || '')}" onchange="saveFishApiKey(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">O en <code>js/fish-config.local.js</code> (no se sube a git).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Fish</span>
+        <select id="fish-voice-select" onchange="saveFishVoiceId(this.value)" class="input-field">
+          ${listFishVoiceOptions(s.fishVoiceId || getFishVoiceId())}
+        </select>
+        <input type="text" class="input-field" placeholder="O pega un ID de fish.audio/discover"
+          value="${esc(s.fishVoiceId || getFishVoiceId() || '')}" onchange="saveFishVoiceId(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">Biblioteca arriba · o ID manual · <a href="https://fish.audio/discover" target="_blank" rel="noopener">discover</a></p>
+        <button type="button" class="btn btn-ghost btn-sm mt-1" onclick="refreshFishVoicesFromSettings()" ${hasFishApiKey() ? '' : 'disabled'}>↻ Cargar mis voces clonadas</button>
+      </div>
+      ${s.medVoiceEngine === 'fish' ? `<div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Modelo Fish</span>
+        <select onchange="setFishModelSetting(this.value)" class="input-field">
+          ${FISH_TTS_MODELS.map(m => `<option value="${m.id}" ${(s.fishModel || 's2.1-pro') === m.id ? 'selected' : ''}>${m.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Velocidad (${Math.round((s.fishSpeed ?? 0.82) * 100)}%)</span>
+        <input type="range" min="65" max="100" step="1" value="${Math.round((s.fishSpeed ?? 0.82) * 100)}"
+          onchange="setFishSpeedSetting(this.value / 100)" class="w-full">
+        <p class="ds-setting-hint">82% suele sonar mejor para meditación.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="previewCalmaVoice()">▶ Vista previa de voz</button>` : ''}
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Azure Speech key</span>
+        <input type="password" class="input-field" placeholder="Key del recurso Speech en portal.azure.com"
+          value="${esc(s.azureSpeechKey || '')}" onchange="saveAzureSpeechKey(this.value)" autocomplete="off">
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Región Azure</span>
+        <select onchange="setAzureSpeechRegionSetting(this.value)" class="input-field">
+          ${['eastus', 'westus2', 'centralus', 'southcentralus', 'westeurope', 'northeurope', 'mexicocentral'].map(r =>
+            `<option value="${r}" ${(s.azureSpeechRegion || 'eastus') === r ? 'selected' : ''}>${r}</option>`
+          ).join('')}
+        </select>
+        <p class="ds-setting-hint">Debe coincidir con la región de tu recurso Speech (ej. eastus).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Microsoft</span>
+        <select onchange="setAzureVoiceSetting(this.value)" class="input-field" ${hasAzureTts() ? '' : 'disabled'}>
+          ${listAzureVoiceOptions(s.azureVoice)}
+        </select>
+        ${!hasAzureTts() ? '<p class="ds-setting-hint">Pega la key de Azure arriba o usa <code>js/azure-config.local.js</code>.</p>' : ''}
+      </div>
+      ${s.medVoiceEngine === 'gemini' ? `<div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Gemini (experimental)</span>
+        <select onchange="setGeminiVoiceSetting(this.value)" class="input-field">
+          ${listGeminiVoiceOptions(s.geminiVoice)}
+        </select>
+      </div>` : ''}
+    `)}
+    ${settingGroup('Calma · Guiones con Gemini', `
+      <p class="ds-setting-hint">Mejora los textos de cada día en <strong>programas guiados</strong>. Solo texto — la voz usa Fish, Azure o navegador.</p>
+      <ol class="ds-setting-steps">
+        <li>Abre <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li>
+        <li>Inicia sesión con Google → <strong>Create API key</strong></li>
+        <li>Copia la key y pégala abajo (o en <code>js/gemini-config.local.js</code>)</li>
+      </ol>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">API key Gemini</span>
+        <input id="gemini-api-key" type="password" class="input-field" placeholder="AIza…"
+          value="${esc(s.geminiApiKey || '')}" onchange="saveGeminiApiKey(this.value)" autocomplete="off">
+        ${hasGeminiContent() ? '<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Key detectada — programas pueden usar guiones adaptados.</p>' : '<p class="ds-setting-hint">Gratis en AI Studio. Se guarda solo en tu dispositivo.</p>'}
+      </div>
+      ${settingRow('Mejorar guiones en programas', `<input type="checkbox" ${s.medGeminiPrograms !== false ? 'checked' : ''} onchange="toggleMedGeminiPrograms(this.checked)" ${hasGeminiContent() ? '' : 'disabled'}>`, 'Cada día del programa: intro y pasos reescritos para ese día. Requiere API key arriba.')}
+    `)}
     ${settingGroup('Interfaz', `
       ${settingRow('Sidebar compacto', `<input type="checkbox" ${s.compactSidebar ? 'checked' : ''} onchange="toggleCompactSidebar(this.checked)">`)}
       ${settingRow('Sonidos', `<input type="checkbox" ${s.sound ? 'checked' : ''} onchange="toggleSound(this.checked)">`)}
@@ -322,6 +420,44 @@ export function bindSettingsGlobals(deps = {}) {
     saveSettings(s)
   }
   window.setDefaultDiff = (v) => { const s = getSettings(); s.defaultDifficulty = guardDifficulty(v); saveSettings(s) }
+  window.saveGeminiApiKey = (key) => { setGeminiApiKey(key); render() }
+  window.setMedVoiceEngine = (v) => {
+    const s = getSettings()
+    s.medVoiceEngine = ['browser', 'azure', 'gemini', 'fish'].includes(v) ? v : 'browser'
+    saveSettings(s)
+    render()
+  }
+  window.saveFishApiKey = (key) => { setFishApiKey(key); render() }
+  window.saveFishVoiceId = (id) => { setFishVoiceId(id); render() }
+  window.setFishModelSetting = (id) => { setFishModel(id); render() }
+  window.setFishSpeedSetting = (n) => { setFishSpeed(n); render() }
+  window.refreshFishVoicesFromSettings = async () => {
+    await refreshFishVoiceList()
+    render()
+  }
+  window.previewCalmaVoice = async () => {
+    try {
+      await previewMeditationVoice()
+    } catch (e) {
+      alert(e.message || 'Error al reproducir vista previa')
+    }
+    const { getLastFishError } = await import('../fish-audio-tts.js?v=124')
+    if (getLastFishError()) alert(getLastFishError())
+  }
+  ensureFishConfig().then(() => {
+    if (hasFishApiKey()) refreshFishVoiceList().catch(() => {})
+    render()
+  }).catch(() => {})
+  window.saveAzureSpeechKey = (key) => { setAzureSpeechKey(key); render() }
+  window.setAzureSpeechRegionSetting = (r) => { setAzureSpeechRegion(r); render() }
+  window.setAzureVoiceSetting = (id) => { setAzureVoiceId(id); render() }
+  window.setGeminiVoiceSetting = (id) => { setGeminiVoiceId(id); render() }
+  window.toggleMedGeminiPrograms = (on) => {
+    const s = getSettings()
+    s.medGeminiPrograms = !!on
+    saveSettings(s)
+    render()
+  }
   window.setTheme = (id) => {
     if (id !== 'default' && !isUnlocked(id)) return
     const s = getSettings()

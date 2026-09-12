@@ -1,8 +1,8 @@
 /** Programas de Calma adaptativos — ajuste por consistencia */
 
 import { getToday } from './core.js'
-import { MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=81'
-import { getProgramProgress, getProgramSessionForToday } from './meditation-service.js'
+import { MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=120'
+import { getProgramProgress, getProgramSessionForToday, isProgramCompletedToday } from './meditation-service.js?v=120'
 
 const RECOVERY_SESSIONS = ['reset', 'breathing', 'release', 'transition-breath']
 
@@ -29,6 +29,9 @@ export function getAdaptiveProgramMode(programId) {
 }
 
 export function getAdaptiveProgramSession(programId) {
+  if (isProgramCompletedToday(programId)) {
+    return { session: null, mode: 'normal', hint: null, suggestedDifficulty: null, doneToday: true }
+  }
   const mode = getAdaptiveProgramMode(programId)
   const scheduled = getProgramSessionForToday(programId)
 

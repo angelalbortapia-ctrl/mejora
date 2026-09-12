@@ -4,5 +4,8 @@ dist
 .DS_Store
 *.local
 js/supabase-config.local.js
+js/gemini-config.local.js
+js/azure-config.local.js
+js/fish-config.local.js
 *.app/
 *.icns

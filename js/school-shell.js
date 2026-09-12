@@ -1,6 +1,6 @@
 /** Escuela — shell visual y sub-navegación */
 
-import { subTabBar } from './ui.js?v=81'
+import { subTabBar } from './ui.js?v=82'
 
 export const SCHOOL_SECTIONS = [
   { id: 'curriculum', label: 'Currículo', icon: '📅' },
