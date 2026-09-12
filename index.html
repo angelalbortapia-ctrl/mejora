@@ -3,42 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f5f7fb" />
+  <meta name="theme-color" content="#0a0c10" />
+  <meta name="description" content="Mejora — disciplina, hábitos, neurociencia y calma bajo presión." />
   <script>
     try {
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
-      if (s && s.darkMode === true) document.documentElement.classList.add('dark')
       if (s && s.reducedMotion) document.documentElement.classList.add('reduce-motion')
     } catch (_) {}
   </script>
-  <title>Mejora — Tu espacio de crecimiento</title>
+  <title>Mejora — Disciplina y rendimiento</title>
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
+  <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="styles.css?v=55" />
-  <link rel="stylesheet" href="css/design-system.css?v=55" />
-  <link rel="stylesheet" href="css/aurora-theme.css?v=55" />
-  <link rel="stylesheet" href="css/onboarding.css?v=55" />
-  <link rel="stylesheet" href="css/page-themes.css?v=55" />
-  <link rel="stylesheet" href="css/impact.css?v=55" />
-  <link rel="stylesheet" href="css/mejora-redesign.css?v=55" />
+  <link rel="stylesheet" href="css/design-system.css?v=78" />
+  <link rel="stylesheet" href="css/forge.css?v=78" />
+  <link rel="stylesheet" href="css/school.css?v=78" />
 </head>
-<body class="mejora-v3">
+<body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
-  <div class="app-aurora" aria-hidden="true">
-    <div class="app-aurora-orb app-aurora-orb--1"></div>
-    <div class="app-aurora-orb app-aurora-orb--2"></div>
-    <div class="app-aurora-orb app-aurora-orb--3"></div>
-    <div class="app-aurora-grid"></div>
-  </div>
   <div class="app-shell">
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
         <a href="#/" class="sidebar-brand no-underline">
-          <span class="logo-mark">✦</span>
+          <span class="logo-mark">M</span>
           <span class="font-display logo-text">Mejora</span>
         </a>
         <button type="button" id="sidebar-close" class="sidebar-close btn-ghost" aria-label="Cerrar menú">✕</button>
@@ -56,7 +47,7 @@
           <p class="sidebar-stats-caption">Plan del día</p>
         </div>
         <a href="#/ajustes" data-path="/ajustes" class="sidebar-link sidebar-link-settings no-underline">
-          <span class="sidebar-link-icon">⚙️</span>
+          <span class="sidebar-link-icon" aria-hidden="true">⚙</span>
           <span class="sidebar-link-label">Ajustes</span>
         </a>
       </div>
@@ -101,22 +92,23 @@
               </div>
             </div>
             <div class="banner-metric banner-metric-weather" id="banner-weather-wrap">
-              <span class="banner-metric-icon" id="banner-weather-icon" aria-hidden="true">🌤️</span>
+              <span class="banner-metric-icon" id="banner-weather-icon" aria-hidden="true">☀</span>
               <div>
                 <span class="banner-metric-value" id="banner-weather-temp">—</span>
                 <span class="banner-metric-label" id="banner-weather-label">clima</span>
               </div>
             </div>
-            <span id="banner-shield" class="banner-shield hidden" title="">🛡️</span>
+            <span id="banner-shield" class="banner-shield hidden" title="">🛡</span>
           </div>
 
           <div class="banner-end">
             <time id="banner-date" class="banner-date" datetime=""></time>
+            <button type="button" class="btn-secondary banner-search-btn" onclick="document.getElementById('global-search-dialog')?.showModal()" aria-label="Buscar">⌕</button>
             <a href="#/plan" id="banner-cta" class="banner-cta btn-primary no-underline">Continuar plan</a>
             <a href="#/perfil" class="banner-avatar no-underline" id="banner-avatar" title="Perfil">
-              <span id="banner-avatar-icon">🌱</span>
+              <span id="banner-avatar-icon"></span>
             </a>
-            <a href="#/ajustes" class="banner-icon-btn btn-ghost no-underline" title="Ajustes" aria-label="Ajustes">⚙️</a>
+            <a href="#/ajustes" class="banner-icon-btn btn-ghost no-underline" title="Ajustes" aria-label="Ajustes">⚙</a>
           </div>
         </div>
       </header>
@@ -136,12 +128,12 @@
     window.addEventListener('error', (e) => {
       if (!e.filename?.includes('/js/')) return
       const box = document.createElement('div')
-      box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#1a1a1a;background:#fff3cd;border:1px solid #f0c36d;border-radius:12px'
-      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 1rem;line-height:1.5">Usa el servidor local (no abras index.html directo). Doble clic en <strong>start-server.command</strong> o en terminal:</p><pre style="background:#fff;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
+      box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#eceff4;background:#12161c;border:1px solid #3d4a5c;border-radius:8px'
+      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 1rem;line-height:1.5">Usa el servidor local (no abras index.html directo).</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
       document.body.innerHTML = ''
       document.body.appendChild(box)
     })
   </script>
-  <script type="module" src="js/app.js?v=55"></script>
+  <script type="module" src="js/app.js?v=78"></script>
 </body>
 </html>

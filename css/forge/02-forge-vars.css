@@ -1,0 +1,61 @@
+/* Re-aplica tokens FORGE después de styles.css (legacy) */
+
+:root {
+  --m-bg: #0a0c10;
+  --m-bg-2: #06080b;
+  --m-surface: #12161c;
+  --m-surface-2: #1a2029;
+  --m-surface-3: #222a35;
+  --m-text: #eceff4;
+  --m-muted: #8b95a5;
+  --m-border: #2a3340;
+  --m-border-strong: #3d4a5c;
+  --m-accent: #d4a012;
+  --m-accent-hover: #f0b429;
+  --m-accent-soft: rgba(212, 160, 18, 0.14);
+  --m-accent-glow: rgba(212, 160, 18, 0.25);
+  --m-steel: #5c6b7a;
+  --m-danger: #c45c5c;
+  --m-success: #3d8f6a;
+  --m-radius: 6px;
+  --m-radius-lg: 10px;
+  --m-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-display: 'Barlow Condensed', 'Inter', system-ui, sans-serif;
+  --m-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.45);
+  --m-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
+
+  --bg: var(--m-bg);
+  --bg-elevated: var(--m-surface);
+  --bg-card: var(--m-surface);
+  --bg-surface: var(--m-surface-2);
+  --text: var(--m-text);
+  --text-muted: var(--m-muted);
+  --border: var(--m-border);
+  --border-hover: var(--m-border-strong);
+  --primary: var(--m-accent);
+  --primary-hover: var(--m-accent-hover);
+  --primary-soft: var(--m-accent-soft);
+  --primary-glow: var(--m-accent-glow);
+  --neon: var(--m-accent);
+  --btn-text: #0a0c10;
+  --secondary-bg: var(--m-surface-2);
+  --input-bg: var(--m-surface-2);
+  --header-bg: rgba(10, 12, 16, 0.92);
+  --sidebar-bg: #0e1116;
+  --radius: var(--m-radius);
+  --radius-lg: var(--m-radius-lg);
+  --gradient-hero: linear-gradient(135deg, #1a2029 0%, #12161c 50%, #0a0c10 100%);
+  --gradient-card: linear-gradient(165deg, var(--m-surface) 0%, var(--m-surface-2) 100%);
+  --shadow: var(--m-shadow);
+  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --glass-bg: rgba(18, 22, 28, 0.88);
+  --glass-border: var(--m-border);
+  --glass-glow: rgba(212, 160, 18, 0.04);
+  --success: var(--m-success);
+  --danger: var(--m-danger);
+}
+
+html {
+  color-scheme: dark;
+  /* Base 16px — no escalar html entero (rompe sidebar, banner, grids) */
+}

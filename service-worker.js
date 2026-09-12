@@ -1,8 +1,11 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const CACHE = 'mejora-v55'
+const CACHE = 'mejora-v78'
 const ASSETS = [
   `${BASE}/manifest.json`,
   `${BASE}/public/favicon.svg`,
+  `${BASE}/public/icon-192.png`,
+  `${BASE}/public/icon-512.png`,
+  `${BASE}/public/apple-touch-icon.png`,
   `${BASE}/public/audio/rain.wav`,
   `${BASE}/public/audio/ocean.wav`,
   `${BASE}/public/audio/forest.wav`,
@@ -18,12 +21,26 @@ const ASSETS = [
 const NETWORK_FIRST = [
   '/',
   '/index.html',
-  '/styles.css',
   '/css/utilities.css',
   '/css/design-system.css',
-  '/css/aurora-theme.css',
+  '/css/forge.css',
+  '/css/forge/01-tokens.css',
+  '/css/forge/02-forge-vars.css',
+  '/css/forge/03-shell.css',
+  '/css/forge/04-legacy-pages.css',
+  '/css/mejora-redesign.css',
+  '/css/forge-pages.css',
+  '/css/forge-meditation.css',
+  '/css/forge-fx.css',
   '/css/onboarding.css',
-  '/css/page-themes.css',
+  '/css/school.css',
+  '/js/onboarding-ui.js',
+  '/js/tour.js',
+  '/js/version.js',
+  '/js/meditations.js',
+  '/js/meditation-service.js',
+  '/js/pages/meditation.js',
+  '/js/global-search.js',
   '/js/',
 ]
 

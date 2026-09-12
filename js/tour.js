@@ -1,10 +1,32 @@
 import { getSettings, saveSettings, setItem, getItem } from './core.js'
 
 const STEPS = [
-  { target: '#sidebar-nav', title: 'Navegación', text: 'Explora Inicio, Plan, Gimnasia, Hábitos y Mi viaje desde aquí.' },
-  { target: '#app-banner', title: 'Banner superior', text: 'Tu plan del día, racha y acceso rápido siempre visibles.' },
-  { target: '#app-content', title: 'Tu espacio', text: 'Aquí verás misiones, hábitos y progreso. El bloque "Siguiente paso" te guía.' },
-  { target: '#banner-cta', title: 'Acción rápida', text: 'Un clic para continuar tu plan del día.' },
+  {
+    title: 'Navegación',
+    text: 'Hoy, Hábitos, Escuela, Calma y Tú. En móvil, la misma barra abajo.',
+    highlight: '#sidebar-nav',
+  },
+  {
+    title: 'Plan del día',
+    text: '4 misiones diarias en el banner. Completa las 4 para el bonus +80 XP.',
+    highlight: '.banner-metric-plan',
+  },
+  {
+    title: 'Continuar plan',
+    text: 'Un clic te lleva a la siguiente misión pendiente.',
+    highlight: '#banner-cta',
+  },
+  {
+    title: 'Pantalla Hoy',
+    text: 'Resumen del día, ánimo, hábitos y la siguiente acción recomendada.',
+    highlight: '#app-content',
+  },
+  {
+    title: 'Buscar',
+    text: 'Encuentra lecciones, meditaciones y rutas. Atajo: ⌘K o Ctrl+K.',
+    highlight: '.banner-search-btn',
+    optional: true,
+  },
 ]
 
 export function shouldShowTour() {
@@ -17,28 +39,47 @@ export function startTour(onStep) {
   const overlay = document.getElementById('tour-overlay')
   if (!overlay) return
 
+  const clearHighlight = () => {
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'))
+  }
+
   const renderStep = () => {
+    while (step < STEPS.length && STEPS[step].optional && !document.querySelector(STEPS[step].highlight)) {
+      step++
+    }
+    if (step >= STEPS.length) {
+      clearHighlight()
+      finishTour()
+      return
+    }
+
     const s = STEPS[step]
-    const el = document.querySelector(s.target)
+    clearHighlight()
+    const target = document.querySelector(s.highlight)
+    target?.classList.add('tour-highlight')
+
     overlay.classList.add('active')
     overlay.innerHTML = `
-      <div class="tour-backdrop"></div>
-      <div class="tour-spotlight" id="tour-spotlight"></div>
-      <div class="tour-card animate-slide-up">
-        <p class="tour-step-label">Paso ${step + 1} de ${STEPS.length}</p>
-        <h3 class="tour-title">${s.title}</h3>
+      <div class="tour-card tour-card--light animate-slide-up" role="dialog" aria-labelledby="tour-title">
+        <p class="tour-step-label">Tour · ${step + 1} de ${STEPS.length}</p>
+        <h3 class="tour-title" id="tour-title">${s.title}</h3>
         <p class="tour-text">${s.text}</p>
         <div class="tour-actions">
-          <button type="button" class="btn-ghost" id="tour-skip">Saltar</button>
+          <button type="button" class="btn-ghost" id="tour-skip">Saltar tour</button>
           <button type="button" class="btn-primary" id="tour-next">${step < STEPS.length - 1 ? 'Siguiente' : 'Listo'}</button>
         </div>
       </div>`
-    positionSpotlight(el)
-    document.getElementById('tour-skip')?.addEventListener('click', skipTour)
+
+    document.getElementById('tour-skip')?.addEventListener('click', () => {
+      clearHighlight()
+      skipTour()
+    })
     document.getElementById('tour-next')?.addEventListener('click', () => {
       step++
-      if (step >= STEPS.length) finishTour()
-      else {
+      if (step >= STEPS.length) {
+        clearHighlight()
+        finishTour()
+      } else {
         renderStep()
         onStep?.(step)
       }
@@ -48,21 +89,12 @@ export function startTour(onStep) {
   renderStep()
 }
 
-function positionSpotlight(el) {
-  const spot = document.getElementById('tour-spotlight')
-  if (!spot || !el) return
-  const r = el.getBoundingClientRect()
-  spot.style.top = `${Math.max(8, r.top - 6)}px`
-  spot.style.left = `${Math.max(8, r.left - 6)}px`
-  spot.style.width = `${r.width + 12}px`
-  spot.style.height = `${r.height + 12}px`
-}
-
 export function finishTour() {
   const overlay = document.getElementById('tour-overlay')
   if (!overlay) return
   overlay.classList.remove('active')
   overlay.innerHTML = ''
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'))
   const s = getSettings()
   s.tourComplete = true
   saveSettings(s)

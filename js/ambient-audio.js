@@ -158,7 +158,7 @@ export const AMBIENT_PRESETS = [
   { id: 'stream', label: 'Arroyo', icon: '💧' },
   { id: 'fire', label: 'Fogata', icon: '🔥' },
   { id: 'night', label: 'Noche', icon: '🌙' },
-  { id: 'brown', label: 'Ruido suave', icon: '🫧' },
+  { id: 'brown', label: 'Binaural θ', icon: 'θ' },
   { id: 'cafe', label: 'Café', icon: '☕' },
   { id: 'zen', label: 'Zen', icon: '🎐' },
 ]

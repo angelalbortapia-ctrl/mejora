@@ -21,7 +21,7 @@ También puedes hacer doble clic en **Mejora.app** (Escritorio) o `start-server.
 1. **Plan** — 4 misiones diarias + bonus XP
 2. **Hacer** — Rutina, gimnasia, hábitos, meditación
 3. **Verificar** — Gráficas, Mi viaje, consistencia
-4. **Actuar** — Diario, revisiones semanal/mensual
+4. **Actuar** — Metas, revisiones y ajustes de hábitos
 
 ## Stack
 

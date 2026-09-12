@@ -21,7 +21,16 @@ export function setLastRenderPath(path) {
 export function parsePath(hash = location.hash) {
   const full = hash.slice(1).split('?')[0] || '/'
   const parts = full.split('/').filter(Boolean)
-  return { full, parts, path: '/' + (parts[0] || '') }
+  const path = '/' + (parts[0] || '')
+  const sub = parts.slice(1)
+  return { full, parts, path, sub }
+}
+
+export function buildHash(path, ...segments) {
+  const base = path.replace(/^\//, '').replace(/\/$/, '')
+  const rest = segments.filter(Boolean).map(s => String(s).replace(/\//g, ''))
+  const segs = [base, ...rest].filter(Boolean)
+  return '#/' + segs.join('/')
 }
 
 export function scheduleRender(immediate = false) {
@@ -32,7 +41,7 @@ export function scheduleRender(immediate = false) {
     renderImpl()
     return
   }
-  if (debounceId) return
+  if (debounceId) clearTimeout(debounceId)
   debounceId = setTimeout(() => {
     debounceId = null
     renderImpl()
@@ -40,7 +49,8 @@ export function scheduleRender(immediate = false) {
 }
 
 export function navigate(path) {
-  const target = path.startsWith('/') ? path : `/${path}`
-  if (location.hash !== `#${target}`) location.hash = target
+  const target = path.startsWith('#') ? path.slice(1) : (path.startsWith('/') ? path : `/${path}`)
+  const hash = `#${target}`
+  if (location.hash !== hash) location.hash = hash
   else scheduleRender(true)
 }

@@ -10,7 +10,7 @@ export function tabBar(tabs, activeId, stateVar, extraOnClick = '') {
       const active = activeId === t.id
       return `<button type="button" role="tab" aria-selected="${active}"
         class="ds-tab ${active ? 'is-active' : ''} ${locked ? 'ds-tab--locked' : ''}"
-        ${locked ? 'disabled title="' + (t.lockTitle || 'Bloqueado') + '"' : `onclick="${stateVar}='${t.id}';${extraOnClick}render()"`}>
+        ${locked ? 'disabled title="' + (t.lockTitle || 'Bloqueado') + '"' : `onclick="${stateVar}='${t.id}';${extraOnClick}render(true)"`}>
         ${t.icon ? `<span class="ds-tab-icon" aria-hidden="true">${t.icon}</span>` : ''}
         <span>${t.label}</span>
       </button>`
@@ -25,7 +25,7 @@ export function subTabBar(tabs, activeId, stateVar, extraOnClick = '') {
       const active = activeId === t.id
       return `<button type="button" role="tab" aria-selected="${active}"
         class="ds-subtab ${active ? 'is-active' : ''}"
-        onclick="${stateVar}='${t.id}';${extraOnClick}render()">
+        onclick="${stateVar}='${t.id}';${extraOnClick}render(true)">
         ${t.icon ? `${t.icon} ` : ''}${t.label}
       </button>`
     }).join('')}

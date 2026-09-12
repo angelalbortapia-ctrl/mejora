@@ -1,0 +1,13 @@
+{
+  "name": "mejora",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "typecheck": "tsc --noEmit",
+    "serve": "python3 -m http.server 5173"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

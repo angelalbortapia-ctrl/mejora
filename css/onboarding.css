@@ -18,6 +18,14 @@
   animation: ob-fade-in 0.5s ease;
 }
 
+body.onboarding-open {
+  overflow: hidden;
+}
+
+body.onboarding-open .app-main {
+  pointer-events: none;
+}
+
 @keyframes ob-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -84,7 +92,7 @@
 }
 
 .onboarding-kicker {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -93,8 +101,8 @@
 }
 
 .onboarding-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
   font-weight: 800;
   line-height: 1.15;
   margin: 0 0 0.5rem;
@@ -172,10 +180,23 @@
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s, transform 0.2s;
   text-align: left;
+}
+
+/* Legibilidad solo dentro de la guía — no afecta el resto de la app */
+.onboarding-inner .input-field {
+  font-size: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+.onboarding-actions .btn-primary,
+.onboarding-actions .btn-secondary,
+.onboarding-actions .btn-ghost {
+  font-size: 0.9375rem;
+  padding: 0.8rem 1rem;
 }
 
 .onboarding-habit-btn:hover { border-color: rgba(45, 212, 191, 0.25); }
@@ -213,3 +234,191 @@
 }
 
 .onboarding-skip button:hover { color: var(--text); }
+
+.onboarding-logo-mark {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.75rem;
+  background: var(--gradient-hero);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--btn-text, #0a0c10);
+  box-shadow: 0 0 32px var(--primary-glow, rgba(212, 160, 18, 0.3));
+}
+
+.onboarding-visual--brand {
+  min-height: 6rem;
+  background: transparent;
+  border: none;
+}
+
+.onboarding-info-list {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.onboarding-info-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.onboarding-info-icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 4px;
+  background: var(--m-accent-soft, var(--primary-soft));
+  color: var(--m-accent, var(--primary));
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-mission-demo {
+  border: 1px solid var(--border);
+  border-radius: var(--m-radius-lg, 10px);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.onboarding-mission-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.onboarding-mission-row:last-child { border-bottom: none; }
+
+.onboarding-mission-row.is-rotating {
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.onboarding-mission-xp {
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--m-accent, var(--primary));
+}
+
+.onboarding-hint {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0 0 1.25rem;
+}
+
+.onboarding-pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.onboarding-pillar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem;
+  border-radius: var(--m-radius, 6px);
+  border: 1px solid var(--border);
+  background: var(--secondary-bg);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.onboarding-pillar-icon {
+  font-size: 1.1rem;
+  color: var(--m-accent, var(--primary));
+}
+
+.onboarding-pillar strong {
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+.onboarding-field-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.onboarding-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.onboarding-checklist {
+  margin: 0 0 1.25rem;
+  padding-left: 1.15rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.onboarding-checklist li { margin-bottom: 0.5rem; }
+
+body.mejora-forge .onboarding-title {
+  background: linear-gradient(135deg, var(--m-text), var(--m-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.mejora-forge .onboarding-kicker {
+  color: var(--m-accent);
+}
+
+body.mejora-forge .onboarding-dot.is-done {
+  background: var(--m-accent);
+  box-shadow: 0 0 8px var(--m-accent-glow);
+}
+
+body.mejora-forge .onboarding-dot.is-current {
+  background: var(--m-accent-soft);
+}
+
+body.mejora-forge .onboarding-habit-btn.is-selected {
+  border-color: var(--m-accent);
+  background: var(--m-accent-soft);
+}
+
+body.mejora-forge .tour-step-label {
+  font-size: 0.75rem;
+}
+
+body.mejora-forge .tour-title {
+  font-size: 1.125rem;
+}
+
+body.mejora-forge .tour-text {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+body.mejora-forge .tour-card {
+  max-width: 22rem;
+  padding: 1.35rem 1.5rem;
+}

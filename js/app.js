@@ -7,15 +7,16 @@ import {
   setRecord, getAchievements,
   ensureDailyPlan, getPlanProgress, checkPlanTask, isRoutineDoneToday, getWeekNumber,
   GOAL_TEMPLATES, getGoals, addGoal, syncGoals, getHabitWeekChart,
-  needsOnboarding, MOODS, getMood, setMood, getMoodWeek, getMoodInsight,
-  getStreakShieldStatus,
+  needsOnboarding, migrateOnboardingFlag, MOODS, getMood, setMood, getMoodWeek, getMoodInsight,
+  getStreakShieldStatus, resetAllData,
 } from './core.js'
 import {
   HABIT_CATEGORIES, HABIT_TEMPLATES,
-  WEEKLY_REVIEW_PROMPTS, MONTHLY_REVIEW_PROMPTS, genMathProblem, getMemoryConfig, getSimonConfig,
+  genMathProblem, getMemoryConfig, getSimonConfig,
   getLogicPuzzles, getWordGroup, getAnagrams, COLORS, getReflectionPrompt, pickSequence,
 } from './content.js'
-import { MEDITATIONS, MEDITATION_STEPS } from './meditations.js'
+import { medState, MED_DURATIONS, clearMedTimers, stopMeditationSession, syncMeditationFromRoute } from './meditation-service.js'
+import { renderMeditationPage, bindMeditationGlobals } from './pages/meditation.js?v=78'
 import {
   UNLOCKS, THEMES, isUnlocked, getUnlocked, getNextUnlock,
   checkNewUnlocks, markUnlockSeen, applyTheme,
@@ -37,7 +38,7 @@ import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
   initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
 } from './brain-exercises.js'
-import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar } from './layout.js'
+import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar } from './layout.js?v=78'
 import {
   getActivityCalendar, getConsistencyScore, getJourneySummary, getJourneyInsight,
   getHabitTrendWeeks, getMilestones, getNextBestAction, getWeeklySummary, getWeeklyActivityScores,
@@ -45,23 +46,31 @@ import {
 import {
   emptyState, milestoneBar, sparklineSVG,
   tabBar, subTabBar, segmentBar, settingGroup, settingRow, pageLead, zoneHeader, pageHero,
-} from './ui.js?v=48'
-import { celebrate, haptic, updateAppShell } from './fx.js'
+} from './ui.js?v=78'
+import { celebrate, haptic, updateAppShell, forgeSparkAt, pulseElement, flashPlanBanner } from './fx.js'
 import { playTone, playClick, playHabitDone, playSuccess } from './sounds.js'
 import {
   bindRender, scheduleRender, navigate, parsePath,
   getLastRenderPath, setLastRenderPath,
 } from './router.js'
-import { onboarding, renderOnboardingOverlay, resetOnboardingCache } from './onboarding-ui.js'
-import { renderHome } from './pages/home.js'
+import { onboarding, renderOnboardingOverlay, resetOnboardingCache, restartOnboarding, TOTAL_ONBOARD_STEPS } from './onboarding-ui.js?v=78'
+import { renderHome } from './pages/home.js?v=78'
 import { getMissionTone, getMissionChip } from './coaching.js'
 import {
   getDailyLesson, getWeeklyLesson, getWeeklyLessonMeta, LESSONS, LAB_EXERCISE_IDS, EXERCISE_REAL_WORLD,
   renderLessonCard, renderLessonFull, renderNeuroPunchBanner, renderDebateBanner, renderLegendaryHall,
   renderHomeNeuroCard, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
   getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson,
-} from './brain-academy.js'
-import { startTour, shouldShowTour } from './tour.js'
+} from './brain-academy.js?v=78'
+import {
+  renderSchoolHub, completeLessonReview, renderHomeReviewBanner,
+  renderReviewQuizFlow, getReviewQuiz, getSchoolStats,
+} from './school.js?v=78'
+import { renderCatalogPage } from './school-catalog.js?v=78'
+import { wrapSchoolPage } from './school-shell.js?v=78'
+import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from './school-library.js?v=78'
+import { downloadFacultyCertificate, checkAndIssueCertificates } from './school-certificates.js?v=78'
+import { startTour, shouldShowTour } from './tour.js?v=78'
 import { exportMonthlyReportText, maybeAutoBackup } from './backup.js'
 import {
   initCloudSync, getCloudStatus, signIn, signUp, signOut,
@@ -71,10 +80,24 @@ import {
   playSingingBowl, startAmbientSound, stopAmbientSound, setAmbientVolume, resumeAudioContext,
   isAmbientPlaying, AMBIENT_PRESETS,
 } from './ambient-audio.js'
+import { awardXp, processPlanAwards, showToast } from './awards.js'
+import { moodPickerHTML, heatmapHTML, skillBars, guardDifficulty } from './page-helpers.js'
+import { routineState, stopRoutineIfLeaving, patchRoutineUI } from './routine-service.js'
+import { pomodoro, patchPomodoroUI } from './focus-service.js'
+import { renderRoutine, bindRoutineGlobals } from './pages/routine.js?v=78'
+import { renderPlan, renderSoloHoy } from './pages/plan.js?v=78'
+import { renderMejora, bindMejoraGlobals, getEditingHabits, setEditingHabits } from './pages/mejora.js?v=78'
+import { renderEnfoque, bindEnfoqueGlobals } from './pages/enfoque.js?v=78'
+import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } from './pages/settings.js?v=78'
+import { maybeAutoSectionGuide } from './section-guides.js?v=78'
 
 // --- State ---
 let brainState = {
-  exercise: null, difficulty: 'medio', mode: 'hub', brainView: 'academy', activeLesson: null, lessonFlow: null,
+  exercise: null, difficulty: 'medio', mode: 'hub', brainView: 'school', schoolFaculty: null, schoolSection: 'curriculum',
+  catalogFilter: { q: '', category: 'all', faculty: 'all', region: 'all', duration: 'all', status: 'all' },
+  libraryFilter: { q: '', topic: 'all' }, pubmed: { query: '', results: [], loading: false },
+  activePaper: null, paperMeta: null, reviewFlow: null,
+  activeLesson: null, lessonFlow: null,
   session: null, memory: {}, math: {}, words: {}, simon: {}, logic: {}, anagrams: {}, trivia: {},
   nback: {}, stroop: {}, flanker: {}, switching: {}, gonogo: {}, corsi: {}, symbols: {},
 }
@@ -83,266 +106,35 @@ function clearBrainTimers() { brainTimers.forEach(t => clearTimeout(t)); brainTi
 let deferredInstallPrompt = null
 let dailyApis = getDailyBundle()
 let dailyApisLoading = false
-let medState = {
-  session: null, difficulty: 'medio', completed: false, completedMin: 0,
-  phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0, ambientPreview: false,
-}
-let medTimers = []
-let mejoraTab = 'habits'
-let diarioSection = 'daily'
-let pomodoro = { minutes: 25, seconds: 0, active: false, mode: 'work' }
-let pomodoroTimer = null
-let routineState = { active: false, step: 0, difficulty: 'medio' }
-let routineTimers = []
-let settingsTab = 'general'
 let viajeTab = 'resumen'
 let metasTab = 'activas'
 let profileTab = 'resumen'
-let editingHabits = false
 let logicSession = { puzzles: [], index: 0, score: 0, difficulty: 'medio', finished: false, selected: null }
-function renderHomePage() {
-  return renderHome({ moodPickerHTML, dailyApis, dailyApisLoading })
-}
 
-function ensureToastContainer() {
-  let el = document.getElementById('toast-container')
-  if (!el) {
-    el = document.createElement('div')
-    el.id = 'toast-container'
-    document.body.appendChild(el)
-  }
-  return el
-}
-
-function showToast(message, xp, skill, levelUp = false) {
-  const container = ensureToastContainer()
-  const el = document.createElement('div')
-  el.className = 'xp-toast' + (levelUp ? ' xp-toast-level' : '')
-  const skillInfo = SKILLS[skill] || { icon: '⭐' }
-  el.innerHTML = levelUp
-    ? `<span class="toast-icon">🎉</span><div><strong>¡Nivel ${message}!</strong><p class="text-sm opacity-80">${skillInfo.name} · +${xp} XP</p></div>`
-    : `<span class="toast-icon">${skillInfo.icon}</span><div><strong>+${xp} XP</strong><p class="text-sm opacity-80">${message}</p></div>`
-  container.appendChild(el)
-  playTone(levelUp ? 660 : 523, levelUp ? 0.25 : 0.15)
-  setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 300) }, 2800)
-}
-
-function showUnlockToast(unlock) {
-  markUnlockSeen(unlock.id)
-  const container = ensureToastContainer()
-  const el = document.createElement('div')
-  el.className = 'xp-toast unlock-toast'
-  el.innerHTML = `<span class="toast-icon">${unlock.icon}</span><div><strong>¡Desbloqueado!</strong><p class="text-sm opacity-80">${unlock.name} · ${unlock.desc}</p></div>`
-  container.appendChild(el)
-  playTone(784, 0.3)
-  setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 4000) }, 3500)
-}
-
-function awardXp(skill, amount, message) {
-  const prevLevel = getTotalLevel()
-  const result = addXp(skill, amount)
-  const newLevel = getTotalLevel()
-  if (result.levelUp) {
-    celebrate('level')
-    showToast(result.newLevel, amount, skill, true)
-  } else showToast(message, amount, skill)
-  checkNewUnlocks(prevLevel, newLevel).forEach(showUnlockToast)
-  return result
-}
-
-function processPlanAwards(awards) {
-  for (const a of awards) {
-    if (a.bonus) {
-      celebrate()
-      showToast('¡Plan del día completo!', a.result.xp, 'discipline')
-    } else if (a.task) showToast(a.task.label, a.result.xp, 'discipline')
-  }
-}
-
-function moodPickerHTML(compact = false) {
-  const today = getToday()
-  const current = getMood(today)
-  const week = getMoodWeek()
-  const insight = getMoodInsight()
-  const picker = `<div class="mood-picker flex gap-2 ${compact === 'home' ? 'mood-picker--home' : 'justify-between'}">
-      ${MOODS.map(m => `<button onclick="pickMood(${m.id})" class="mood-btn ${current?.id === m.id ? 'active' : ''}" title="${m.label}">
-        <span class="mood-emoji">${m.emoji}</span>
-        <span class="mood-label">${m.label}</span>
-      </button>`).join('')}
-    </div>`
-
-  if (compact === 'home') {
-    return `<div class="home-glass home-mood-panel">
-      <p class="home-mood-label">Ánimo de hoy</p>
-      ${picker}
-    </div>`
-  }
-
-  return `<div class="card mood-card ${compact ? 'mb-4' : 'mb-6'}">
-    <div class="flex justify-between items-center mb-3">
-      <h3 class="font-semibold text-main ${compact ? 'text-sm' : ''}">${compact ? '¿Cómo te sientes?' : 'Estado de ánimo'}</h3>
-      ${current ? `<span class="text-sm text-muted">${current.emoji} ${current.label}</span>` : '<span class="text-xs text-muted">Sin registrar</span>'}
-    </div>
-    ${picker}
-    ${!compact ? `<div class="mood-week flex justify-between mt-4 pt-4" style="border-top:1px solid var(--border)">
-      ${week.map(d => `<div class="text-center flex-1">
-        <span class="text-lg">${d.mood?.emoji || '·'}</span>
-        <p class="text-xs text-muted mt-1 ${d.isToday ? 'font-bold text-main' : ''}">${d.label}</p>
-      </div>`).join('')}
-    </div>
-    ${insight ? `<p class="text-xs text-muted mt-3 italic">${insight}</p>` : ''}` : ''}
-  </div>`
-}
-
-function habitChartHTML(compact = false, home = false) {
-  const chart = getHabitWeekChart()
-  const maxH = compact ? 80 : 120
-  const wrapClass = home ? 'home-glass home-panel' : (compact ? '' : 'card card-static home-panel')
-  return `<div class="${wrapClass}">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="home-panel-title" style="margin:0">${compact ? 'Hábitos esta semana' : 'Hábitos esta semana'}</h3>
-      <span class="text-sm text-muted">Promedio: ${chart.avg}%</span>
-    </div>
-    <div class="habit-chart flex items-end justify-between gap-2" style="height:${maxH}px">
-      ${chart.days.map(d => {
-        const h = Math.max(4, (d.percent / 100) * maxH)
-        return `<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-          <span class="text-muted" style="font-size:10px">${d.count}/${d.total}</span>
-          <div class="chart-bar w-full rounded-t-lg transition-all ${d.isToday ? 'chart-bar-today' : ''}" style="height:${h}px" title="${d.percent}%"></div>
-          <span class="text-xs text-muted ${d.isToday ? 'font-bold text-main' : ''}">${d.label}</span>
-        </div>`
-      }).join('')}
-    </div>
-  </div>`
-}
-
-function xpBar(info, color) {
-  return `<div class="mb-1 flex justify-between text-xs text-muted"><span>Nivel ${info.level}</span><span>${info.xp} XP</span></div>
-    <div class="progress-track w-full" style="height:0.5rem">
-      <div class="progress-fill h-full" style="width:${info.percent}%;background:${color === 'var(--primary)' ? 'var(--gradient-hero)' : color}"></div>
-    </div>`
-}
-
-function difficultyPicker(current, onchange) {
-  return segmentBar(
-    Object.entries(DIFFICULTIES).map(([k, d]) => ({
-      id: k,
-      label: d.label,
-      icon: d.icon,
-      locked: k === 'experto' && !isUnlocked('diff_expert'),
-      lockTitle: 'Desbloquea en nivel 10',
-      lockLabel: '(Nv.10)',
-    })),
-    current,
-    onchange,
-  )
-}
-
-function guardDifficulty(d) {
-  return d === 'experto' && !isUnlocked('diff_expert') ? 'medio' : d
+function isHomeLikePath(path) {
+  return ['/', '/plan', '/mejora', '/meditacion'].includes(path)
 }
 
 async function loadDailyApis(force = false) {
   const country = getSettings().country || 'MX'
   if (!force && dailyApis?.date === getToday() && dailyApis?.country === country && !dailyApis.stale) return
   dailyApisLoading = true
-  const path = location.hash.slice(1) || '/'
-  if (['/', '/plan', '/mejora', '/meditacion'].includes(path)) render()
+  const path = parsePath().path
+  if (isHomeLikePath(path)) scheduleRender()
   try {
     dailyApis = await ensureDailyBundle(country)
   } catch {
     dailyApis = getDailyBundle() || buildLocalBundle(country)
   }
   dailyApisLoading = false
-  const p = location.hash.slice(1) || '/'
-  if (['/', '/plan', '/mejora', '/meditacion'].includes(p)) render()
+  if (isHomeLikePath(parsePath().path)) scheduleRender()
 }
 
-function playerCard() {
-  const rank = getRank()
-  const total = getTotalLevel()
-  const p = getProgress()
-  const totalXp = Object.values(p.xp).reduce((a, b) => a + b, 0)
-  const info = getLevelInfo(totalXp)
-  return `<div class="card mb-6">
-    <div class="flex items-center gap-4 mb-4">
-      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl player-avatar">${rank.icon}</div>
-      <div class="flex-1">
-        <p class="text-sm text-muted">${rank.title} · Nivel ${total}</p>
-        <p class="font-display text-xl font-bold text-main">${totalXp} XP total</p>
-      </div>
-      <a href="#/perfil" class="text-muted no-underline text-sm">Ver perfil →</a>
-    </div>
-    ${xpBar(info, 'var(--primary)')}
-  </div>`
+function renderHomePage() {
+  return renderHome({ moodPickerHTML, dailyApis, dailyApisLoading })
 }
 
-function skillBars() {
-  const p = getProgress()
-  return Object.entries(SKILLS).map(([key, skill]) => {
-    const info = getLevelInfo(p.xp[key] || 0)
-    return `<div class="mb-4">
-      <div class="flex items-center gap-2 mb-1"><span>${skill.icon}</span><span class="text-sm font-medium text-main">${skill.name}</span><span class="text-xs text-muted ml-auto">Nv. ${info.level}</span></div>
-      ${xpBar(info, skill.color)}
-    </div>`
-  }).join('')
-}
-
-function heatmapHTML(days = 28) {
-  const cal = getActivityCalendar(days)
-  return `<div class="heatmap-grid">${cal.map(d =>
-    `<div class="heatmap-cell ${d.level ? `l${d.level}` : ''} ${d.isToday ? 'today' : ''}" title="${d.date}: ${d.count} actividades"></div>`
-  ).join('')}</div>`
-}
-
-// --- Solo hoy (minimal) ---
-function renderSoloHoy() {
-  const progress = getPlanProgress()
-  const action = getNextBestAction()
-  const habits = getHabits().filter(h => !isHabitComplete(h)).slice(0, 3)
-
-  return `<div class="animate-fade-in route-enter page-shell page-wide page-solo-hoy">
-    <a href="#/" class="btn-secondary focus-exit no-underline">← Salir</a>
-    <div class="ds-page ds-page--full solo-dashboard">
-    ${pageHero('Solo hoy', 'Una cosa a la vez, sin ruido', `${progress.percent}%`, 'plan del día')}
-    <div class="ds-panel ds-panel--flat text-center solo-focus">
-      <p class="text-xs text-muted uppercase tracking-wide mb-2">Modo enfoque</p>
-      <p class="font-display text-3xl font-bold text-main">${progress.percent}%</p>
-      <p class="text-sm text-muted">Plan del día · ${progress.done}/${progress.total}</p>
-      <div class="progress-track w-full mt-3" style="height:8px">
-        <div class="progress-fill h-full" style="width:${progress.percent}%"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-2 mt-4">
-        <a href="#/rutina" class="btn-secondary text-center no-underline py-3">⚔️ Express</a>
-        <a href="#/" class="btn-ghost text-center no-underline py-3">Vista completa</a>
-      </div>
-    </div>
-
-    <a href="${action.link}" class="ds-list-item next-action no-underline solo-action">
-      <span class="ds-list-icon">${action.icon}</span>
-      <div class="ds-list-body">
-        <p class="ds-list-meta" style="margin:0">Ahora</p>
-        <p class="ds-list-title">${action.title}</p>
-        <p class="ds-list-meta">${action.desc}</p>
-      </div>
-      <span class="text-muted">→</span>
-    </a>
-
-    ${habits.length ? `<div class="ds-panel ds-panel--flat solo-habits">
-      <h3 class="section-title" style="margin:0 0 0.75rem">Hábitos pendientes</h3>
-      <div class="space-y-2">
-        ${habits.map(h => `<a href="#/mejora" class="flex items-center gap-2 p-2 rounded-lg no-underline habit-item">
-          <span>${h.icon}</span><span class="text-main text-sm flex-1">${esc(h.name)}</span><span class="text-muted text-xs">→</span>
-        </a>`).join('')}
-      </div>
-    </div>` : `<div class="card card-static solo-habits solo-habits--done">
-      <p class="text-main font-medium mb-1">✅ Hábitos al día</p>
-      <p class="text-sm text-muted mb-3">Si tienes 3 minutos, una reflexión corta cerraría el día con intención.</p>
-      <a href="#/mejora/diario" onclick="mejoraTab='diario';diarioSection='daily';render(true)" class="btn-secondary text-sm no-underline">Abrir diario →</a>
-    </div>`}
-    </div>
-  </div>`
-}
+const renderPlanPage = () => renderPlan(dailyApis)
 
 // --- Mi viaje (largo plazo) ---
 function renderViaje() {
@@ -395,7 +187,6 @@ function renderViaje() {
           <div class="flex justify-between"><span class="text-muted">🔥 Racha actual</span><span class="text-main font-medium">${s.streak} días</span></div>
           <div class="flex justify-between"><span class="text-muted">🧠 Sesiones cerebrales</span><span class="text-main font-medium">${s.brainSessions}</span></div>
           <div class="flex justify-between"><span class="text-muted">✅ Hábitos completados</span><span class="text-main font-medium">${s.habitsCompleted}</span></div>
-          <div class="flex justify-between"><span class="text-muted">📝 Reflexiones</span><span class="text-main font-medium">${s.reflections}</span></div>
           <div class="flex justify-between"><span class="text-muted">🎯 Metas logradas</span><span class="text-main font-medium">${s.goalsCompleted}</span></div>
         </div>
       </div>
@@ -474,84 +265,6 @@ function renderViaje() {
     ${pageHero('Mi viaje', `Día ${s.daysSinceStart} de tu camino · desde ${since}`, `${s.consistency30}%`, 'consistencia 30d')}
     ${viajeTabs}
     <div class="viaje-dashboard">${tabContent}</div>
-    </div>
-  </div>`
-}
-
-// --- Plan del día ---
-function renderPlan() {
-  processPlanAwards(checkPlanTask('plan_review'))
-  processPlanAwards(checkPlanTask('morning'))
-  const plan = ensureDailyPlan()
-  const progress = getPlanProgress()
-  const p = getProgress()
-  const week = getWeekNumber()
-  if (p.weekly.week !== week) { p.weekly = { week, done: 0, target: 5, rewarded: false }; saveProgress(p) }
-  const weeklyPct = Math.min(100, (p.weekly.done / p.weekly.target) * 100)
-
-  const holidayMsg = dailyApis?.holiday?.isHoliday
-    ? `🎉 Hoy es ${esc(dailyApis.holiday.name)} — prioriza lo esencial`
-    : 'Tu hoja de ruta para hoy'
-
-  const statusBadge = bundleStatusHTML(dailyApis)
-
-  return `<div class="animate-fade-in page-shell page-plan">
-    <div class="ds-page ds-page--full">
-    ${pageHero('Plan del día', `${holidayMsg}${statusBadge ? ` · ${statusBadge}` : ''}`, `${progress.done}/${progress.total}`, 'pendientes')}
-
-    <div class="plan-dashboard">
-    <div class="ds-panel ds-panel--flat plan-progress">
-      <div class="flex justify-between items-center mb-2">
-        <span class="text-sm font-medium text-main">${progress.done}/${progress.total} misiones</span>
-        <span class="text-sm text-muted">${progress.percent}%</span>
-      </div>
-      <div class="progress-track w-full mb-2" style="height:0.75rem">
-        <div class="progress-fill h-full" style="width:${progress.percent}%"></div>
-      </div>
-      ${progress.allDone
-        ? `<p class="text-center text-main font-medium">🎉 ¡Plan completo! +${plan.bonusXp} XP bonus</p>`
-        : `<p class="text-center text-sm text-muted">Completa todo para +${plan.bonusXp} XP extra</p>`}
-    </div>
-
-    <div class="plan-missions ds-list">
-      ${plan.tasks.map(t => {
-        const tone = getMissionTone(t)
-        return `
-        <a href="${t.link}" class="ds-list-item plan-mission-item mission--${tone} ${t.done ? 'is-done' : ''} no-underline">
-          <span class="ds-list-icon">${t.done ? '✅' : t.icon}</span>
-          <div class="ds-list-body">
-            <span class="mission-chip">${getMissionChip(tone)}</span>
-            <p class="ds-list-title">${t.label}</p>
-            ${t.brief ? `<p class="plan-mission-brief">${t.brief}</p>` : ''}
-            <p class="ds-list-meta">${t.why || `+${t.xp} XP`}</p>
-          </div>
-          <span class="mission-xp">+${t.xp}</span>
-          ${!t.done ? '<span class="text-muted">→</span>' : ''}
-        </a>`
-      }).join('')}
-    </div>
-
-    <div class="plan-side">
-      ${!isRoutineDoneToday() ? `<div class="card plan-express" style="border:2px dashed var(--border)">
-        <h3 class="font-semibold text-main mb-2">⏱️ Modo Express (5 min)</h3>
-        <p class="text-sm text-muted mb-4">¿Poco tiempo? Rutina corta: 1 min respiración + 3 cálculos.</p>
-        <button onclick="startExpress()" class="btn-secondary w-full">Iniciar express</button>
-      </div>` : ''}
-
-      <div class="card plan-weekly">
-        <h3 class="font-semibold text-main mb-2">📅 Misión semanal</h3>
-        <p class="text-sm text-muted mb-3">Activo ${p.weekly.target} de 7 días → +200 XP</p>
-        <div class="w-full h-2 rounded-full" style="background:var(--secondary-bg)">
-          <div class="h-2 rounded-full" style="width:${weeklyPct}%;background:var(--primary)"></div>
-        </div>
-        <p class="text-xs text-muted mt-2">${p.weekly.done}/${p.weekly.target} días</p>
-      </div>
-
-      ${sunsetBannerHTML(dailyApis?.sun)}
-    </div>
-
-    <div class="plan-chart">${habitChartHTML()}</div>
-    </div>
     </div>
   </div>`
 }
@@ -687,7 +400,7 @@ function renderProfile() {
       <div class="ds-stat-row profile-stats span-full">
         ${[
           ['Rutinas', stats.routinesCompleted], ['Ejercicios', stats.brainSessions],
-          ['Meditación', stats.meditationMinutes + ' min'], ['Reflexiones', stats.reflections],
+          ['Meditación', stats.meditationMinutes + ' min'],
           ['Hábitos', stats.habitsCompleted], ['Desafíos', stats.challengesWon],
         ].map(([l, v]) => `<div class="ds-stat"><p class="ds-stat-value">${v}</p><p class="ds-stat-label">${l}</p></div>`).join('')}
       </div>
@@ -736,211 +449,6 @@ function renderProfile() {
   </div>`
 }
 
-// --- Routine ---
-const ROUTINE_STROOP_INK = [
-  { key: 'rojo', label: 'Rojo', name: 'ROJO', css: '#ef4444' },
-  { key: 'azul', label: 'Azul', name: 'AZUL', css: '#3b82f6' },
-  { key: 'verde', label: 'Verde', name: 'VERDE', css: '#22c55e' },
-]
-
-function genRoutineStroop() {
-  const ink = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
-  let word = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
-  while (word.key === ink.key) word = ROUTINE_STROOP_INK[Math.floor(Math.random() * ROUTINE_STROOP_INK.length)]
-  return { ink, word }
-}
-
-function clearRoutineTimers() { routineTimers.forEach(t => clearInterval(t)); routineTimers = [] }
-
-function startRoutine() {
-  if (isRoutineDoneToday()) return
-  const diff = routineState.difficulty || getSettings().defaultDifficulty
-  const d = DIFFICULTIES[diff]
-  clearRoutineTimers()
-  routineState = {
-    active: true, step: 1, difficulty: diff,
-    breathing: { elapsed: 0, phase: 'inhale', total: diff === 'experto' ? 180 : diff === 'dificil' ? 150 : 120 },
-    brain: { round: 0, total: 5, score: 0, trial: genRoutineStroop(), feedback: null },
-  }
-  routineTimers.push(setInterval(() => {
-    if (routineState.step !== 1) return
-    const b = routineState.breathing
-    b.elapsed++
-    if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
-    if (b.elapsed >= b.total) {
-      routineState.step = 2
-      routineState.brain.trial = genRoutineStroop()
-      render()
-      return
-    }
-    render()
-  }, 1000))
-  render()
-}
-
-function finishRoutine(express = false) {
-  clearRoutineTimers()
-  recordActivity('routine')
-  const xp = express ? 30 : (DIFFICULTIES[routineState.difficulty]?.xp || 50)
-  awardXp('mindfulness', Math.floor(xp * 0.4), 'Rutina completada')
-  awardXp('mental', Math.floor(xp * 0.3), 'Mente activa')
-  awardXp('wisdom', Math.floor(xp * 0.3), 'Reflexión')
-  updateStats({ routinesCompleted: getStats().routinesCompleted + 1 })
-  processPlanAwards(checkPlanTask(express ? 'express' : 'routine'))
-  routineState = { active: false, step: 4, difficulty: routineState.difficulty, express }
-  render()
-}
-
-window.startExpress = function() {
-  if (isRoutineDoneToday()) return
-  clearRoutineTimers()
-  const diff = 'facil'
-  routineState = {
-    active: true, step: 1, difficulty: diff, express: true,
-    breathing: { elapsed: 0, phase: 'inhale', total: 60 },
-    brain: { round: 0, total: 5, score: 0, trial: genRoutineStroop(), feedback: null },
-  }
-  routineTimers.push(setInterval(() => {
-    if (routineState.step !== 1) return
-    const b = routineState.breathing
-    b.elapsed++
-    if (b.elapsed % 4 === 0) b.phase = b.phase === 'inhale' ? 'hold' : b.phase === 'hold' ? 'exhale' : 'inhale'
-    if (b.elapsed >= b.total) {
-      routineState.step = 2
-      routineState.brain.trial = genRoutineStroop()
-      render()
-      return
-    }
-    render()
-  }, 1000))
-  location.hash = '/rutina'
-  render()
-}
-
-function renderRoutine() {
-  if (!routineState.active && routineState.step !== 4) {
-    if (isRoutineDoneToday()) return `<div class="animate-fade-in text-center page-shell page-wide page-routine"><div class="card span-full">
-      <p class="text-4xl mb-4">✨</p><h2 class="font-display text-2xl font-bold text-main mb-2">Rutina completada</h2>
-      <p class="text-muted mb-6">Vuelve mañana para más XP.</p><a href="#/plan" class="btn-primary inline-block no-underline">Ver plan</a></div></div>`
-    return `<div class="animate-fade-in page-shell page-wide page-routine">
-      <div class="ds-page ds-page--full">
-      ${pageLead('Respiración + Stroop rápido + reflexión · protocolos con evidencia')}
-      <div class="page-dashboard routine-intro-grid">
-        <div class="routine-intro-main ds-panel ds-panel--flat">
-          <p class="ds-section-title">Dificultad</p>
-          ${difficultyPicker(routineState.difficulty || getSettings().defaultDifficulty, 'setRoutineDiff')}
-        </div>
-        <div class="ds-panel ds-panel--flat space-y-3 text-left routine-intro-steps">
-          <div class="flex gap-3"><span>🌬️</span><div><p class="font-medium text-main">Respiración</p><p class="text-xs text-muted">2-3 min según nivel</p></div></div>
-          <div class="flex gap-3"><span>🎨</span><div><p class="font-medium text-main">Stroop rápido</p><p class="text-xs text-muted">5 trials · cíngulo anterior</p></div></div>
-          <div class="flex gap-3"><span>📝</span><div><p class="font-medium text-main">Reflexión</p><p class="text-xs text-muted">Pregunta según dificultad</p></div></div>
-        </div>
-        <button onclick="startRoutine()" class="btn-primary w-full text-lg py-4 routine-intro-cta">Comenzar rutina</button>
-      </div>
-      </div>
-    </div>`
-  }
-  if (routineState.step === 4) {
-    const d = DIFFICULTIES[routineState.difficulty]
-    return `<div class="animate-fade-in text-center page-shell page-wide"><div class="card level-up">
-      <p class="text-4xl mb-4">🎉</p><h2 class="font-display text-2xl font-bold text-main mb-2">¡${routineState.express ? 'Express completado' : 'Rutina completada'}!</h2>
-      <p class="text-muted mb-6">${routineState.express ? '5 minutos bien invertidos' : `Modo ${d?.label || 'Medio'}`}</p>
-      <a href="#/plan" class="btn-primary inline-block no-underline">Ver plan del día</a></div></div>`
-  }
-
-  const steps = routineState.express ? ['Respirar', 'Stroop'] : ['Respirar', 'Stroop', 'Reflexionar']
-  const stepHtml = `<div class="step-indicator span-full">${steps.map((_, i) =>
-    `<div class="step-dot ${i + 1 < routineState.step ? 'done' : i + 1 === routineState.step ? 'current' : ''}"></div>`
-  ).join('')}</div>`
-
-  if (routineState.step === 1) {
-    const b = routineState.breathing
-    const scale = b.phase === 'inhale' ? 1.15 : b.phase === 'exhale' ? 0.85 : 1.05
-    const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
-    return `<div class="page-shell page-wide page-routine">
-      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
-      <div class="routine-active-grid">${stepHtml}
-        <div class="routine-active-side card card-static">
-          <p class="text-sm text-muted mb-2">Fase 1 · Respiración</p>
-          <p class="text-main font-medium">${DIFFICULTIES[routineState.difficulty].icon} ${DIFFICULTIES[routineState.difficulty].label}</p>
-          <p id="routine-remaining" class="text-xs text-muted mt-3">${b.total - b.elapsed}s restantes</p>
-        </div>
-        <div class="routine-stage card card-static">
-          <div class="relative w-44 h-44 mx-auto">
-            <div id="routine-breathe-circle" class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
-            <div class="absolute inset-0 flex items-center justify-center"><span id="routine-phase-text" class="font-display text-2xl meditation-text">${phase[b.phase]}</span></div>
-          </div>
-        </div>
-      </div></div>`
-  }
-  if (routineState.step === 2) {
-    const br = routineState.brain
-    const t = br.trial
-    return `<div class="animate-fade-in page-shell page-wide page-routine">
-      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
-      <div class="routine-active-grid">${stepHtml}
-        <div class="routine-active-side card card-static">
-          <p class="text-sm text-muted mb-2">Fase 2 · Stroop</p>
-          <p class="text-main font-medium">Trial ${br.round + 1} de ${br.total}</p>
-          <p class="text-xs text-muted mt-2">Nombra el color de la tinta, no la palabra.</p>
-        </div>
-        <div class="card text-center exercise-stage">
-          <p class="font-display text-4xl font-bold mb-6" style="color:${t.ink.css}">${t.word.name}</p>
-          <div class="flex flex-col gap-2">
-            ${ROUTINE_STROOP_INK.map(c => `
-              <button type="button" onclick="routineStroopPick('${c.key}')" class="btn-secondary w-full">${c.label}</button>`).join('')}
-          </div>
-          ${br.feedback === 'correct' ? '<p class="text-green-500 mt-3">✓ Cíngulo + PFC</p>' : ''}
-          ${br.feedback === 'wrong' ? `<p class="text-red-400 mt-3">✗ Era ${t.ink.label}</p>` : ''}
-        </div>
-      </div></div>`
-  }
-  if (routineState.step === 3) {
-    const prompt = getReflectionPrompt(routineState.difficulty)
-    return `<div class="animate-fade-in page-shell page-wide page-routine">
-      <button onclick="routineState.active=false;routineState.step=0;clearRoutineTimers();location.hash='/rutina';render()" class="btn-secondary focus-exit">← Salir</button>
-      <div class="routine-active-grid">${stepHtml}
-        <div class="routine-active-side card card-static">
-          <p class="text-sm text-muted mb-2">Fase 3 · Reflexión</p>
-          <p class="text-main text-sm italic">"${prompt}"</p>
-        </div>
-        <div class="card exercise-stage">
-          <h3 class="font-display text-lg font-semibold text-main mb-2">Tu reflexión</h3>
-          <textarea id="routine-reflection" class="input-field min-h-32 resize-none mb-4" placeholder="Mínimo 20 caracteres..."></textarea>
-          <button onclick="routineFinishReflection('${esc(prompt)}')" class="btn-primary w-full">Completar rutina</button>
-        </div>
-      </div></div>`
-  }
-}
-
-window.setRoutineDiff = (d) => { routineState.difficulty = guardDifficulty(d); render() }
-window.routineStroopPick = function(key) {
-  const br = routineState.brain
-  if (br.feedback) return
-  if (key === br.trial.ink.key) { br.score++; br.feedback = 'correct'; playTone(523) }
-  else { br.feedback = 'wrong'; playTone(200) }
-  br.round++
-  render()
-  setTimeout(() => {
-    br.feedback = null
-    if (br.round >= br.total) {
-      if (routineState.express) finishRoutine(true)
-      else routineState.step = 3
-    } else br.trial = genRoutineStroop()
-    render()
-  }, 700)
-}
-window.routineFinishReflection = function(prompt) {
-  const text = document.getElementById('routine-reflection')?.value?.trim()
-  if (!text || text.length < 20) { alert('Escribe al menos 20 caracteres.'); return }
-  const entries = getItem('reflections', [])
-  entries.unshift({ id: Date.now(), date: new Date().toISOString(), prompt, text, difficulty: routineState.difficulty })
-  setItem('reflections', entries)
-  updateStats({ reflections: getStats().reflections + 1 })
-  processPlanAwards(checkPlanTask('reflection'))
-  finishRoutine(routineState.express)
-}
-
 // --- Brain Gym (programa neurociencia + academia) ---
 function getLabExercises() {
   return LAB_EXERCISE_IDS.map(id => EXERCISES[id]).filter(Boolean)
@@ -965,6 +473,11 @@ function renderBrainExercise() {
 }
 
 function renderBrainGym() {
+  if (brainState.reviewFlow) {
+    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
+      <div class="ds-page ds-page--full">${renderReviewQuizFlow(brainState.reviewFlow)}</div>
+    </div>`
+  }
   if (brainState.session?.phase === 'debrief') return renderSessionDebrief()
   if (brainState.session?.phase === 'intro' && !brainState.exercise) return renderSessionIntro()
   if (brainState.exercise) return renderBrainExercise()
@@ -976,10 +489,43 @@ function renderBrainGym() {
   const d = DIFFICULTIES[diff]
 
   const brainTabs = tabBar([
-    { id: 'academy', label: 'Academia', icon: '🎓' },
+    { id: 'school', label: 'Escuela', icon: '🏫' },
+    { id: 'academy', label: 'Catálogo', icon: '📚' },
     { id: 'lab', label: 'Laboratorio', icon: '🔬' },
     { id: 'program', label: 'Programa', icon: '📋' },
-  ], brainState.brainView || 'academy', 'brainState.brainView', 'brainState.activeLesson=null;')
+  ], brainState.brainView || 'school', 'brainState.brainView', 'brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.schoolSection=\'curriculum\';brainState.activePaper=null;')
+
+  if (brainState.brainView === 'school') {
+    if (brainState.activePaper) {
+      const paper = getPaper(brainState.activePaper)
+      return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
+        <div class="ds-page ds-page--full brain-campus">
+        ${brainTabs}
+        ${paper ? wrapSchoolPage(renderPaperDetail(paper, brainState.paperMeta), 'library', { stats: getSchoolStats() }) : ''}
+        </div>
+      </div>`
+    }
+    if (brainState.activeLesson) {
+      if (brainState.lessonFlow?.id === brainState.activeLesson) {
+        return `<div class="animate-fade-in page-shell page-wide page-brain">
+          <div class="ds-page ds-page--full">${brainTabs}${renderLessonPostFlow(brainState.lessonFlow)}</div>
+        </div>`
+      }
+      const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
+      return `<div class="animate-fade-in page-shell page-wide page-brain">
+        <div class="ds-page ds-page--full">${brainTabs}${lesson ? renderLessonFull(lesson) : ''}</div>
+      </div>`
+    }
+    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
+      <div class="ds-page ds-page--full brain-campus">
+      ${brainTabs}
+      ${renderSchoolHub(brainState.schoolFaculty, brainState.schoolSection, {
+        pubmed: brainState.pubmed,
+        libraryFilter: brainState.libraryFilter,
+      })}
+      </div>
+    </div>`
+  }
 
   if (brainState.brainView === 'academy') {
     if (brainState.activeLesson) {
@@ -993,36 +539,11 @@ function renderBrainGym() {
         <div class="ds-page ds-page--full">${lesson ? renderLessonFull(lesson) : ''}</div>
       </div>`
     }
-    const daily = getDailyLesson()
     const weekly = getWeeklyLessonMeta()
-    const doneCount = getCompletedLessons().length
-    const unlocked = getUnlockedLessonCount()
-    return `<div class="animate-fade-in page-shell page-wide page-brain">
-      <div class="ds-page ds-page--full">
+    return `<div class="animate-fade-in page-shell page-wide page-brain page-school">
+      <div class="ds-page ds-page--full brain-campus">
       ${brainTabs}
-      ${pageHero('Neurociencia', '32 lecciones · casos legendarios · laboratorio', `${doneCount}/${unlocked}`, 'leídas')}
-      ${renderNeuroPunchBanner()}
-      ${renderDebateBanner()}
-      ${renderLegendaryHall()}
-      <div class="academy-weekly span-full">
-        <p class="academy-weekly-label">📅 Semana ${weekly.week} · Lección nueva</p>
-        ${renderLessonCard(weekly.lesson, { weekly: true, featured: true })}
-        <button type="button" onclick="openLesson('${weekly.lesson.id}')" class="btn-primary w-full mt-3 py-4">
-          ${weekly.isNew ? 'Leer lección de la semana →' : 'Releer lección de la semana →'}
-        </button>
-        <p class="academy-weekly-note">${unlocked}/${LESSONS.length} catálogo · legendarios siempre abiertos · +2/semana</p>
-      </div>
-      <div class="academy-daily span-full">
-        <p class="academy-daily-label">📖 Lectura rápida del día</p>
-        ${renderLessonCard(daily, { featured: true })}
-        ${isLessonUnlocked(daily.id)
-          ? `<button type="button" onclick="openLesson('${daily.id}')" class="btn-secondary w-full mt-3">Leer →</button>`
-          : `<p class="text-xs text-muted mt-2 text-center">Esta lectura se desbloquea en el catálogo primero.</p>`}
-      </div>
-      ${zoneHeader('Catálogo', `${unlocked} de ${LESSONS.length} lecciones · sistemas · memoria · atención · emoción`)}
-      <div class="academy-lesson-grid span-full">
-        ${LESSONS.map(l => renderLessonCard(l)).join('')}
-      </div>
+      ${renderCatalogPage(brainState.catalogFilter, weekly)}
       </div>
     </div>`
   }
@@ -1165,7 +686,7 @@ function renderSessionDebrief() {
         <ul class="session-debrief-list">
           ${debrief.prompts.map(p => `<li>${esc(p)}</li>`).join('')}
         </ul>
-        <textarea id="session-debrief-text" class="input-field min-h-24 resize-none mt-3" placeholder="Opcional: escribe tu reflexión (10+ caracteres para guardar en el diario)…"></textarea>
+        <textarea id="session-debrief-text" class="input-field min-h-24 resize-none mt-3" placeholder="Opcional: una nota breve sobre la sesión…"></textarea>
       </aside>
       <button type="button" onclick="submitSessionDebrief(${avg})" class="btn-primary w-full py-4 mt-4">Guardar y recibir XP</button>
       <button type="button" onclick="finishGuidedSession(${avg})" class="btn-ghost w-full mt-2">Omitir reflexión</button>
@@ -1202,21 +723,6 @@ window.launchSessionExercise = function() {
 }
 
 window.submitSessionDebrief = function(avgPct) {
-  const text = document.getElementById('session-debrief-text')?.value?.trim()
-  if (text && text.length >= 10 && brainState.session) {
-    const debrief = getSessionDebrief(brainState.session.results)
-    const entries = getItem('reflections', [])
-    entries.unshift({
-      id: Date.now(),
-      date: new Date().toISOString(),
-      text,
-      prompt: debrief.prompts[0] || 'Debrief de sesión cerebral',
-      difficulty: 'medio',
-      source: 'brain_session',
-    })
-    setItem('reflections', entries)
-    updateStats({ reflections: getStats().reflections + 1 })
-  }
   finishGuidedSession(avgPct)
 }
 
@@ -1225,7 +731,10 @@ window.finishGuidedSession = function(avgPct) {
   awardXp('mental', 40 + bonus, 'Sesión cerebral completada')
   processPlanAwards(checkPlanTask('brain'))
   recordActivity('brain')
-  updateStats({ brainSessions: getStats().brainSessions + 1 })
+  updateStats({
+    brainSessions: getStats().brainSessions + 1,
+    challengesWon: getStats().challengesWon + 1,
+  })
   brainState.mode = 'hub'
   brainState.session = null
   brainState.exercise = null
@@ -1283,7 +792,10 @@ function finishBrain(score = 0) {
   const game = brainState.exercise
   clearBrainTimers()
   recordActivity('brain')
-  updateStats({ brainSessions: getStats().brainSessions + 1 })
+  updateStats({
+    brainSessions: getStats().brainSessions + 1,
+    challengesWon: getStats().challengesWon + 1,
+  })
   if (score > 0) setRecord(game, diff, score)
   const xp = Math.floor((DIFFICULTIES[diff]?.xp || 30) * (1 + score / 100))
   awardXp('mental', xp, 'Ejercicio mental')
@@ -1817,13 +1329,15 @@ window.openLesson = function(id) {
     return
   }
   brainState.activeLesson = id
-  brainState.brainView = 'academy'
-  render()
+  brainState.lessonFlow = null
+  if (brainState.brainView !== 'school') brainState.brainView = 'academy'
+  navigate(`/gimnasia/leccion/${id}`)
 }
 
 window.closeLesson = function() {
   brainState.activeLesson = null
-  render()
+  brainState.lessonFlow = null
+  navigate('/gimnasia')
 }
 
 window.completeLesson = function(id) {
@@ -1832,6 +1346,7 @@ window.completeLesson = function(id) {
   if (!wasDone) {
     awardXp('mental', 30, 'Lección de academia')
     recordActivity('brain')
+    processPlanAwards(checkPlanTask('brain'))
   }
   const quiz = getLessonQuiz(id)
   brainState.lessonFlow = {
@@ -1861,34 +1376,121 @@ window.answerLessonQuiz = function(choice) {
 window.finishLessonFlow = function(skipReflect = false) {
   const flow = brainState.lessonFlow
   if (!flow) return
-  const reflect = skipReflect ? '' : document.getElementById('lesson-flow-reflect')?.value?.trim()
-  if (reflect && reflect.length >= 15) {
-    const lesson = LESSONS.find(l => l.id === flow.id)
-    const entries = getItem('reflections', [])
-    entries.unshift({
-      id: Date.now(),
-      date: new Date().toISOString(),
-      text: reflect,
-      prompt: lesson?.reflect || 'Reflexión de academia',
-      difficulty: 'medio',
-      source: 'academy',
-      quizScore: flow.quizScore,
-    })
-    setItem('reflections', entries)
-    updateStats({ reflections: getStats().reflections + 1 })
-    processPlanAwards(checkPlanTask('reflection'))
-  }
   brainState.lessonFlow = null
   brainState.activeLesson = null
+  checkAndIssueCertificates()
   render()
+}
+
+window.completeLessonReview = completeLessonReview
+
+window.setCatalogFilter = function(key, val) {
+  brainState.catalogFilter = { ...brainState.catalogFilter, [key]: val }
+  render()
+}
+
+window.startReviewQuiz = function(id) {
+  location.hash = '/gimnasia'
+  brainState.brainView = 'school'
+  brainState.schoolSection = 'curriculum'
+  brainState.reviewFlow = { id, quizIndex: 0, quizScore: 0, phase: 'quiz' }
+  brainState.activeLesson = null
+  brainState.lessonFlow = null
+  render()
+}
+
+window.answerReviewQuiz = function(choice) {
+  const flow = brainState.reviewFlow
+  if (!flow || flow.phase !== 'quiz') return
+  const quiz = getReviewQuiz(flow.id)
+  if (!quiz?.length) return
+  const q = quiz[flow.quizIndex]
+  if (choice === q.correct) {
+    flow.quizScore++
+    playSuccess()
+  } else playTone(220, 0.2)
+  flow.quizIndex++
+  if (flow.quizIndex >= quiz.length) {
+    flow.phase = 'done'
+    completeLessonReview(flow.id)
+    checkAndIssueCertificates()
+  }
+  render()
+}
+
+window.finishReviewQuiz = function() {
+  brainState.reviewFlow = null
+  render()
+}
+
+window.openLibrary = function() {
+  location.hash = '/gimnasia'
+  brainState.brainView = 'school'
+  brainState.schoolSection = 'library'
+  brainState.schoolFaculty = null
+  brainState.activePaper = null
+  brainState.paperMeta = null
+  render()
+}
+
+window.openPaper = function(id) {
+  brainState.activePaper = id
+  brainState.paperMeta = { loading: true, crossref: null, openAlex: null, related: [] }
+  const paper = getPaper(id)
+  render()
+  if (paper?.doi) {
+    fetchPaperLiveMeta(paper).then(meta => {
+      if (brainState.activePaper === id) {
+        brainState.paperMeta = { ...meta, loading: false }
+        render()
+      }
+    }).catch(() => {
+      if (brainState.activePaper === id) {
+        brainState.paperMeta = { loading: false, crossref: null, openAlex: null, related: [] }
+        render()
+      }
+    })
+  } else {
+    brainState.paperMeta = { loading: false, crossref: null, openAlex: null, related: [] }
+  }
+}
+
+window.searchPubMedLibrary = function() {
+  const input = document.getElementById('pubmed-query')
+  const query = (input?.value || brainState.pubmed.query || '').trim()
+  if (!query) return
+  brainState.pubmed = { query, results: [], loading: true }
+  render()
+  searchPubMed(query, 8).then(results => {
+    brainState.pubmed = { query, results, loading: false }
+    render()
+  }).catch(() => {
+    brainState.pubmed = { query, results: [], loading: false }
+    render()
+  })
+}
+
+window.closePaper = function() {
+  brainState.activePaper = null
+  brainState.paperMeta = null
+  render()
+}
+
+window.setLibraryFilter = function(key, val) {
+  brainState.libraryFilter = { ...brainState.libraryFilter, [key]: val }
+  render()
+}
+
+window.downloadFacultyCert = function(id) {
+  downloadFacultyCertificate(id)
 }
 
 window.goToLesson = function(id) {
   location.hash = '/gimnasia'
-  brainState.brainView = 'academy'
+  brainState.brainView = brainState.brainView || 'school'
   brainState.activeLesson = id
   brainState.lessonFlow = null
-  render()
+  render(true)
 }
 
 window.goToLab = function(id) {
@@ -2076,930 +1678,15 @@ window.wordSelect = function(word) {
   }, 700)
 }
 
-// --- Meditation ---
-function clearMedTimers() { medTimers.forEach(t => clearInterval(t)); medTimers = [] }
-
-function stopMeditationSession() {
-  clearMedTimers()
-  stopAmbientSound()
-  medState.ambientPreview = false
-}
-
-function medAmbientVol(s) {
-  const v = Number(s?.medAmbientVolume ?? 0.45)
-  if (v <= 0) return 0
-  return Math.max(0.2, Math.min(1, v))
-}
-
-function medAmbientPanelHTML(compact = false) {
-  const s = getSettings()
-  const vol = Math.round((s.medAmbientVolume ?? 0.45) * 100)
-  const current = s.medAmbient || 'rain'
-  const isSilent = current === 'off'
-  const playing = isAmbientPlaying()
-  return `<div class="med-ambient-panel ${compact ? 'med-ambient-panel--compact' : ''}">
-    <div class="med-ambient-head">
-      <span class="med-ambient-title">${compact ? '🎧 Ambiente' : 'Sonido ambiente'}</span>
-      ${playing ? '<span class="med-ambient-live">● Sonando</span>' : isSilent ? '<span class="med-ambient-muted">Silencio</span>' : ''}
-    </div>
-    <div class="med-ambient-types">
-      ${AMBIENT_PRESETS.map(p => `
-        <button type="button" onclick="setMedAmbient('${p.id}')" class="med-ambient-btn ${current === p.id ? 'active' : ''}" title="${p.label}" aria-pressed="${current === p.id}">
-          <span>${p.icon}</span><span class="med-ambient-btn-label">${p.label}</span>
-        </button>`).join('')}
-    </div>
-    <label class="med-ambient-slider ${isSilent ? 'med-ambient-slider--off' : ''}">
-      <span class="text-xs text-muted">Volumen</span>
-      <input type="range" min="0" max="100" value="${isSilent ? 0 : vol}" ${isSilent ? 'disabled' : ''}
-        oninput="setMedAmbientVol(Number(this.value)/100)" class="med-ambient-range" aria-label="Volumen ambiente">
-      <span id="med-ambient-vol-pct" class="text-xs text-muted">${isSilent ? '—' : `${vol}%`}</span>
-    </label>
-    ${isSilent ? '<p class="med-ambient-hint">Silencio activo. Elige un sonido arriba para escuchar.</p>' : ''}
-    ${compact ? '' : `<button type="button" onclick="toggleAmbientPreview()" class="btn-secondary w-full text-sm mt-2">
-      ${playing ? '⏹ Detener sonido' : '▶ Probar sonido'}
-    </button>`}
-  </div>`
-}
-
-const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
-
-function getMeditationMeta(id) {
-  return MEDITATIONS.find(m => m.id === id)
-}
-
-function getMeditationSteps(id) {
-  const meta = getMeditationMeta(id)
-  if (!meta || meta.type !== 'steps' || !meta.stepsKey) return []
-  return MEDITATION_STEPS[meta.stepsKey] || []
-}
-
-async function startMeditation(id) {
-  stopMeditationSession()
-  await resumeAudioContext()
-  const diff = medState.difficulty || 'medio'
-  const duration = MED_DURATIONS[diff]
-  const meta = getMeditationMeta(id)
-  medState = {
-    session: id, difficulty: diff, completed: false, completedMin: duration,
-    phase: 'inhale', elapsed: 0, step: 0, stepElapsed: 0,
-    steps: getMeditationSteps(id),
-    sessionName: meta?.name || 'Meditación',
-  }
-  const total = duration * 60
-  const settings = getSettings()
-  if (settings.sound) await playSingingBowl('start')
-  if (settings.medAmbient && settings.medAmbient !== 'off') {
-    await startAmbientSound(settings.medAmbient, medAmbientVol(settings))
-  } else {
-    stopAmbientSound()
-  }
-
-  if (id === 'breathing') {
-    medTimers.push(setInterval(() => {
-      medState.phase = medState.phase === 'inhale' ? 'hold' : medState.phase === 'hold' ? 'exhale' : 'inhale'
-      playTone(medState.phase === 'inhale' ? 330 : 220, 0.15)
-      if (!patchLiveUI('/meditacion')) render()
-    }, diff === 'experto' ? 3000 : 4000))
-  }
-
-  medTimers.push(setInterval(() => {
-    medState.elapsed++
-    if (medState.steps?.length) {
-      medState.stepElapsed++
-      const step = medState.steps[medState.step]
-      if (step && medState.stepElapsed >= step.duration && medState.step < medState.steps.length - 1) {
-        medState.step++; medState.stepElapsed = 0
-      }
-    }
-    if (medState.elapsed >= total) {
-      clearMedTimers()
-      stopAmbientSound()
-      if (getSettings().sound) playSingingBowl('end')
-      recordActivity('meditation')
-      const xp = DIFFICULTIES[diff].xp
-      awardXp('mindfulness', xp, 'Meditación completada')
-      updateStats({ meditationMinutes: getStats().meditationMinutes + duration })
-      processPlanAwards(checkPlanTask('meditation'))
-      medState.completed = true
-      render()
-    } else if (!patchLiveUI('/meditacion')) {
-      render()
-    }
-  }, 1000))
-  render()
-}
-
 function renderMeditation() {
-  if (medState.completed) return `<div class="animate-fade-in text-center page-shell page-wide"><div class="card">
-    <p class="text-4xl mb-4">✨</p><h2 class="font-display text-2xl font-bold text-main mb-2">Sesión completada</h2>
-    <p class="text-muted mb-2">${medState.completedMin} min · ${DIFFICULTIES[medState.difficulty].label}</p>
-    <p class="font-bold text-main mb-6">+${DIFFICULTIES[medState.difficulty].xp} XP</p>
-    <button onclick="stopMeditationSession();medState.session=null;medState.completed=false;render()" class="btn-primary">Continuar</button></div></div>`
-
-  if (medState.session) {
-    const duration = MED_DURATIONS[medState.difficulty]
-    const total = duration * 60
-    const remaining = total - medState.elapsed
-    const mins = Math.floor(remaining / 60)
-    const secs = (remaining % 60).toString().padStart(2, '0')
-    const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
-    let content
-    if (medState.session === 'breathing') {
-      const scale = medState.phase === 'inhale' ? 1.2 : medState.phase === 'exhale' ? 0.8 : 1.1
-      content = `<p id="med-timer" class="text-sm text-muted mb-8">${mins}:${secs}</p>
-        <div class="relative w-48 h-48 mx-auto mb-8">
-          <div id="med-breathe-circle" class="absolute inset-0 rounded-full breathe-circle meditation-ring" style="transform:scale(${scale});transition:transform 4s"></div>
-          <div class="absolute inset-0 flex items-center justify-center"><span id="med-phase-text" class="font-display text-2xl meditation-text">${phase[medState.phase]}</span></div>
-        </div>`
-    } else {
-      const steps = medState.steps || []
-      const step = steps[medState.step]
-      content = `<p id="med-timer" class="text-sm text-muted mb-4">${mins}:${secs} · Paso ${medState.step + 1}/${steps.length}</p>
-        <div class="progress-track w-full mb-8" style="height:0.5rem"><div id="med-progress-fill" class="progress-fill h-full" style="width:${(medState.elapsed/total)*100}%"></div></div>
-        <p id="med-step-text" class="font-display text-lg text-main">${step?.text || ''}</p>`
-    }
-    return `<div class="page-shell page-wide page-meditation focus-session">
-      <button onclick="stopMeditationSession();medState.session=null;render()" class="btn-secondary focus-exit">← Salir</button>
-      <div class="med-active-grid">
-        <div class="routine-active-side med-session-side">
-          <p class="text-sm text-muted mb-4">${esc(medState.sessionName || '')}</p>
-          ${medAmbientPanelHTML(true)}
-        </div>
-        <div class="card exercise-stage text-center">${content}</div>
-      </div>
-    </div>`
-  }
-
-  return `<div class="animate-fade-in page-shell page-wide page-meditation">
-    <div class="ds-page ds-page--full">
-    ${pageHero('Calma', 'Meditación guiada · respiración y presencia', `${MED_DURATIONS[medState.difficulty]} min`, 'duración')}
-    ${sunsetBannerHTML(dailyApis?.sun)}
-    <div class="page-dashboard">
-      <div class="span-full">
-        ${difficultyPicker(medState.difficulty, 'setMedDiff')}
-      </div>
-      <div class="span-full">${medAmbientPanelHTML()}</div>
-      <div class="med-sessions-grid span-full">
-      ${MEDITATIONS.map(s =>
-        `<button onclick="startMeditation('${s.id}')" class="card text-left w-full cursor-pointer">
-          <div class="flex items-center gap-4">
-            <span class="text-3xl">${s.icon}</span>
-            <div class="flex-1"><h3 class="font-semibold text-main">${s.name}</h3>
-            <p class="text-sm text-muted">${s.desc}</p>
-            ${s.neuro ? `<p class="text-xs mt-1" style="color:var(--primary)">🧠 ${s.neuro}</p>` : ''}
-            <p class="text-xs text-muted mt-1">${MED_DURATIONS[medState.difficulty]} min · +${DIFFICULTIES[medState.difficulty].xp} XP</p></div>
-          </div></button>`
-      ).join('')}
-      </div>
-    </div>
-    </div>
-  </div>`
-}
-
-window.setMedDiff = (d) => { medState.difficulty = guardDifficulty(d); render() }
-
-window.setMedAmbient = async function(type) {
-  const s = getSettings()
-  s.medAmbient = type
-  saveSettings(s)
-  await resumeAudioContext()
-  if (type === 'off') {
-    stopAmbientSound()
-    medState.ambientPreview = false
-  } else {
-    const vol = medAmbientVol(s) || 0.45
-    s.medAmbientVolume = vol
-    saveSettings(s)
-    const ok = await startAmbientSound(type, vol)
-    medState.ambientPreview = ok
-    if (!ok) showToast('No se pudo reproducir el sonido. Toca de nuevo.', 0, 'mindfulness')
-  }
-  render()
-}
-
-window.setMedAmbientVol = async function(v) {
-  const vol = Math.max(0, Math.min(1, Number(v) || 0))
-  const s = getSettings()
-  s.medAmbientVolume = vol
-  await resumeAudioContext()
-
-  if (vol <= 0) {
-    s.medAmbient = 'off'
-    saveSettings(s)
-    stopAmbientSound()
-    medState.ambientPreview = false
-    render()
-    return
-  }
-
-  if (!s.medAmbient || s.medAmbient === 'off') {
-    s.medAmbient = 'rain'
-  }
-  saveSettings(s)
-
-  if (isAmbientPlaying()) {
-    setAmbientVolume(vol)
-  } else {
-    await startAmbientSound(s.medAmbient, vol)
-    medState.ambientPreview = true
-  }
-
-  const label = document.getElementById('med-ambient-vol-pct')
-  if (label) label.textContent = `${Math.round(vol * 100)}%`
-  const live = document.querySelector('.med-ambient-live')
-  if (live) live.style.display = isAmbientPlaying() ? '' : 'none'
-}
-
-window.toggleAmbientPreview = async function() {
-  await resumeAudioContext()
-  if (isAmbientPlaying()) {
-    stopAmbientSound()
-    medState.ambientPreview = false
-  } else {
-    const s = getSettings()
-    if (!s.medAmbient || s.medAmbient === 'off') {
-      s.medAmbient = 'rain'
-      s.medAmbientVolume = medAmbientVol(s) || 0.45
-      saveSettings(s)
-    }
-    if (getSettings().sound) await playSingingBowl('start')
-    const ok = await startAmbientSound(s.medAmbient, medAmbientVol(s))
-    medState.ambientPreview = ok
-    if (!ok) showToast('No se pudo reproducir el sonido. Toca de nuevo.', 0, 'mindfulness')
-  }
-  render()
-}
-
-// --- Mejora / Habits ---
-function renderMejora() {
-  const today = getToday()
-  const habits = getHabits()
-  const doneCount = getCompletedHabitsCount(today)
-
-  let tabContent
-  if (mejoraTab === 'habits') {
-    tabContent = `<div class="ds-toolbar">
-      <h3 class="ds-toolbar-title">Hábitos de hoy</h3>
-      <button onclick="editingHabits=true;render()" class="btn-secondary text-sm">✏️ Editar</button>
-    </div>
-    ${editingHabits ? renderHabitEditor() : !habits.length ? emptyState({
-      iconKey: 'habit',
-      title: 'Sin hábitos activos',
-      desc: 'Elige plantillas sugeridas o crea los tuyos para empezar a sumar XP.',
-      ctaLabel: 'Agregar hábitos',
-      ctaOnclick: 'editingHabits=true;render()',
-    }) : `<div class="habits-grid">
-      ${habits.map(h => {
-        const hp = getHabitProgress(h.id)
-        const hLevel = getLevel(hp.xp)
-        const cat = HABIT_CATEGORIES[h.category] || HABIT_CATEGORIES.salud
-        const diffStars = '★'.repeat(h.difficulty) + '☆'.repeat(5 - h.difficulty)
-        const isDone = isHabitComplete(h, today)
-        const count = getHabitCount(h.id, today)
-        const isCounter = h.type === 'counter'
-        const progressPct = isCounter ? Math.min(100, Math.round((count / h.target) * 100)) : (isDone ? 100 : 0)
-        const control = isCounter
-          ? `<div class="habit-counter ${isDone ? 'done' : ''}" onclick="event.stopPropagation()">
-              <button onclick="adjustHabit('${h.id}',-1)">−</button>
-              <span class="count">${count}/${h.target} ${h.unit}</span>
-              <button onclick="adjustHabit('${h.id}',1)">+</button>
-            </div>`
-          : `<button onclick="toggleHabit('${h.id}')" class="habit-check ${isDone ? 'done' : ''}">${isDone ? '✓' : ''}</button>`
-        return `<div class="habit-card ${isDone ? 'is-done' : ''}">
-          <div class="habit-card-icon" aria-hidden="true">${h.icon}</div>
-          <div class="habit-card-body">
-            <div class="habit-card-title-row">
-              <span class="habit-card-title ${isDone ? 'is-done' : ''}">${esc(h.name)}</span>
-              <span class="habit-card-cat" style="--cat-color:${cat.color}">${cat.icon} ${cat.name}</span>
-            </div>
-            <div class="habit-card-meta">
-              <span>Nv. ${hLevel}</span>
-              <span class="habit-card-stars">${diffStars}</span>
-              ${hp.streak > 0 ? `<span>🔥 ${hp.streak}</span>` : ''}
-              <span>+${h.xp} XP</span>
-            </div>
-            ${isCounter ? `<div class="habit-card-progress">
-              <div class="habit-card-progress-fill" style="width:${progressPct}%"></div>
-            </div>` : ''}
-          </div>
-          <div class="habit-card-action">${control}</div>
-        </div>`
-      }).join('')}
-    </div>
-    <p class="text-sm text-muted mt-4 text-center">${doneCount}/${habits.length} completados hoy</p>`}`
-  } else if (mejoraTab === 'diario') {
-    const diff = getSettings().defaultDifficulty
-    const prompt = getReflectionPrompt(diff)
-    const entries = getItem('reflections', [])
-    const weekly = getItem('weeklyReview', null)
-    const monthly = getItem('monthlyReview', null)
-
-    const sectionNav = [
-      { id: 'daily', l: 'Hoy', i: '✨' },
-      { id: 'weekly', l: 'Semanal', i: '📅' },
-      ...(isUnlocked('review_monthly') ? [{ id: 'monthly', l: 'Mensual', i: '🗓️' }] : []),
-      { id: 'history', l: 'Historial', i: '📖' },
-    ]
-
-    let sectionContent = ''
-    if (diarioSection === 'daily') {
-      sectionContent = `${moodPickerHTML()}
-        ${adviceCardHTML(dailyApis?.advice)}
-        ${readingCardHTML(dailyApis?.reading)}
-        <h4 class="font-semibold text-main mb-2">Reflexión del día</h4>
-        ${segmentBar(Object.entries(DIFFICULTIES).map(([k, d]) => ({ id: k, label: d.label, icon: d.icon, locked: d.locked, lockTitle: d.lockTitle })), diff, 'setReflectDiff')}
-        <p class="text-muted text-sm mb-3 italic">"${prompt}"</p>
-        <textarea id="reflection-text" class="input-field min-h-28 resize-none mb-3" placeholder="Escribe libremente..."></textarea>
-        <button onclick="saveReflection()" class="btn-primary w-full">Guardar entrada (+${DIFFICULTIES[diff].xp} XP)</button>`
-    } else if (diarioSection === 'weekly') {
-      sectionContent = `<h4 class="font-semibold text-main mb-4">Revisión semanal</h4>
-        ${WEEKLY_REVIEW_PROMPTS.map((q, i) => `<div class="mb-4">
-          <p class="text-sm text-main mb-2">${i + 1}. ${q}</p>
-          <textarea id="review-${i}" class="input-field min-h-16 resize-none" placeholder="Tu respuesta...">${weekly?.answers?.[i] || ''}</textarea>
-        </div>`).join('')}
-        <button onclick="saveWeeklyReview()" class="btn-primary w-full">Guardar revisión (+75 XP)</button>`
-    } else if (diarioSection === 'monthly') {
-      sectionContent = isUnlocked('review_monthly')
-        ? `<h4 class="font-semibold text-main mb-4">Revisión mensual</h4>
-          <p class="text-sm text-muted mb-4">Perspectiva de largo plazo para tus metas.</p>
-          ${MONTHLY_REVIEW_PROMPTS.map((q, i) => `<div class="mb-4">
-            <p class="text-sm text-main mb-2">${i + 1}. ${q}</p>
-            <textarea id="monthly-${i}" class="input-field min-h-16 resize-none" placeholder="Tu respuesta...">${monthly?.answers?.[i] || ''}</textarea>
-          </div>`).join('')}
-          <button onclick="saveMonthlyReview()" class="btn-primary w-full">Guardar revisión (+120 XP)</button>`
-        : `<p class="text-muted text-center py-8">🔒 Desbloquea la revisión mensual en nivel 8</p>`
-    } else {
-      sectionContent = entries.length
-        ? `<div class="space-y-3 max-h-96 overflow-y-auto">
-          ${entries.slice(0, 20).map(e => {
-            const mood = e.mood ? MOODS.find(m => m.id === e.mood) : null
-            return `<div class="reflection-entry rounded-xl p-3">
-              <p class="text-xs text-muted">${new Date(e.date).toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})} ${mood ? mood.emoji : ''} · ${e.difficulty || 'medio'}</p>
-              ${e.prompt ? `<p class="text-xs italic text-muted">${esc(e.prompt)}</p>` : ''}
-              <p class="text-sm text-main mt-1">${esc(e.text)}</p>
-            </div>`
-          }).join('')}
-        </div>`
-        : emptyState({
-          iconKey: 'spark',
-          title: 'Sin entradas aún',
-          desc: 'Escribe tu primera reflexión en la pestaña Hoy.',
-          ctaLabel: 'Ir a Hoy',
-          ctaOnclick: "diarioSection='daily';render()",
-        })
-    }
-
-    tabContent = `<div class="ds-diario">
-      <div class="ds-diario-nav">${subTabBar(
-        sectionNav.map(s => ({ id: s.id, label: s.l, icon: s.i })),
-        diarioSection,
-        'diarioSection',
-      )}</div>
-      <div class="ds-diario-body">${sectionContent}</div>
-    </div>`
-  }
-
-  const tabs = [
-    { id: 'habits', l: 'Hábitos', i: '✅' },
-    { id: 'diario', l: 'Diario', i: '📝' },
-  ]
-
-  const habitsChart = mejoraTab === 'habits' && !editingHabits && getHabits().length
-    ? `<div class="mejora-week-chart">${habitChartHTML()}</div>`
-    : ''
-
-  const habitsBody = mejoraTab === 'habits' && habitsChart
-    ? `<div class="mejora-habits-layout">${habitsChart}<div class="mejora-habits-main">${tabContent}</div></div>`
-    : tabContent
-
-  return `<div class="animate-fade-in page-shell page-wide page-mejora">
-    <div class="ds-page ds-page--full">
-      ${tabBar(tabs.map(t => ({ id: t.id, label: t.l, icon: t.i })), mejoraTab, 'mejoraTab', 'editingHabits=false;')}
-      <div class="mejora-tab-panel ds-panel ds-panel--flat">
-        ${mejoraTab === 'habits' ? pageLead('Marca cada hábito al completarlo · XP y racha por hábito') : pageLead('Reflexión, ánimo y revisiones semanales')}
-        ${habitsBody}
-      </div>
-    </div>
-  </div>`
-}
-
-function renderHabitEditor() {
-  const habits = getHabits()
-  const existingIds = new Set(habits.map(h => h.id))
-  const suggestions = HABIT_TEMPLATES.filter(t => !existingIds.has(t.id) && !existingIds.has(t.id.replace('tpl_', '')))
-  return `<div class="space-y-3">
-    ${suggestions.length ? `<div class="mb-4">
-      <p class="text-sm font-medium text-main mb-2">Plantillas sugeridas</p>
-      <div class="flex flex-wrap gap-2">
-        ${suggestions.slice(0, 12).map(t => {
-          const cat = HABIT_CATEGORIES[t.category] || HABIT_CATEGORIES.salud
-          return `<button type="button" onclick="addHabitTemplate('${t.id}')" class="px-3 py-2 rounded-xl text-xs text-left" style="background:${cat.color}18;border:1px solid ${cat.color}44">
-            ${t.icon} ${esc(t.name)}
-          </button>`
-        }).join('')}
-      </div>
-    </div>` : ''}
-    ${habits.map((h, i) => `<div class="p-3 rounded-xl" style="background:var(--secondary-bg)">
-      <div class="flex gap-2 mb-2">
-        <input value="${esc(h.icon)}" onchange="updateHabitField(${i},'icon',this.value)" class="input-field w-14 text-center text-xl">
-        <input value="${esc(h.name)}" onchange="updateHabitField(${i},'name',this.value)" class="input-field flex-1">
-        <button onclick="removeHabit(${i})" class="btn-ghost text-red-400">✕</button>
-      </div>
-      <div class="flex gap-2">
-        <select onchange="updateHabitField(${i},'category',this.value)" class="input-field flex-1 text-sm">
-          ${Object.entries(HABIT_CATEGORIES).map(([k,c]) => `<option value="${k}" ${h.category===k?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
-        </select>
-        <select onchange="updateHabitField(${i},'difficulty',parseInt(this.value))" class="input-field w-24 text-sm">
-          ${[1,2,3,4,5].map(d => `<option value="${d}" ${h.difficulty===d?'selected':''}>★${d}</option>`).join('')}
-        </select>
-        <input type="number" value="${h.xp}" onchange="updateHabitField(${i},'xp',parseInt(this.value))" class="input-field w-20 text-sm" title="XP">
-      </div>
-      <div class="flex gap-2 mt-2">
-        <select onchange="updateHabitField(${i},'type',this.value)" class="input-field flex-1 text-sm">
-          <option value="check" ${h.type==='check'?'selected':''}>✓ Checkbox</option>
-          <option value="counter" ${h.type==='counter'?'selected':''}>🔢 Contador</option>
-        </select>
-        <input type="number" min="1" value="${h.target || 1}" onchange="updateHabitField(${i},'target',parseInt(this.value))" class="input-field w-20 text-sm" title="Meta">
-        <input value="${esc(h.unit || 'vez')}" onchange="updateHabitField(${i},'unit',this.value)" class="input-field flex-1 text-sm" placeholder="Unidad">
-      </div>
-    </div>`).join('')}
-    <div class="flex gap-2 mt-4">
-      <button onclick="addHabit()" class="btn-secondary flex-1">+ Agregar</button>
-      <button onclick="editingHabits=false;render()" class="btn-primary flex-1">Listo</button>
-    </div>
-  </div>`
-}
-
-window.updateHabitField = (i, field, val) => { const h = getHabits(); h[i][field] = val; setItem('habits', h) }
-window.removeHabit = (i) => { const h = getHabits(); h.splice(i, 1); setItem('habits', h); render() }
-window.addHabit = () => {
-  const h = getHabits()
-  h.push({ id: 'custom_' + Date.now(), name: 'Nuevo hábito', icon: '⭐', category: 'productividad', difficulty: 2, xp: 25, type: 'check', target: 1, unit: 'vez' })
-  setItem('habits', h); render()
-}
-window.addHabitTemplate = (tplId) => {
-  const tpl = HABIT_TEMPLATES.find(t => t.id === tplId)
-  if (!tpl) return
-  const h = getHabits()
-  if (h.some(x => x.id === tpl.id || x.name === tpl.name)) return
-  h.push({ ...tpl, id: tpl.id.replace('tpl_', '') || tpl.id })
-  setItem('habits', h)
-  render()
-}
-window.adjustHabit = function(id, delta) {
-  const habit = getHabits().find(h => h.id === id)
-  if (!habit) return
-  if (delta > 0) {
-    const result = incrementHabit(habit)
-    if (result?.completed) {
-      awardXp('discipline', result.xp, result.name)
-      processPlanAwards(checkPlanTask('habit'))
-    }
-  } else decrementHabit(habit)
-  render()
-}
-window.toggleHabit = function(id) {
-  const habit = getHabits().find(h => h.id === id)
-  if (!habit || habit.type === 'counter') return
-  if (isHabitComplete(habit)) uncompleteHabit(id)
-  else {
-    const result = completeHabit(habit)
-    if (result?.completed) {
-      haptic(20)
-      playHabitDone()
-      awardXp('discipline', result.xp, result.name)
-      processPlanAwards(checkPlanTask('habit'))
-    }
-  }
-  render()
-}
-window.setReflectDiff = (d) => { const s = getSettings(); s.defaultDifficulty = guardDifficulty(d); saveSettings(s); render() }
-window.pickMood = function(id) {
-  const wasSet = getMood()
-  const mood = setMood(id)
-  if (!wasSet) awardXp('wisdom', 10, `Ánimo: ${mood.label}`)
-  render()
-}
-
-window.saveReflection = function() {
-  const text = document.getElementById('reflection-text')?.value?.trim()
-  if (!text || text.length < 15) { alert('Escribe al menos 15 caracteres.'); return }
-  const diff = getSettings().defaultDifficulty
-  const prompt = getReflectionPrompt(diff)
-  const entries = getItem('reflections', [])
-  const mood = getMood()
-  entries.unshift({ id: Date.now(), date: new Date().toISOString(), prompt, text, difficulty: diff, mood: mood?.id || null })
-  setItem('reflections', entries)
-  recordActivity('reflection')
-  awardXp('wisdom', DIFFICULTIES[diff].xp, 'Reflexión guardada')
-  updateStats({ reflections: getStats().reflections + 1 })
-  processPlanAwards(checkPlanTask('reflection'))
-  processPlanAwards(checkPlanTask('evening'))
-  render()
-}
-window.saveWeeklyReview = function() {
-  const answers = WEEKLY_REVIEW_PROMPTS.map((_, i) => document.getElementById(`review-${i}`)?.value?.trim() || '')
-  if (answers.some(a => a.length < 10)) { alert('Responde todas las preguntas (mín. 10 caracteres).'); return }
-  setItem('weeklyReview', { date: getToday(), answers })
-  awardXp('wisdom', 75, 'Revisión semanal')
-  render()
-}
-window.saveMonthlyReview = function() {
-  const answers = MONTHLY_REVIEW_PROMPTS.map((_, i) => document.getElementById(`monthly-${i}`)?.value?.trim() || '')
-  if (answers.some(a => a.length < 15)) { alert('Responde todas las preguntas (mín. 15 caracteres).'); return }
-  setItem('monthlyReview', { date: getToday(), answers })
-  awardXp('wisdom', 120, 'Revisión mensual')
-  render()
-}
-
-// --- Enfoque ---
-function renderEnfoque() {
-  const progress = pomodoro.mode === 'work'
-    ? ((25*60 - (pomodoro.minutes*60+pomodoro.seconds))/(25*60))*100
-    : ((5*60 - (pomodoro.minutes*60+pomodoro.seconds))/(5*60))*100
-  const sessions = getItem('pomodoroSessions', 0)
-  const focusClass = pomodoro.active ? ' focus-active' : ''
-  return `<div class="animate-fade-in page-shell page-wide page-enfoque route-enter${focusClass}">
-    ${pomodoro.active ? '<button onclick="togglePomodoro()" class="btn-secondary focus-exit">← Salir</button>' : ''}
-    <div class="ds-page ds-page--full enfoque-dashboard">
-    ${pageHero('Enfoque profundo', 'Pomodoro · 25 min trabajo + 5 min descanso', sessions, 'sesiones')}
-      <div class="ds-panel text-center enfoque-timer">
-        <p class="text-sm text-muted mb-4">${pomodoro.mode === 'work' ? '🍅 Enfoque (25 min)' : '☕ Descanso (5 min)'}</p>
-        <div class="relative w-44 h-44 mx-auto mb-8">
-          <svg class="w-full h-full" style="transform:rotate(-90deg)" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" stroke-width="6"/>
-            <circle id="pomo-progress" cx="50" cy="50" r="45" fill="none" stroke="${pomodoro.mode==='work'?'#ff8c69':'var(--primary)'}" stroke-width="6" stroke-dasharray="${progress*2.83} 283" stroke-linecap="round"/>
-          </svg>
-          <div class="absolute inset-0 flex items-center justify-center"><span id="pomo-timer" class="font-display text-3xl font-bold text-main">${String(pomodoro.minutes).padStart(2,'0')}:${String(pomodoro.seconds).padStart(2,'0')}</span></div>
-        </div>
-        <div class="flex gap-3 justify-center">
-          <button id="pomo-toggle-btn" onclick="togglePomodoro()" class="btn-primary">${pomodoro.active ? 'Pausar' : 'Iniciar'}</button>
-          <button onclick="resetPomodoro()" class="btn-secondary">Reiniciar</button>
-        </div>
-      </div>
-      <div class="card enfoque-info">
-        <h1 class="font-display text-2xl font-bold text-main mb-2">Enfoque Profundo</h1>
-        <p class="text-muted mb-4">Sesiones completadas: <strong class="text-main">${sessions}</strong></p>
-        <p class="text-sm text-muted leading-relaxed">Bloques de 25 min de trabajo profundo + 5 min de descanso. Ideal después de completar tu plan del día.</p>
-        <a href="#/plan" class="btn-secondary w-full mt-4 block text-center no-underline">Ver plan del día →</a>
-      </div>
-    </div>
-  </div>`
-}
-
-window.togglePomodoro = function() {
-  pomodoro.active = !pomodoro.active
-  if (pomodoro.active) {
-    if (pomodoroTimer) clearInterval(pomodoroTimer)
-    pomodoroTimer = setInterval(() => {
-      if (pomodoro.seconds === 0 && pomodoro.minutes === 0) {
-        pomodoro.active = false; clearInterval(pomodoroTimer); playTone(440, 0.3)
-        if (pomodoro.mode === 'work') {
-          pomodoro.mode = 'break'; pomodoro.minutes = 5
-          const s = getItem('pomodoroSessions', 0) + 1
-          setItem('pomodoroSessions', s)
-          awardXp('discipline', 20, 'Sesión de enfoque')
-          processPlanAwards(checkPlanTask('focus'))
-        } else { pomodoro.mode = 'work'; pomodoro.minutes = 25 }
-        pomodoro.seconds = 0
-      } else if (pomodoro.seconds === 0) { pomodoro.minutes--; pomodoro.seconds = 59 }
-      else pomodoro.seconds--
-      render()
-    }, 1000)
-  } else if (pomodoroTimer) clearInterval(pomodoroTimer)
-  render()
-}
-window.resetPomodoro = function() {
-  pomodoro.active = false; if (pomodoroTimer) clearInterval(pomodoroTimer)
-  pomodoro.minutes = pomodoro.mode === 'work' ? 25 : 5; pomodoro.seconds = 0; render()
-}
-
-// --- Settings ---
-function formatCloudTime(iso) {
-  if (!iso) return 'Nunca'
-  try {
-    return new Date(iso).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return '—'
-  }
-}
-
-function renderCloudAccountPanel() {
-  const cloud = getCloudStatus()
-  if (!cloud.configured) {
-    return `${pageLead('Sincroniza tu progreso entre dispositivos con Supabase.')}
-      ${settingGroup('Configuración pendiente', `
-        <p class="ds-setting-hint">Crea un proyecto en <a href="https://supabase.com" target="_blank" rel="noopener" class="text-link">supabase.com</a>, ejecuta <code>supabase/schema.sql</code> y copia <code>js/supabase-config.example.js</code> → <code>js/supabase-config.local.js</code> con tu URL y anon key.</p>
-      `)}`
-  }
-  if (cloud.signedIn) {
-    return `${pageLead('Tu progreso se guarda en la nube automáticamente.')}
-      ${settingGroup('Cuenta', `
-        <p class="ds-setting-hint">Conectado como <strong>${esc(cloud.email || '')}</strong></p>
-        <p class="ds-setting-hint">Última sync: ${formatCloudTime(cloud.lastSyncedAt)}${cloud.syncing ? ' · sincronizando…' : ''}</p>
-        <div class="flex flex-col gap-2 mt-3">
-          <button type="button" onclick="cloudSyncNow()" class="btn-primary w-full" ${cloud.syncing ? 'disabled' : ''}>☁️ Sincronizar ahora</button>
-          <button type="button" onclick="cloudPullNow()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>⬇️ Traer de la nube</button>
-          <button type="button" onclick="cloudSignOut()" class="btn-ghost w-full">Cerrar sesión</button>
-        </div>
-        <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
-      `)}`
-  }
-  return `${pageLead('Crea una cuenta para no perder tu progreso al cambiar de dispositivo.')}
-    ${settingGroup('Iniciar sesión', `
-      <div class="flex flex-col gap-2">
-        <input id="cloud-email" type="email" class="input-field" placeholder="Correo" autocomplete="email">
-        <input id="cloud-password" type="password" class="input-field" placeholder="Contraseña (mín. 6)" autocomplete="current-password">
-        <button type="button" onclick="cloudSignIn()" class="btn-primary w-full">Entrar</button>
-        <button type="button" onclick="cloudSignUp()" class="btn-secondary w-full">Crear cuenta</button>
-      </div>
-      <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
-      <p class="ds-setting-hint mt-2">Si activas confirmación por correo en Supabase, revisa tu bandeja antes de entrar.</p>
-    `)}`
-}
-
-function renderSettings() {
-  const s = getSettings()
-  const notifBlock = !canUseNotifications()
-    ? '<p class="ds-setting-hint">Tu navegador no soporta notificaciones.</p>'
-    : getNotificationPermission() === 'denied'
-      ? '<p class="ds-setting-hint">Permiso bloqueado. Habilítalo en ajustes del navegador.</p>'
-      : `<p class="ds-setting-hint">Te avisamos si el plan del día no está completo.</p>
-        <select onchange="setReminderHour(parseInt(this.value))" class="input-field mt-2" ${!s.notificationsEnabled ? 'disabled' : ''}>
-          <option value="">Sin hora fija</option>
-          ${[7, 8, 9, 12, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${s.reminderHour === h ? 'selected' : ''}>${h}:00</option>`).join('')}
-        </select>`
-
-  const content = settingsTab === 'general' ? `
-    ${settingGroup('Interfaz', `
-      ${settingRow('Sidebar compacto', `<input type="checkbox" ${s.compactSidebar ? 'checked' : ''} onchange="toggleCompactSidebar(this.checked)">`)}
-      ${settingRow('Sonidos', `<input type="checkbox" ${s.sound ? 'checked' : ''} onchange="toggleSound(this.checked)">`)}
-      ${settingRow('Reducir animaciones', `<input type="checkbox" ${s.reducedMotion ? 'checked' : ''} onchange="toggleReducedMotion(this.checked)">`, 'Menos movimiento y efectos visuales.')}
-    `)}
-    ${settingGroup('Notificaciones', `
-      <div class="ds-setting-row ds-setting-row--stack">
-        <label class="flex justify-between items-center w-full">
-          <span class="ds-setting-label">Recordatorios del plan</span>
-          <input type="checkbox" ${s.notificationsEnabled ? 'checked' : ''} onchange="toggleNotifications(this.checked)">
-        </label>
-        ${notifBlock}
-      </div>
-      <div class="ds-setting-row ds-setting-row--stack">
-        <label class="flex justify-between items-center w-full">
-          <span class="ds-setting-label">Recordatorio de hábitos</span>
-          <input type="checkbox" ${s.habitRemindersEnabled ? 'checked' : ''} onchange="toggleHabitReminders(this.checked)" ${!s.notificationsEnabled ? 'disabled' : ''}>
-        </label>
-        <p class="ds-setting-hint">Aviso si faltan hábitos por completar.</p>
-        <select onchange="setHabitReminderHour(parseInt(this.value))" class="input-field" ${!s.notificationsEnabled || !s.habitRemindersEnabled ? 'disabled' : ''}>
-          <option value="">Sin hora fija</option>
-          ${[12, 17, 18, 19, 20, 21].map(h => `<option value="${h}" ${s.habitReminderHour === h ? 'selected' : ''}>${h}:00</option>`).join('')}
-        </select>
-      </div>
-      <div class="ds-setting-row">
-        <div>
-          <span class="ds-setting-label">Aviso al atardecer</span>
-          <p class="ds-setting-hint">~30 min antes del ocaso, invita a meditar.</p>
-        </div>
-        <input type="checkbox" ${s.sunsetRemindersEnabled !== false ? 'checked' : ''} onchange="toggleSunsetReminders(this.checked)" ${!s.notificationsEnabled ? 'disabled' : ''}>
-      </div>
-    `)}
-    ${settingGroup('Preferencias', `
-      <div class="ds-setting-row ds-setting-row--stack">
-        <span class="ds-setting-label">Dificultad por defecto</span>
-        <select onchange="setDefaultDiff(this.value)" class="input-field">
-          ${Object.entries(DIFFICULTIES).map(([k, d]) => {
-            const locked = k === 'experto' && !isUnlocked('diff_expert')
-            return `<option value="${k}" ${s.defaultDifficulty === k ? 'selected' : ''} ${locked ? 'disabled' : ''}>${locked ? '🔒 ' : ''}${d.icon} ${d.label}</option>`
-          }).join('')}
-        </select>
-      </div>
-      <div class="ds-setting-row ds-setting-row--stack">
-        <span class="ds-setting-label">País (festivos y clima)</span>
-        <select onchange="setCountry(this.value)" class="input-field">
-          ${[['MX', 'México'], ['ES', 'España'], ['AR', 'Argentina'], ['CO', 'Colombia'], ['CL', 'Chile'], ['PE', 'Perú'], ['US', 'Estados Unidos']]
-            .map(([code, name]) => `<option value="${code}" ${(s.country || 'MX') === code ? 'selected' : ''}>${name}</option>`).join('')}
-        </select>
-        <p class="ds-setting-hint">El clima usa tu ubicación si la permites, o la capital del país.</p>
-        <button type="button" onclick="requestLocationRefresh()" class="btn-secondary w-full text-sm mt-1">📍 Actualizar ubicación</button>
-      </div>
-    `)}
-    ${settingGroup('Tema visual', `
-      <p class="ds-setting-hint" style="margin:0 0 0.5rem">${getUnlocked().filter(u => u.type === 'theme').length + 1} temas disponibles</p>
-      <div class="ds-theme-grid">
-        ${Object.entries(THEMES).map(([id, t]) => {
-          const unlocked = id === 'default' || isUnlocked(id)
-          const active = (s.theme || 'default') === id
-          const unlock = UNLOCKS.find(u => u.id === id)
-          return `<button onclick="${unlocked ? `setTheme('${id}')` : ''}" class="ds-theme-btn ${active ? 'btn-primary is-active' : 'btn-secondary'} ${!unlocked ? 'opacity-40' : ''}">
-            ${unlocked ? t.icon : '🔒'} ${t.name}${!unlocked && unlock ? ` (Nv.${unlock.level})` : ''}
-          </button>`
-        }).join('')}
-      </div>
-    `)}
-  ` : settingsTab === 'account' ? renderCloudAccountPanel() : `
-    ${pageLead('Respalda tu progreso, niveles y logros.')}
-    ${settingRow('Respaldo automático semanal', `<input type="checkbox" ${s.autoBackupEnabled ? 'checked' : ''} onchange="toggleAutoBackup(this.checked)">`, 'Descarga un JSON cada 7 días si la app está abierta.')}
-    <div class="flex flex-col gap-2 mt-4">
-      <button onclick="exportData()" class="btn-primary w-full">📤 Exportar todo</button>
-      <button onclick="exportMonthlyReportText()" class="btn-secondary w-full">📄 Informe mensual (.txt)</button>
-      <button onclick="restartTour()" class="btn-ghost w-full">🎯 Repetir tour guiado</button>
-      <label class="btn-secondary w-full block text-center cursor-pointer">📥 Importar<input type="file" accept=".json" onchange="importData(event)" class="hidden"></label>
-    </div>
-    <p id="import-status" class="text-sm text-muted mt-3 text-center"></p>`
-
-  return `<div class="animate-fade-in page-shell page-wide page-settings">
-    <div class="ds-page ds-page--full">
-      ${tabBar([
-        { id: 'general', label: 'General', icon: '⚙️' },
-        { id: 'account', label: 'Cuenta', icon: '☁️' },
-        { id: 'data', label: 'Datos', icon: '💾' },
-      ], settingsTab, 'settingsTab')}
-      <div class="ds-panel">${content}</div>
-    </div>
-  </div>`
-}
-
-window.toggleDark = (v) => { const s = getSettings(); s.darkMode = v; saveSettings(s); render() }
-window.toggleCompactSidebar = (v) => {
-  const s = getSettings(); s.compactSidebar = v; saveSettings(s); applyCompactSidebar(v); render()
-}
-window.toggleSound = (v) => { const s = getSettings(); s.sound = v; saveSettings(s) }
-window.toggleReducedMotion = (v) => { const s = getSettings(); s.reducedMotion = v; saveSettings(s) }
-window.toggleHabitReminders = (v) => {
-  const s = getSettings(); s.habitRemindersEnabled = v
-  if (v && !s.habitReminderHour) s.habitReminderHour = 18
-  saveSettings(s); if (s.notificationsEnabled) startReminderChecker(getPlanProgress); render()
-}
-window.setHabitReminderHour = (h) => { const s = getSettings(); s.habitReminderHour = h || null; saveSettings(s) }
-window.toggleSunsetReminders = (v) => {
-  const s = getSettings()
-  s.sunsetRemindersEnabled = v
-  saveSettings(s)
-  if (s.notificationsEnabled) startReminderChecker(getPlanProgress)
-  render()
-}
-window.toggleAutoBackup = (v) => { const s = getSettings(); s.autoBackupEnabled = v; saveSettings(s) }
-
-function setCloudMsg(msg, ok = true) {
-  const el = document.getElementById('cloud-status-msg')
-  if (el) {
-    el.textContent = msg
-    el.style.color = ok ? '' : 'var(--color-danger, #c44)'
-  }
-}
-
-window.cloudSignIn = async function() {
-  const email = document.getElementById('cloud-email')?.value?.trim()
-  const password = document.getElementById('cloud-password')?.value
-  if (!email || !password) { setCloudMsg('Correo y contraseña requeridos', false); return }
-  try {
-    await signIn(email, password)
-    setCloudMsg('✓ Sesión iniciada')
-    playSuccess()
-    render()
-  } catch (e) {
-    setCloudMsg(e?.message || 'No se pudo iniciar sesión', false)
-  }
-}
-
-window.cloudSignUp = async function() {
-  const email = document.getElementById('cloud-email')?.value?.trim()
-  const password = document.getElementById('cloud-password')?.value
-  if (!email || !password || password.length < 6) {
-    setCloudMsg('Correo y contraseña (mín. 6 caracteres)', false)
-    return
-  }
-  try {
-    const data = await signUp(email, password)
-    if (data.session) {
-      setCloudMsg('✓ Cuenta creada')
-      playSuccess()
-      render()
-    } else {
-      setCloudMsg('Revisa tu correo para confirmar la cuenta')
-    }
-  } catch (e) {
-    setCloudMsg(e?.message || 'No se pudo crear la cuenta', false)
-  }
-}
-
-window.cloudSignOut = async function() {
-  await signOut()
-  setCloudMsg('Sesión cerrada')
-  render()
-}
-
-window.cloudSyncNow = async function() {
-  try {
-    await pushToCloud({ force: true })
-    setCloudMsg('✓ Subido a la nube')
-    playSuccess()
-    render()
-  } catch (e) {
-    setCloudMsg(e?.message || 'Error al sincronizar', false)
-  }
-}
-
-window.cloudPullNow = async function() {
-  try {
-    await pullFromCloud()
-    setCloudMsg('✓ Datos descargados')
-    playSuccess()
-    render(true)
-  } catch (e) {
-    setCloudMsg(e?.message || 'Error al descargar', false)
-  }
-}
-window.exportMonthlyReportText = exportMonthlyReportText
-window.restartTour = function() {
-  const s = getSettings(); s.tourComplete = false; saveSettings(s)
-  setTimeout(() => startTour(), 300)
-}
-window.toggleNotifications = async function(v) {
-  const s = getSettings()
-  if (v) {
-    const perm = await requestNotificationPermission()
-    if (perm !== 'granted') { s.notificationsEnabled = false; saveSettings(s); alert('Necesitas permitir notificaciones para usar recordatorios.'); render(); return }
-  }
-  s.notificationsEnabled = v
-  if (v && !s.reminderHour) s.reminderHour = 20
-  saveSettings(s)
-  if (v) startReminderChecker(getPlanProgress)
-  render()
-}
-window.setReminderHour = (h) => {
-  const s = getSettings()
-  s.reminderHour = h || null
-  saveSettings(s)
-}
-window.setDefaultDiff = (v) => { const s = getSettings(); s.defaultDifficulty = guardDifficulty(v); saveSettings(s) }
-window.setTheme = (id) => {
-  if (id !== 'default' && !isUnlocked(id)) return
-  const s = getSettings()
-  s.theme = id
-  saveSettings(s)
-  applyTheme(id)
-  render()
-}
-window.requestLocationRefresh = async function() {
-  const { requestUserLocation } = await import('./apis.js')
-  const geo = await requestUserLocation()
-  const s = getSettings()
-  if (geo) {
-    s.latitude = Math.round(geo.lat * 100) / 100
-    s.longitude = Math.round(geo.lon * 100) / 100
-    s.locationName = 'Tu ubicación'
-    s.locationAsked = true
-    saveSettings(s)
-    dailyApis = null
-    await loadDailyApis()
-    render()
-  } else {
-    alert('No se pudo obtener tu ubicación. Revisa los permisos del navegador.')
-  }
-}
-
-window.setCountry = (code) => {
-  const s = getSettings()
-  s.country = code
-  s.latitude = null
-  s.longitude = null
-  s.locationName = ''
-  saveSettings(s)
-  dailyApis = null
-  loadDailyApis()
-}
-window.exportData = function() {
-  const data = {}
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key.startsWith(PREFIX)) data[key.replace(PREFIX, '')] = JSON.parse(localStorage.getItem(key))
-  }
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)]))
-  a.download = `mejora-backup-${getToday()}.json`; a.click()
-}
-window.importData = function(e) {
-  const file = e.target.files[0]; if (!file) return
-  const reader = new FileReader()
-  reader.onload = (ev) => {
-    try {
-      Object.entries(JSON.parse(ev.target.result)).forEach(([k, v]) => setItem(k, v))
-      const imported = getSettings()
-      saveSettings(imported)
-      applyTheme(imported.theme)
-      document.getElementById('import-status').textContent = '✓ Importado'
-      setTimeout(render, 800)
-    } catch { document.getElementById('import-status').textContent = '✗ Error' }
-  }
-  reader.readAsText(file)
+  return renderMeditationPage(dailyApis)
 }
 
 // --- Router ---
 const routes = {
-  '/': renderHomePage, '/plan': renderPlan, '/rutina': renderRoutine, '/gimnasia': renderBrainGym,
+  '/': renderHomePage, '/plan': renderPlanPage, '/rutina': renderRoutine, '/gimnasia': renderBrainGym,
   '/meditacion': renderMeditation, '/mejora': renderMejora, '/enfoque': renderEnfoque,
-  '/ajustes': renderSettings, '/perfil': renderProfile, '/desafios': renderPlan,
+  '/ajustes': renderSettings, '/perfil': renderProfile, '/desafios': renderPlanPage,
   '/metas': renderMetas, '/viaje': renderViaje, '/hoy': renderSoloHoy,
 }
 
@@ -3012,27 +1699,42 @@ window.toggleOnboardHabit = function(id) {
   render()
 }
 
-window.onboardDemoBreath = function() {
-  if (onboarding.demoBreaths >= 3) return
-  onboarding.demoBreaths++
-  haptic(10)
-  playTone(330, 0.12)
+window.onboardBack = function() {
+  if (onboarding.step <= 0) return
+  onboarding.step--
+  resetOnboardingCache()
+  playClick()
   render()
 }
 
 window.onboardNext = function() {
-  if (onboarding.step === 0) {
+  if (onboarding.step === 1) {
     const name = document.getElementById('onboard-name')?.value?.trim()
     const s = getSettings()
     s.userName = name || ''
     saveSettings(s)
   }
-  if (onboarding.step === 2) {
+  if (onboarding.step === 4) {
+    const s = getSettings()
+    const country = document.getElementById('onboard-country')?.value
+    const reminder = document.getElementById('onboard-reminder')?.value
+    const sound = document.getElementById('onboard-sound')?.checked
+    const motion = document.getElementById('onboard-motion')?.checked
+    if (country) s.country = country
+    s.reminderHour = reminder ? parseInt(reminder) : s.reminderHour
+    s.sound = sound !== false
+    s.reducedMotion = !!motion
+    saveSettings(s)
+    document.documentElement.classList.toggle('reduce-motion', !!motion)
+  }
+  if (onboarding.step === 5) {
     const all = getHabits()
     const selected = all.filter(h => onboarding.selectedHabits.includes(h.id))
     setItem('habits', selected.length ? selected : all.slice(0, 3))
   }
+  if (onboarding.step >= TOTAL_ONBOARD_STEPS - 1) return
   onboarding.step++
+  resetOnboardingCache()
   playClick()
   render()
 }
@@ -3041,8 +1743,7 @@ window.finishOnboarding = async function() {
   if (onboarding.goal !== null) addGoal(GOAL_TEMPLATES[onboarding.goal])
   const s = getSettings()
   s.onboardingComplete = true
-  const reminder = document.getElementById('onboard-reminder')?.value
-  if (reminder) s.reminderHour = parseInt(reminder)
+  onboarding.forced = false
   if (s.reminderHour && !s.notificationsEnabled) {
     const perm = await requestNotificationPermission()
     if (perm === 'granted') s.notificationsEnabled = true
@@ -3051,24 +1752,35 @@ window.finishOnboarding = async function() {
   if (s.notificationsEnabled) startReminderChecker(getPlanProgress)
   onboarding.step = 0
   resetOnboardingCache()
+  document.body.classList.remove('onboarding-open')
   playSuccess()
   celebrate()
   showToast('¡Tu viaje comienza!', 0, 'discipline')
   location.hash = '/plan'
   render(true)
-  setTimeout(() => { if (shouldShowTour()) startTour() }, 600)
+  setTimeout(() => { if (shouldShowTour()) startTour() }, 800)
 }
 
 function patchLiveUI(path) {
-  if (path === '/meditacion' && medState.session && !medState.completed) {
+  if (path === '/meditacion' && (medState.session || medState.freeTimer?.active) && !medState.completed) {
+    const timerEl = document.getElementById('med-timer')
+    if (!timerEl) return false
+    if (medState.freeTimer?.active) {
+      const ft = medState.freeTimer
+      const elapsed = ft.elapsed
+      const target = ft.open ? null : ft.targetMin * 60
+      const remaining = target ? target - elapsed : elapsed
+      const mins = Math.floor(Math.max(0, remaining) / 60)
+      const secs = (Math.max(0, remaining) % 60).toString().padStart(2, '0')
+      timerEl.textContent = `${mins}:${secs}`
+      return true
+    }
     const duration = MED_DURATIONS[medState.difficulty]
     const total = duration * 60
     const remaining = total - medState.elapsed
     const mins = Math.floor(remaining / 60)
     const secs = (remaining % 60).toString().padStart(2, '0')
-    const timerEl = document.getElementById('med-timer')
-    if (!timerEl) return false
-    if (medState.session === 'breathing') {
+    if (medState.session === 'breathing' || medState.session === 'box-breath') {
       const scale = medState.phase === 'inhale' ? 1.2 : medState.phase === 'exhale' ? 0.8 : 1.1
       const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
       const phaseEl = document.getElementById('med-phase-text')
@@ -3089,56 +1801,60 @@ function patchLiveUI(path) {
     }
     return true
   }
-  if (path === '/enfoque' && pomodoro.active) {
-    const progress = pomodoro.mode === 'work'
-      ? ((25 * 60 - (pomodoro.minutes * 60 + pomodoro.seconds)) / (25 * 60)) * 100
-      : ((5 * 60 - (pomodoro.minutes * 60 + pomodoro.seconds)) / (5 * 60)) * 100
-    const timerEl = document.getElementById('pomo-timer')
-    const progressEl = document.getElementById('pomo-progress')
-    const toggleEl = document.getElementById('pomo-toggle-btn')
-    if (!timerEl || !progressEl || !toggleEl) return false
-    timerEl.textContent = `${String(pomodoro.minutes).padStart(2, '0')}:${String(pomodoro.seconds).padStart(2, '0')}`
-    progressEl.setAttribute('stroke-dasharray', `${progress * 2.83} 283`)
-    toggleEl.textContent = pomodoro.active ? 'Pausar' : 'Iniciar'
-    return true
-  }
-  if (path === '/gimnasia' && brainState.exercise && patchBrainExerciseUI()) {
-    return true
-  }
-  if (path === '/rutina' && routineState.active && routineState.step === 1) {
-    const b = routineState.breathing
-    const remainingEl = document.getElementById('routine-remaining')
-    const phaseEl = document.getElementById('routine-phase-text')
-    const circleEl = document.getElementById('routine-breathe-circle')
-    if (!remainingEl || !phaseEl || !circleEl) return false
-    const scale = b.phase === 'inhale' ? 1.15 : b.phase === 'exhale' ? 0.85 : 1.05
-    const phase = { inhale: 'Inhala', hold: 'Mantén', exhale: 'Exhala' }
-    remainingEl.textContent = `${b.total - b.elapsed}s restantes`
-    phaseEl.textContent = phase[b.phase]
-    circleEl.style.transform = `scale(${scale})`
-    return true
-  }
+  if (path === '/enfoque' && patchPomodoroUI()) return true
+  if (path === '/gimnasia' && brainState.exercise && patchBrainExerciseUI()) return true
+  if (path === '/rutina' && patchRoutineUI()) return true
   return false
 }
 
+function clearEphemeralBrainState() {
+  clearBrainTimers()
+  brainState.activeLesson = null
+  brainState.lessonFlow = null
+  brainState.activePaper = null
+  brainState.paperMeta = null
+  brainState.reviewFlow = null
+  brainState.exercise = null
+}
+
+function syncRouteFromHash() {
+  const { path, sub } = parsePath()
+  if (path === '/gimnasia') {
+    if (sub[0] === 'leccion' && sub[1] && isLessonUnlocked(sub[1])) {
+      brainState.activeLesson = sub[1]
+      brainState.lessonFlow = null
+      brainState.brainView = 'school'
+    } else if (sub[0] === 'biblioteca') {
+      brainState.brainView = 'school'
+      brainState.schoolSection = sub[1] ? 'library' : 'library'
+      if (sub[1]) brainState.activePaper = sub[1]
+    } else if (sub[0] === 'catalogo') brainState.brainView = 'academy'
+    else if (sub[0] === 'laboratorio') brainState.brainView = 'lab'
+    else if (sub[0] === 'programa') brainState.brainView = 'program'
+  }
+  if (path === '/meditacion') syncMeditationFromRoute(sub)
+}
+
 function renderCore() {
-  const { parts, path } = parsePath()
+  const { path, sub } = parsePath()
+  syncRouteFromHash()
+  const prevPath = getLastRenderPath()
+  if (prevPath === '/gimnasia' && path !== '/gimnasia') clearEphemeralBrainState()
+  if (prevPath === '/rutina' && path !== '/rutina') stopRoutineIfLeaving(path)
   if (path !== '/meditacion') {
-    if (medState.session) {
+    const medActive = medState.session || medState.freeTimer?.active
+    if (medActive && !medState.completed) {
       stopMeditationSession()
       medState.session = null
       medState.completed = false
+    } else if (medActive && medState.completed) {
+      medState.session = null
+      medState.completed = false
+      medState.view = 'hub'
     } else if (medState.ambientPreview || isAmbientPlaying()) {
       stopAmbientSound()
       medState.ambientPreview = false
     }
-  }
-  if (path === '/mejora') {
-    if (parts[1] === 'diario') {
-      mejoraTab = 'diario'
-      if (parts[2]) diarioSection = parts[2]
-    }
-    if (mejoraTab === 'journal') mejoraTab = 'diario'
   }
   const content = document.getElementById('app-content')
   const sameRoute = path === getLastRenderPath()
@@ -3151,10 +1867,21 @@ function renderCore() {
   }
 
   content.classList.remove('route-stable', 'route-enter')
-  content.innerHTML = (routes[path] || routes['/'])()
+  try {
+    content.innerHTML = (routes[path] || routes['/'])()
+  } catch (err) {
+    console.error('[Mejora] render error', path, err)
+    content.innerHTML = `<div class="card" style="max-width:28rem;margin:2rem auto;padding:1.5rem">
+      <h2 style="margin:0 0 0.5rem">Algo falló al cargar esta vista</h2>
+      <p style="margin:0 0 1rem;line-height:1.5;color:var(--m-muted)">Recarga con <strong>Cmd+Shift+R</strong>. Si abriste <code>index.html</code> directo, usa el servidor local.</p>
+      <pre style="font-size:0.75rem;overflow:auto;padding:0.75rem;background:var(--m-surface-2,#f5f5f5);border-radius:8px">${esc(String(err.message || err))}</pre>
+      <button type="button" class="btn-primary mt-4" onclick="location.reload()">Recargar</button>
+    </div>`
+  }
   if (!sameRoute) {
     requestAnimationFrame(() => content.classList.add('route-enter'))
     setLastRenderPath(path)
+    maybeAutoSectionGuide(path)
   } else {
     content.classList.add('route-stable')
   }
@@ -3177,7 +1904,7 @@ function renderCore() {
     planDone: progress.done,
     planTotal: progress.total,
     planAllDone: progress.allDone,
-    rankIcon: rank.icon,
+    rankLevel: rank.min,
     userName: settings.userName,
     shield: getStreakShieldStatus(),
     weather: w && dailyApis?.weather
@@ -3227,7 +1954,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 })
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('./service-worker.js', { scope: './' }).then(reg => {
+  navigator.serviceWorker.register('./service-worker.js?v=78', { scope: './' }).then(reg => {
     reg.update().catch(() => {})
     reg.addEventListener('updatefound', () => {
       const worker = reg.installing
@@ -3248,11 +1975,9 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 
 // Init
+migrateOnboardingFlag()
 const initSettings = getSettings()
-if (initSettings.darkMode) {
-  initSettings.darkMode = false
-  saveSettings(initSettings)
-}
+document.documentElement.classList.remove('dark')
 if (initSettings.theme && initSettings.theme !== 'default' && !isUnlocked(initSettings.theme)) {
   initSettings.theme = 'default'
   setItem('settings', initSettings)
@@ -3280,36 +2005,44 @@ async function maybeSendPlanReminderFromApp() {
 
 initCloudSync().catch(() => {})
 onCloudStatus(() => {
-  if (settingsTab === 'account' && getLastRenderPath() === '/ajustes') scheduleRender()
+  if (getSettingsTab() === 'account' && getLastRenderPath() === '/ajustes') scheduleRender()
 })
 
+bindMeditationGlobals()
+bindRoutineGlobals()
+bindMejoraGlobals()
+bindEnfoqueGlobals()
+bindSettingsGlobals({
+  invalidateDailyApis: () => { dailyApis = null },
+  reloadDailyApis: () => loadDailyApis(true),
+})
 bindRender(renderCore)
 window.render = (immediate) => scheduleRender(!!immediate)
 window.navigate = navigate
+window.patchLiveUI = patchLiveUI
+window.processPlanAwards = processPlanAwards
 window.startBrain = startBrain
 window.finishBrain = finishBrain
-window.startMeditation = startMeditation
-window.startRoutine = startRoutine
-window.clearMedTimers = clearMedTimers
-window.stopMeditationSession = stopMeditationSession
+window.endExerciseBlock = endExerciseBlock
 window.brainState = brainState
 window.medState = medState
 
 /** Sincroniza estado de pestañas con onclick inline (módulo ES ≠ window) */
 ;[
-  ['mejoraTab', () => mejoraTab, v => { mejoraTab = v }],
-  ['settingsTab', () => settingsTab, v => { settingsTab = v }],
+  ['settingsTab', getSettingsTab, setSettingsTab],
   ['viajeTab', () => viajeTab, v => { viajeTab = v }],
   ['metasTab', () => metasTab, v => { metasTab = v }],
   ['profileTab', () => profileTab, v => { profileTab = v }],
-  ['diarioSection', () => diarioSection, v => { diarioSection = v }],
-  ['editingHabits', () => editingHabits, v => { editingHabits = v }],
+  ['editingHabits', getEditingHabits, setEditingHabits],
+  ['schoolFaculty', () => brainState.schoolFaculty, v => { brainState.schoolFaculty = v }],
 ].forEach(([name, get, set]) => {
   Object.defineProperty(window, name, { get, set, configurable: true })
 })
 
-saveSettings(getSettings())
 initLayout()
+import('./global-search.js?v=78').then(m => m.mountGlobalSearch?.()).catch(() => {})
 window.addEventListener('hashchange', () => scheduleRender(true))
 scheduleRender(true)
-if (shouldShowTour()) setTimeout(() => startTour(), 900)
+if (shouldShowTour() && ['/', '/plan'].includes(parsePath().path)) {
+  setTimeout(() => startTour(), 900)
+}

@@ -1,0 +1,210 @@
+/* Calma FORGE */
+
+.med-hero { border-top: 2px solid var(--m-accent) !important; }
+
+.med-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.med-stat {
+  padding: 0.75rem;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius);
+  text-align: center;
+}
+
+.med-stat-val {
+  display: block;
+  font-family: var(--m-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--m-accent);
+}
+
+.med-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--m-muted);
+}
+
+.med-hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.med-program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.65rem;
+}
+
+.med-program-card {
+  padding: 1rem;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-lg);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s;
+}
+
+.med-program-card:hover { border-color: var(--m-accent); }
+
+.med-program-days {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--m-accent);
+}
+
+.med-program-name { display: block; font-weight: 700; margin: 0.25rem 0; }
+.med-program-desc { display: block; font-size: 0.8rem; color: var(--m-muted); }
+.med-program-progress { display: block; font-size: 0.75rem; color: var(--m-muted); margin-top: 0.5rem; }
+
+.med-session-card {
+  border-color: var(--m-border) !important;
+  background: var(--m-surface) !important;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  text-align: left;
+}
+
+.med-session-card:hover { border-color: var(--m-accent) !important; }
+
+.med-session-icon {
+  font-family: var(--m-display);
+  font-size: 1.5rem;
+  color: var(--m-accent);
+  width: 2.5rem;
+  text-align: center;
+}
+
+.med-neuro { color: var(--m-accent) !important; font-size: 0.75rem; }
+
+.med-voice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--m-muted);
+  margin-top: 0.5rem;
+}
+
+.med-complete-card { max-width: 22rem; margin: 0 auto; }
+.med-complete-icon { margin-bottom: 1rem; }
+.mi-icon--xl { width: 3rem; height: 3rem; stroke: var(--m-accent); }
+.mi-icon--rank { width: 1.25rem; height: 1.25rem; stroke: var(--m-accent); }
+
+.banner-avatar .mi-icon--rank { display: block; margin: auto; }
+
+.med-diff-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+body.mejora-forge .page-meditation .med-sessions-grid .card {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+}
+
+body.mejora-forge .page-meditation .med-sessions-grid .card:hover {
+  border-color: var(--m-accent) !important;
+}
+
+body.mejora-forge .page-profile .profile-rank-badge {
+  background: var(--m-surface-2) !important;
+  color: var(--m-accent) !important;
+  border: 1px solid var(--m-border-strong) !important;
+}
+
+.forge-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.forge-crumb { color: var(--m-muted); }
+.forge-crumb--current { color: var(--m-accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.forge-crumb-sep { color: var(--m-border-strong); }
+
+.global-search-dialog {
+  border: 1px solid var(--m-border-strong);
+  border-radius: var(--m-radius-lg);
+  background: var(--m-surface);
+  color: var(--m-text);
+  padding: 1rem;
+  max-width: 28rem;
+  width: calc(100% - 2rem);
+}
+
+.global-search-input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius);
+  background: var(--m-surface-2);
+  color: var(--m-text);
+  font: inherit;
+  margin: 0.5rem 0;
+}
+
+.global-search-results { list-style: none; margin: 0; padding: 0; max-height: 16rem; overflow-y: auto; }
+
+.global-search-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--m-radius);
+}
+
+.global-search-hit:hover { background: var(--m-surface-2); }
+
+.global-search-type { font-size: 0.65rem; text-transform: uppercase; color: var(--m-accent); }
+.global-search-title { font-weight: 600; }
+.global-search-meta { font-size: 0.75rem; color: var(--m-muted); }
+.global-search-hint { font-size: 0.7rem; color: var(--m-muted); margin: 0.5rem 0 0; }
+.global-search-empty { padding: 1rem; color: var(--m-muted); font-size: 0.875rem; }
+
+body.mejora-forge .onboarding-overlay {
+  background: rgba(10, 12, 16, 0.94) !important;
+}
+
+body.mejora-forge .onboarding-shell,
+body.mejora-forge .onboarding-card {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border-strong) !important;
+  color: var(--m-text) !important;
+}
+
+body.mejora-forge .bottom-nav {
+  grid-template-columns: repeat(5, 1fr) !important;
+}
+
+.banner-search-btn {
+  padding: 0.4rem 0.65rem;
+  min-width: 2.25rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .med-stats-bar { grid-template-columns: repeat(2, 1fr); }
+}

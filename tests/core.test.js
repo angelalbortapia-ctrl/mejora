@@ -3,7 +3,7 @@
  */
 import {
   toDateStr, getToday, incrementHabit, decrementHabit, isHabitComplete,
-  syncGoals, getGoals, PREFIX,
+  syncGoals, getGoals, PREFIX, needsOnboarding, migrateOnboardingFlag, getSettings, saveSettings,
 } from '../js/core.js'
 
 const results = []
@@ -53,6 +53,17 @@ test('decrementHabit desmarca completado', () => {
   incrementHabit(habit)
   decrementHabit(habit)
   assert(!isHabitComplete(habit), 'Should uncomplete after decrement')
+})
+
+test('migrateOnboardingFlag con progreso previo', () => {
+  clearStorage()
+  const s = getSettings()
+  s.onboardingComplete = false
+  saveSettings(s)
+  localStorage.setItem(PREFIX + 'stats', JSON.stringify({ habitsCompleted: 5, brainSessions: 0, reflections: 0, routinesCompleted: 0, challengesWon: 0, meditationMinutes: 0 }))
+  migrateOnboardingFlag()
+  assert(getSettings().onboardingComplete === true)
+  assert(needsOnboarding() === false)
 })
 
 test('syncGoals registra hitos intermedios', () => {

@@ -8,7 +8,8 @@ import {
   HOME_SHORTCUTS, getDailyIntention, MOOD_COACH,
 } from '../coaching.js'
 import { homeInsightHTML } from '../apis.js'
-import { renderHomeNeuroCard } from '../brain-academy.js'
+import { renderHomeNeuroCard } from '../brain-academy.js?v=78'
+import { renderHomeReviewBanner } from '../school.js?v=78'
 import { getNextBestAction } from '../analytics.js'
 
 function greeting() {
@@ -127,22 +128,32 @@ export function renderHome({ moodPickerHTML, dailyApis, dailyApisLoading }) {
 
   return `<div class="animate-fade-in page-shell page-home page-home--v3">
     <main class="m-home">
-      <header class="m-home-header">
-        <p class="m-home-date">${formatDate()}</p>
-        <h1 class="m-home-title">${greeting()}, ${name}</h1>
-        <p class="m-home-lead">${getDailyIntention()}</p>
-        ${streak >= 2 || progress.percent > 0 ? `<p class="m-progress-pill">
-          ${streak >= 2 ? `<span>🔥 <strong>${streak}</strong> días seguidos</span>` : ''}
-          ${progress.percent > 0 ? `<span>· Plan <strong>${progress.percent}%</strong></span>` : ''}
-        </p>` : ''}
-      </header>
+      <div class="m-home-top">
+        <header class="m-home-header">
+          <p class="m-home-date">${formatDate()}</p>
+          <h1 class="m-home-title">${greeting()}, ${name}</h1>
+          <p class="m-home-lead">${getDailyIntention()}</p>
+          ${streak >= 2 || progress.percent > 0 ? `<p class="m-progress-pill">
+            ${streak >= 2 ? `<span>🔥 <strong>${streak}</strong> días seguidos</span>` : ''}
+            ${progress.percent > 0 ? `<span>· Plan <strong>${progress.percent}%</strong></span>` : ''}
+          </p>` : ''}
+        </header>
+        ${needsOnboarding() ? '' : nowCardHTML()}
+      </div>
 
-      ${needsOnboarding() ? '' : nowCardHTML()}
-      ${todayListHTML()}
-      ${habitsRowHTML()}
-      ${shortcutsHTML()}
-      ${renderHomeNeuroCard()}
-      ${moodSectionHTML(moodPickerHTML)}
+      <div class="m-home-body">
+        <div class="m-home-main">
+          ${renderHomeReviewBanner()}
+          ${todayListHTML()}
+          ${renderHomeNeuroCard()}
+        </div>
+        <aside class="m-home-side">
+          ${habitsRowHTML()}
+          ${shortcutsHTML()}
+          ${moodSectionHTML(moodPickerHTML)}
+        </aside>
+      </div>
+
       ${footerLinksHTML()}
     </main>
   </div>`

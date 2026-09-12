@@ -30,3 +30,8 @@ export function icon(name, cls = 'mi-icon') {
 export function iconBadge(name, label, cls = '') {
   return `<span class="mi-badge ${cls}" title="${label}">${icon(name, 'mi-icon mi-icon--badge')}</span>`
 }
+
+export function rankIcon(level = 1) {
+  const tier = level >= 50 ? 'spark' : level >= 35 ? 'shield' : level >= 20 ? 'xp' : level >= 10 ? 'streak' : 'check'
+  return icon(tier, 'mi-icon mi-icon--rank')
+}

@@ -31,11 +31,11 @@ test('parsePath segmento', () => {
   assert(p.parts[0] === 'plan')
 })
 
-test('parsePath anidado mejora/diario', () => {
-  const p = parsePath('#/mejora/diario/weekly')
+test('parsePath anidado mejora (segmentos extra ignorados en ruta)', () => {
+  const p = parsePath('#/mejora/extra/segment')
   assert(p.path === '/mejora')
-  assert(p.parts[1] === 'diario')
-  assert(p.parts[2] === 'weekly')
+  assert(p.parts[1] === 'extra')
+  assert(p.parts[2] === 'segment')
 })
 
 test('lastRenderPath get/set', () => {

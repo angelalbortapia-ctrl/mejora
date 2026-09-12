@@ -91,8 +91,6 @@ export function getWeeklySummary() {
   let habitDays = 0
   let activeDays = 0
   let brainCount = 0
-  let reflections = 0
-
   for (let i = 0; i < 7; i++) {
     const d = new Date()
     d.setDate(d.getDate() - i)
@@ -100,7 +98,6 @@ export function getWeeklySummary() {
     const types = log[ds] || []
     if (types.length) activeDays++
     if (types.includes('brain')) brainCount++
-    if (types.includes('reflection')) reflections++
     const mood = getItem(`mood_${ds}`, null)
     if (mood) moods.push(mood)
     if (habits.length && habits.some(h => isHabitComplete(h, ds))) habitDays++
@@ -140,9 +137,6 @@ export function getWeeklySummary() {
   else if (brainCount > 0) parts.push(`${brainCount} sesión${brainCount > 1 ? 'es' : ''} cerebral — intenta 2 la próxima semana para ver patrones.`)
   else parts.push('Sin entrenamiento cognitivo esta semana. Una sesión de 15 min el miércoles puede ser tu ancla.')
 
-  if (reflections >= 3) parts.push(`${reflections} reflexiones: tu diario ya tiene material para revisar patrones.`)
-  else if (reflections > 0) parts.push(`${reflections} reflexión${reflections > 1 ? 'es' : ''} — sube a 3 por semana para insights más claros.`)
-
   if (moodAvg) {
     if (moodAvg >= 3.5) parts.push(`Ánimo promedio alto (${moodAvg}/4). Buen momento para metas ambiciosas o dificultad experta.`)
     else if (moodAvg < 2.5) parts.push(`Ánimo bajo (${moodAvg}/4). Prioriza calma y hábitos mínimos — no grandes cambios.`)
@@ -155,7 +149,6 @@ export function getWeeklySummary() {
     activeDays,
     habitDays,
     brainCount,
-    reflections,
     moodAvg,
     habitDelta,
     narrative: parts.join(' '),
@@ -171,8 +164,6 @@ export function getNextBestAction() {
   const mood = getMood()
   const habitsDone = getCompletedHabitsCount()
   const habitsTotal = getHabits().length
-  const entries = getItem('reflections', [])
-
   if (progress.allDone) {
     return {
       icon: '✨',
@@ -216,20 +207,6 @@ export function getNextBestAction() {
       link: '#/gimnasia',
       cta: 'Abrir gimnasia',
       priority: 'medium',
-    }
-  }
-
-  if (pending?.type === 'reflection') {
-    const todayReflect = entries.some(e => e.date?.startsWith(getToday()))
-    if (!todayReflect) {
-      return {
-        icon: '📝',
-        title: 'Reflexión del día',
-        desc: mood ? 'Cierra el día con 2 minutos de escritura.' : 'Registra tu ánimo y reflexiona brevemente.',
-        link: '#/mejora/diario',
-        cta: 'Abrir diario',
-        priority: 'medium',
-      }
     }
   }
 
@@ -287,8 +264,7 @@ export function getJourneyInsight() {
     return `Ritmo intermedio (${s.consistency30}% consistencia). Prioriza cerrar el plan antes de añadir actividades — la profundidad gana a la amplitud.`
   }
   if (s.streak >= 3) return `Racha de ${s.streak} días activa. Un mal día no la rompe — no volver mañana sí.`
-  if (s.reflections >= 10) return `Llevas ${s.reflections} reflexiones escritas. Relee una de hace 2 semanas: verás patrones que hoy no notas.`
-  return 'Reinicio suave: rutina express (5 min) + 2 hábitos + una línea en el diario. Tres victorias pequeñas > un plan perfecto abandonado.'
+  return 'Reinicio suave: rutina express (5 min) + 2 hábitos. Tres victorias pequeñas > un plan perfecto abandonado.'
 }
 
 export function getMilestones() {
@@ -299,7 +275,6 @@ export function getMilestones() {
     { id: 'streak14', label: 'Racha de 14 días', icon: '🔥', check: () => s.streak >= 14 },
     { id: 'brain10', label: '10 sesiones cerebrales', icon: '🧠', check: () => s.brainSessions >= 10 },
     { id: 'habits50', label: '50 hábitos completados', icon: '✅', check: () => s.habitsCompleted >= 50 },
-    { id: 'reflect20', label: '20 reflexiones', icon: '📝', check: () => s.reflections >= 20 },
     { id: 'consistency70', label: '70% consistencia (30d)', icon: '💎', check: () => s.consistency30 >= 70 },
     { id: 'goal1', label: 'Primera meta lograda', icon: '🎯', check: () => s.goalsCompleted >= 1 },
   ]

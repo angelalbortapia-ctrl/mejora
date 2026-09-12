@@ -17,14 +17,9 @@ const MISSION_COPY = {
     why: 'Tres pasos constantes valen más que una semana de intención.',
   },
   mental: {
-    label: 'Neurociencia',
-    brief: 'Una lección de Academia o sesión de laboratorio (~15–20 min).',
+    label: 'Escuela',
+    brief: 'Lección del currículo o protocolo de laboratorio (~15–20 min).',
     why: 'Cada lección cubre regiones cerebrales, circuitos y evidencia — no productividad genérica.',
-  },
-  reflect: {
-    label: 'Escribir en el diario',
-    brief: 'Unas líneas honestas. Con 15 caracteres ya cuenta.',
-    why: 'Poner en palabras lo que pasó ayuda a soltarlo y dormir mejor.',
   },
   meditate: {
     label: 'Un momento de calma',
@@ -53,8 +48,8 @@ const MISSION_COPY = {
   },
   evening: {
     label: 'Cerrar el día',
-    brief: 'Anota ánimo y una reflexión. Sin juzgarte.',
-    why: 'Lo que nombras lo procesas; lo que ignoras se queda dando vueltas.',
+    brief: 'Unos minutos de calma antes de dormir.',
+    why: 'Bajar el ritmo ayuda a que el cerebro consolide lo del día.',
   },
 }
 
@@ -85,11 +80,6 @@ export const GOAL_COACH = {
     weekly: '¿Notas que reaccionas un poco más lento antes de responder? Eso es progreso.',
     tip: 'Si no puedes 10 min, tres respiraciones profundas también cuentan.',
   },
-  reflections: {
-    desc: 'Tu diario es el registro de cómo fuiste cambiando.',
-    weekly: '¿Hay un tema que repites al escribir? Ahí hay algo para mirar.',
-    tip: 'Escribe sin editar. No es un ensayo, es un espejo.',
-  },
   habits: {
     desc: 'Cien hábitos hechos hablan de sistema, no de motivación pasajera.',
     weekly: '¿Cuál hábito te está costando menos? Refuerza ese antes de añadir otro.',
@@ -114,9 +104,9 @@ export const MOOD_COACH = {
   },
   2: {
     insight: 'Neutral también es válido — es espacio para elegir.',
-    action: 'Dos líneas en el diario pueden aclarar qué necesitas.',
-    link: '#/mejora/diario',
-    cta: 'Escribir un poco',
+    action: 'Marca un hábito pendiente o revisa tu plan.',
+    link: '#/mejora',
+    cta: 'Ver hábitos',
   },
   3: {
     insight: 'Buen ánimo + un paso pequeño = combinación potente.',
@@ -135,21 +125,22 @@ export const MOOD_COACH = {
 export const HOME_SHORTCUTS = [
   {
     href: '#/mejora',
-    icon: '✓',
+    icon: '⚔',
     title: 'Hábitos',
-    desc: 'Tu lista y el diario',
+    desc: 'Ejecuta sin excusas',
   },
   {
     href: '#/gimnasia',
     icon: '🧠',
-    title: 'Neurociencia',
-    desc: '32 lecciones · casos legendarios',
+    title: 'Escuela',
+    desc: '52 lecciones · 12 semanas',
+    onclick: "brainState.brainView='school';brainState.schoolFaculty=null;brainState.schoolSection='curriculum';brainState.activePaper=null;brainState.activeLesson=null;render(true)",
   },
   {
     href: '#/meditacion',
-    icon: '🌿',
+    icon: '◎',
     title: 'Calma',
-    desc: 'Respirar y soltar',
+    desc: 'Control bajo presión',
   },
 ]
 
@@ -178,14 +169,14 @@ export function getMissionChip(tone) {
 export function getDailyIntention() {
   const day = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
   const intentions = [
-    'No necesitas hacerlo todo hoy. Solo lo que de verdad importa.',
-    'Un paso claro vale más que diez intenciones vagas.',
-    'Si solo haces una cosa bien, que sea la que más te importe.',
-    'Volver cuenta más que hacerlo perfecto.',
-    'Menos ruido, más presencia.',
-    'Tu energía es limitada — úsala donde sume.',
-    'Escribir dos líneas honestas puede cambiar el tono del día.',
-    'Cinco minutos de calma no son tiempo perdido.',
+    'Haz lo esencial. El resto es ruido.',
+    'Un paso claro gana a diez intenciones vagas.',
+    'Si solo haces una cosa bien, que sea la que más importa.',
+    'Volver a intentarlo cuenta más que hacerlo perfecto.',
+    'Menos distracción. Más ejecución.',
+    'Tu energía es finita — inviértela donde rinde.',
+    'Disciplina hoy, resultados mañana.',
+    'Cinco minutos de enfoque no son tiempo perdido.',
   ]
   return intentions[day % intentions.length]
 }

@@ -123,7 +123,7 @@ const CURATED_ADVICE = [
   'Respira antes de reaccionar; ganas claridad en diez segundos.',
   'Celebra el avance, no solo el resultado final.',
   'Un hábito a la vez. El que intenta todo a la vez, no sostiene nada.',
-  'Tu diario de hoy es el mapa de tu mañana.',
+  'Lo que haces hoy define mañana.',
   'La calma es una decisión que se practica, no un estado mágico.',
   'Cuando falte energía, reduce la meta — no abandones el ritual.',
   'El descanso también es parte del rendimiento.',
@@ -413,7 +413,7 @@ export function getSunsetTip(sun) {
       type: 'now',
       icon: '🌙',
       title: 'Hora de cerrar el día',
-      text: 'Anochece. Cierra con meditación breve o una reflexión en tu diario.',
+      text: 'Anochece. Cierra con meditación breve o respiración consciente.',
     }
   }
   if (minsToSunset > 90) {
@@ -635,7 +635,7 @@ const TIME_TIPS = {
     { icon: '🌤️', label: 'Tarde', text: 'Si meditaste esta mañana, una sesión corta de respiración ahora consolida el hábito.' },
   ],
   evening: [
-    { icon: '🌙', label: 'Noche', text: 'Cierra con diario + ánimo. Lo que escribas hoy es el ancla de mañana.' },
+    { icon: '🌙', label: 'Noche', text: 'Cierra con calma y registra tu ánimo en Hoy.' },
     { icon: '🌙', label: 'Noche', text: 'No evalúes el día en escala 1-10 — descríbelo. Una frase honesta basta.' },
     { icon: '🌙', label: 'Noche', text: 'Si el plan no se completó, anota qué te frenó. Eso es dato, no fracaso.' },
   ],
@@ -711,7 +711,7 @@ export function homeInsightHTML(bundle, loading = false) {
     return `<section class="m-insight">
       <p class="m-insight-tag">Consejo del día</p>
       <p class="m-insight-text">"${esc(advice.advice)}"</p>
-      <a href="#/mejora/diario" onclick="mejoraTab='diario';diarioSection='daily';render(true)" class="m-insight-link">Llevarlo al diario →</a>
+      <a href="#/gimnasia" class="m-insight-link">Ir a Escuela →</a>
     </section>`
   }
   if (quote?.content) {
@@ -777,7 +777,6 @@ export function homePulseHTML(bundle, loading = false) {
       <span class="pulse-card-icon">💡</span>
     </div>
     <p class="pulse-quote pulse-quote--compact">"${esc(advice.advice)}"</p>
-    <p class="text-xs text-muted mt-2">Llévalo al diario como punto de partida ↓</p>
   </div>` : ''
 
   const quoteCard = quote ? `<div class="pulse-card pulse-card--quote pulse-card--elite card-static">

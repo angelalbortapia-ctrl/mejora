@@ -38,6 +38,16 @@ export function setItem(key, value) {
   }
 }
 
+/** Borra todo el progreso local (FORGE desde cero). */
+export function resetAllData() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(PREFIX)) keys.push(key)
+  }
+  keys.forEach(k => localStorage.removeItem(k))
+}
+
 export function toDateStr(date = new Date()) {
   const d = date instanceof Date ? date : new Date(date)
   const y = d.getFullYear()
@@ -61,7 +71,7 @@ export function getProgress() {
     records: {},
     habitData: {},
     daily: { date: null, ids: [], done: [] },
-    weekly: { week: null, done: 0, target: 7 },
+    weekly: { week: null, done: 0, target: 5 },
   })
 }
 
@@ -217,7 +227,7 @@ export function getMoodWeek() {
 
 export function getMoodInsight() {
   const week = getMoodWeek().filter(d => d.mood)
-  if (week.length < 3) return 'Registra tu ánimo 3 días para ver patrones — el diario se vuelve más útil con datos.'
+  if (week.length < 3) return 'Registra tu ánimo 3 días para ver patrones en tu semana.'
   const avg = week.reduce((s, d) => s + d.mood.id, 0) / week.length
   const lows = week.filter(d => d.mood.id <= 2).length
   const highs = week.filter(d => d.mood.id >= 4).length
@@ -262,10 +272,18 @@ export function getSettings() {
 }
 
 export function needsOnboarding() {
-  if (getSettings().onboardingComplete) return false
+  return !getSettings().onboardingComplete
+}
+
+/** Usuarios con progreso previo sin flag de onboarding — migración única */
+export function migrateOnboardingFlag() {
+  const s = getSettings()
+  if (s.onboardingComplete) return
   const stats = getStats()
-  if (stats.routinesCompleted > 0 || stats.brainSessions > 0 || stats.habitsCompleted > 0) return false
-  return true
+  if (stats.routinesCompleted > 0 || stats.brainSessions > 0 || stats.habitsCompleted > 0) {
+    s.onboardingComplete = true
+    saveSettings(s)
+  }
 }
 
 export function saveSettings(s) {
@@ -278,7 +296,6 @@ const DEFAULT_HABITS = [
   { id: 'water', name: 'Hidratación', icon: '💧', category: 'salud', difficulty: 1, xp: 15, type: 'counter', target: 8, unit: 'vasos' },
   { id: 'read', name: 'Lectura', icon: '📚', category: 'mente', difficulty: 2, xp: 25, type: 'counter', target: 20, unit: 'min' },
   { id: 'exercise', name: 'Ejercicio físico', icon: '🏃', category: 'salud', difficulty: 3, xp: 35, type: 'check', target: 1, unit: 'sesión' },
-  { id: 'journal', name: 'Diario personal', icon: '📝', category: 'sabiduria', difficulty: 2, xp: 30, type: 'check', target: 1, unit: 'entrada' },
   { id: 'learn', name: 'Aprender algo nuevo', icon: '🎓', category: 'mente', difficulty: 3, xp: 40, type: 'check', target: 1, unit: 'vez' },
 ]
 
@@ -415,7 +432,7 @@ const ACHIEVEMENTS = [
   { id: 'expert_win', name: 'Sin miedo', desc: 'Gana un juego en modo Experto', icon: '💎', check: () => Object.keys(getProgress().records).some(k => k.endsWith('_experto') && getProgress().records[k].best > 0) },
   { id: 'daily_all', name: 'Día perfecto', desc: 'Completa tu plan del día', icon: '🎯', check: () => getPlanProgress().allDone },
   { id: 'goal_first', name: 'Con visión', desc: 'Completa tu primera meta', icon: '🎯', check: () => getGoals().some(g => g.completed) },
-  { id: 'reflections_20', name: 'Introspectivo', desc: '20 reflexiones escritas', icon: '📖', check: () => getStats().reflections >= 20 },
+  { id: 'reflections_20', name: 'Introspectivo', desc: '20 reflexiones en rutina', icon: '📖', check: () => getStats().reflections >= 20 },
   { id: 'challenge_10', name: 'Retador', desc: '10 desafíos completados', icon: '⚔️', check: () => getStats().challengesWon >= 10 },
 ]
 
@@ -449,7 +466,6 @@ const PLAN_CORE = [
 
 const PLAN_ROTATING = [
   { id: 'mental', type: 'brain', label: 'Ejercicio mental', icon: '🧠', xp: 40, link: '#/gimnasia' },
-  { id: 'reflect', type: 'reflection', label: 'Escribir una reflexión', icon: '📝', xp: 30, link: '#/mejora/diario' },
   { id: 'meditate', type: 'meditation', label: 'Sesión de calma', icon: '🧘', xp: 35, link: '#/meditacion' },
   { id: 'focus', type: 'focus', label: 'Bloque de enfoque', icon: '⏱️', xp: 30, link: '#/enfoque' },
   { id: 'habits3', type: 'habits', label: 'Completar 3 hábitos', icon: '✅', xp: 45, target: 3, link: '#/mejora' },
@@ -465,11 +481,13 @@ function buildDailyTasks(dateStr) {
   if (hour < 12) {
     pool.unshift({ id: 'morning', type: 'morning', label: 'Abrir el plan de hoy', icon: '🌅', xp: 15, link: '#/plan' })
   } else if (hour >= 18) {
-    pool.unshift({ id: 'evening', type: 'evening', label: 'Cerrar el día con diario', icon: '🌙', xp: 25, link: '#/mejora/diario' })
+    pool.unshift({ id: 'evening', type: 'evening', label: 'Calma nocturna', icon: '🌙', xp: 25, link: '#/meditacion' })
   }
+  const blocked = hour >= 18 ? new Set(['meditate']) : new Set()
   const pick = []
-  for (let i = 0; pick.length < 2; i++) {
+  for (let i = 0; pick.length < 2 && i < pool.length * 3; i++) {
     const t = pool[(day + i * 3) % pool.length]
+    if (blocked.has(t.id)) continue
     if (!pick.find(p => p.id === t.id)) pick.push(t)
   }
   return [...PLAN_CORE, ...pick].map(t => enrichMission({ ...t, done: false }))
@@ -502,7 +520,6 @@ export function checkPlanTask(type) {
   const p = getProgress()
   const plan = ensureDailyPlan()
   const today = getToday()
-  const habitsToday = getItem(`habits_${today}`, []).length
   let awarded = []
 
   for (const task of plan.tasks) {
@@ -510,19 +527,12 @@ export function checkPlanTask(type) {
     let complete = false
     if (task.type === type) complete = true
     if (task.type === 'habits' && type === 'habit' && getCompletedHabitsCount(today) >= (task.target || 2)) complete = true
-    if (task.type === 'routine' && type === 'express') complete = true
     if (task.type === 'express' && type === 'express') complete = true
-    if (task.type === 'meditation' && type === 'meditation') complete = true
-    if (task.type === 'focus' && type === 'focus') complete = true
-    if (task.type === 'morning' && type === 'morning') complete = true
-    if (task.type === 'evening' && type === 'evening') complete = true
-    if (task.type === 'plan_review' && type === 'plan_review') complete = true
 
     if (complete) {
       task.done = true
       const result = addXp('discipline', task.xp, 'plan')
       awarded.push({ task, result })
-      updateStats({ challengesWon: getStats().challengesWon + 1 })
     }
   }
 
@@ -544,7 +554,7 @@ export const GOAL_TEMPLATES = [
   { title: '30 rutinas completadas', metric: 'routines', target: 30, skill: 'discipline', icon: '⚔️', days: 30, pitch: '30 mañanas donde elegiste entrenarte antes del ruido.' },
   { title: '100 ejercicios mentales', metric: 'brain', target: 100, skill: 'mental', icon: '🧠', days: 90, pitch: 'Cerebro más ágil, atención más estable — medible en semanas.' },
   { title: '60 minutos meditados', metric: 'meditation', target: 60, skill: 'mindfulness', icon: '🧘', days: 30, pitch: 'Una hora de calma acumulada cambia cómo reaccionas bajo presión.' },
-  { title: '50 reflexiones escritas', metric: 'reflections', target: 50, skill: 'wisdom', icon: '📝', days: 60, pitch: 'Un archivo de quién eras mientras cambiabas.' },
+  { title: '20 rutinas con reflexión', metric: 'reflections', target: 20, skill: 'wisdom', icon: '📝', days: 45, pitch: 'Veinte mañanas donde paraste a pensar antes de actuar.' },
   { title: '100 hábitos completados', metric: 'habits', target: 100, skill: 'discipline', icon: '✅', days: 60, pitch: 'Sistema sobre motivación — cien pruebas de que funciona.' },
 ]
 

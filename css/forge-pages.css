@@ -1,0 +1,151 @@
+/* ═══ FORGE — temas por sección (oscuro unificado) ═══ */
+
+.page-hero__mesh { opacity: 0.35; }
+
+.page-hero__title { color: var(--m-text) !important; }
+.page-hero__stat-val { color: var(--m-accent) !important; }
+.page-hero__sub { color: var(--m-muted) !important; }
+
+.page-plan .page-hero,
+.page-metas .page-hero,
+.page-brain .page-hero,
+.page-meditation .page-hero,
+.page-viaje .page-hero,
+.page-profile .page-hero,
+.page-enfoque .page-hero,
+.page-mejora .page-hero,
+.page-settings .page-hero {
+  background: linear-gradient(145deg, var(--m-surface-2), var(--m-surface)) !important;
+  border-color: var(--m-border-strong) !important;
+  border-top: 2px solid var(--m-accent) !important;
+}
+
+.page-plan .page-hero__mesh,
+.page-metas .page-hero__mesh,
+.page-brain .page-hero__mesh,
+.page-meditation .page-hero__mesh,
+.page-viaje .page-hero__mesh,
+.page-profile .page-hero__mesh,
+.page-enfoque .page-hero__mesh {
+  background: radial-gradient(ellipse 70% 60% at 20% 0%, var(--m-accent-glow), transparent 55%) !important;
+}
+
+.page-brain {
+  --page-accent: var(--m-accent);
+  --page-accent-2: var(--m-steel);
+}
+
+.page-brain .program-hero,
+.page-brain .brain-hero {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+}
+
+.page-brain .game-card {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+}
+
+.page-brain .game-card:hover {
+  border-color: var(--m-accent) !important;
+  box-shadow: 0 0 24px var(--m-accent-glow) !important;
+}
+
+.page-meditation {
+  --page-accent: var(--m-success);
+}
+
+.page-meditation .breathe-circle,
+.page-meditation .meditation-ring {
+  background: radial-gradient(circle, var(--m-accent-soft), transparent) !important;
+  border-color: var(--m-border-strong) !important;
+  box-shadow: 0 0 40px var(--m-accent-glow) !important;
+}
+
+.page-viaje {
+  --page-accent: var(--m-accent);
+}
+
+.viaje-kpi {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+}
+
+.viaje-kpi-val {
+  font-family: var(--m-display) !important;
+  color: var(--m-accent) !important;
+}
+
+.page-profile {
+  --page-accent: var(--m-accent);
+}
+
+.ds-stat {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: var(--m-radius) !important;
+}
+
+.ds-stat-value {
+  font-family: var(--m-display) !important;
+  color: var(--m-accent) !important;
+}
+
+.skill-bar-fill {
+  background: linear-gradient(90deg, var(--m-accent), var(--m-accent-hover)) !important;
+}
+
+.zone-header,
+.ds-list-item {
+  border-color: var(--m-border) !important;
+}
+
+.ds-list-item:hover {
+  background: var(--m-surface-2) !important;
+  border-color: var(--m-border-strong) !important;
+}
+
+.academy-lesson-card,
+.academy-lesson-full {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+}
+
+.academy-lesson-cat {
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem !important;
+}
+
+/* Tour ligero — sin pantalla negra */
+body.mejora-forge .tour-overlay {
+  background: transparent !important;
+  pointer-events: none;
+}
+
+body.mejora-forge .tour-overlay.active {
+  pointer-events: auto;
+}
+
+body.mejora-forge .tour-card--light {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border-strong) !important;
+  box-shadow: var(--m-shadow-lg) !important;
+  pointer-events: auto;
+}
+
+body.mejora-forge .tour-highlight {
+  outline: 2px solid var(--m-accent) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 24px var(--m-accent-glow) !important;
+  border-radius: var(--m-radius);
+  position: relative;
+  z-index: 490;
+}
+
+.install-banner {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border-strong) !important;
+  color: var(--m-text) !important;
+}

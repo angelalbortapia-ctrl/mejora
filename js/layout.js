@@ -1,4 +1,4 @@
-import { icon } from './icons.js'
+import { icon, rankIcon } from './icons.js?v=78'
 
 /** Navegación — 5 destinos claros */
 export const NAV_SECTIONS = [
@@ -6,9 +6,9 @@ export const NAV_SECTIONS = [
     label: '',
     items: [
       { path: '/', label: 'Hoy', iconKey: 'home', desc: 'Tu día' },
-      { path: '/mejora', label: 'Hábitos', iconKey: 'habit', desc: 'Rutinas y diario' },
-      { path: '/gimnasia', label: 'Neurociencia', iconKey: 'brain', desc: 'Lecciones y laboratorio' },
-      { path: '/meditacion', label: 'Calma', iconKey: 'calm', desc: 'Respirar y meditar' },
+      { path: '/mejora', label: 'Hábitos', iconKey: 'habit', desc: 'Ejecuta sin excusas' },
+      { path: '/gimnasia', label: 'Escuela', iconKey: 'brain', desc: 'Currículo · 52 lecciones' },
+      { path: '/meditacion', label: 'Calma', iconKey: 'calm', desc: 'Control bajo presión' },
       { path: '/perfil', label: 'Tú', iconKey: 'profile', desc: 'Progreso y logros' },
     ],
   },
@@ -32,7 +32,8 @@ export const NAV_PATHS = [
 export const BOTTOM_NAV = [
   { path: '/', iconKey: 'home', label: 'Hoy' },
   { path: '/mejora', iconKey: 'habit', label: 'Hábitos' },
-  { path: '/gimnasia', iconKey: 'brain', label: 'Neuro' },
+  { path: '/gimnasia', iconKey: 'brain', label: 'Escuela' },
+  { path: '/meditacion', iconKey: 'calm', label: 'Calma' },
   { path: '/perfil', iconKey: 'profile', label: 'Tú' },
 ]
 
@@ -70,7 +71,7 @@ function formatBannerDate() {
 
 export function mountSidebar() {
   const nav = document.getElementById('sidebar-nav')
-  if (!nav || nav.dataset.mounted === 'v3') return
+  if (!nav || nav.dataset.mounted === 'v5') return
   nav.innerHTML = NAV_SECTIONS.map(section => `
     <div class="sidebar-section">
       ${section.label ? `<p class="sidebar-section-label">${section.label}</p>` : ''}
@@ -82,18 +83,18 @@ export function mountSidebar() {
           </span>
         </a>`).join('')}
     </div>`).join('')
-  nav.dataset.mounted = 'v3'
+  nav.dataset.mounted = 'v5'
 }
 
 export function mountBottomNav() {
   const el = document.getElementById('bottom-nav')
-  if (!el || el.dataset.mounted === 'v3') return
+  if (!el || el.dataset.mounted === 'v5') return
   el.innerHTML = BOTTOM_NAV.map(item => `
     <a href="#${item.path}" data-path="${item.path}" class="bottom-nav-link no-underline" title="${item.label}">
       <span class="bottom-nav-icon" aria-hidden="true">${navIconMarkup(item)}</span>
       <span class="bottom-nav-label">${item.label}</span>
     </a>`).join('')
-  el.dataset.mounted = 'v3'
+  el.dataset.mounted = 'v5'
 }
 
 export function updateBottomNav(path) {
@@ -145,7 +146,7 @@ export function updateTopBanner(path, data = {}) {
     planDone = 0,
     planTotal = 0,
     planAllDone = false,
-    rankIcon = '🌱',
+    rankLevel = 1,
     userName = '',
     shield = null,
     weather = null,
@@ -175,13 +176,25 @@ export function updateTopBanner(path, data = {}) {
   document.querySelector('.banner-metric-streak')?.classList.toggle('banner-streak-hot', streak >= 3)
 
   const weatherWrapEl = document.getElementById('banner-weather-wrap')
-  if (weatherWrapEl) weatherWrapEl.classList.add('hidden')
+  const weatherIconEl = document.getElementById('banner-weather-icon')
+  const weatherTempEl = document.getElementById('banner-weather-temp')
+  const weatherLabelEl = document.getElementById('banner-weather-label')
+  if (weatherWrapEl) {
+    if (weather) {
+      weatherWrapEl.classList.remove('hidden')
+      if (weatherIconEl) weatherIconEl.textContent = weather.icon || '🌤️'
+      if (weatherTempEl) weatherTempEl.textContent = `${weather.temp}°`
+      if (weatherLabelEl) weatherLabelEl.textContent = weather.label || 'clima'
+    } else {
+      weatherWrapEl.classList.add('hidden')
+    }
+  }
 
   if (dateEl) {
     dateEl.textContent = formatBannerDate()
     dateEl.dateTime = new Date().toISOString().split('T')[0]
   }
-  if (avatarEl) avatarEl.textContent = rankIcon
+  if (avatarEl) avatarEl.innerHTML = rankIcon(rankLevel)
   if (ctaEl) {
     if (path === '/') {
       ctaEl.textContent = planAllDone ? 'Día completo' : 'Ver lista'
@@ -199,7 +212,18 @@ export function updateTopBanner(path, data = {}) {
   document.getElementById('app-banner')?.classList.toggle('banner-plan-complete', planAllDone)
 
   const shieldEl = document.getElementById('banner-shield')
-  if (shieldEl) shieldEl.classList.add('hidden')
+  if (shieldEl) {
+    if (shield?.unlocked) {
+      shieldEl.classList.remove('hidden')
+      shieldEl.classList.toggle('available', !!shield.available)
+      shieldEl.classList.toggle('used', !!shield.used)
+      shieldEl.title = shield.available
+        ? 'Escudo de racha disponible este mes'
+        : 'Escudo de racha ya usado este mes'
+    } else {
+      shieldEl.classList.add('hidden')
+    }
+  }
 
   const greeting = userName ? ` · ${userName}` : ''
   document.title = `${meta.label}${greeting} — Mejora`

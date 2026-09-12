@@ -1,3 +1,8 @@
+/* DEPRECATED — usar css/forge/03-shell.css + css/forge/04-legacy-pages.css vía css/forge.css */
+/* LEGACY — importado vía css/forge.css; migrar gradualmente a módulos FORGE */
+
+/* LEGACY — importado vía css/forge.css; tokens FORGE en css/forge/02-forge-vars.css */
+
 :root {
   --neon: #a88462;
   --neon-bright: #b8956f;

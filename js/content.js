@@ -111,7 +111,6 @@ export const HABIT_TEMPLATES = [
   { id: 'tpl_noscreen', name: '10 min sin pantalla', icon: '📵', category: 'salud', type: 'check', target: 1, unit: 'bloque', difficulty: 2, xp: 25 },
   { id: 'tpl_vitamins', name: 'Vitaminas / suplementos', icon: '💊', category: 'salud', type: 'check', target: 1, unit: 'vez', difficulty: 1, xp: 15 },
   { id: 'tpl_read', name: 'Leer 15 min', icon: '📖', category: 'sabiduria', type: 'check', target: 1, unit: 'sesión', difficulty: 2, xp: 30 },
-  { id: 'tpl_journal', name: 'Escribir en diario', icon: '📝', category: 'sabiduria', type: 'check', target: 1, unit: 'entrada', difficulty: 2, xp: 30 },
   { id: 'tpl_learn', name: 'Aprender algo nuevo', icon: '🎓', category: 'sabiduria', type: 'check', target: 1, unit: 'vez', difficulty: 2, xp: 35 },
   { id: 'tpl_podcast', name: 'Podcast educativo', icon: '🎧', category: 'sabiduria', type: 'check', target: 1, unit: 'episodio', difficulty: 1, xp: 20 },
   { id: 'tpl_meditate', name: 'Meditar', icon: '🧘', category: 'mente', type: 'check', target: 1, unit: 'sesión', difficulty: 2, xp: 35 },

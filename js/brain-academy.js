@@ -1,6 +1,8 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from './core.js'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=78'
+import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=78'
 
 const ACADEMY_START_KEY = 'academyStart'
 
@@ -546,6 +548,7 @@ export const LESSONS = [
     reflect: '¿Qué número o letra tendría color si tu cerebro los cruzara?',
     intensity: 'intenso',
   },
+  ...SCHOOL_LESSONS,
 ]
 
 /** Casos legendarios — acceso rápido en Academia */
@@ -558,6 +561,7 @@ export const LEGENDARY_HALL = [
   { lessonId: 'phantom-limb', year: '1990s', name: 'Miembro fantasma', tagline: 'Ramachandran · caja de espejos' },
   { lessonId: 'blindsight', year: '1974', name: 'Blindsight', tagline: 'Ver sin saber que ves' },
   { lessonId: 'london-taxi', year: '2000', name: 'Taxistas', tagline: 'Hipocampo que crece con calles' },
+  ...EXTRA_LEGENDARY_HALL,
 ]
 
 const NEURO_DEBATES = [
@@ -764,6 +768,7 @@ const LESSON_META = {
     intensity: 'intenso',
     deepCut: 'Para algunos sinestésicos, el número 4 es “verde sucio” y el 7 es “azul celeste” — siempre, desde niños.',
   },
+  ...SCHOOL_LESSON_META,
 }
 
 export const NEURO_PUNCH = [
@@ -933,7 +938,7 @@ export function renderHomeNeuroCard() {
   return `<section class="m-neuro span-full">
     <div class="m-neuro-head">
       <p class="m-neuro-label">Neuro hoy</p>
-      <a href="#/gimnasia" class="m-neuro-more no-underline">Academia →</a>
+      <a href="#/gimnasia" class="m-neuro-more no-underline" onclick="brainState.brainView='school';setTimeout(render,0)">Escuela →</a>
     </div>
     <p class="m-neuro-punch">${punch}</p>
     <div class="m-neuro-actions">
@@ -980,11 +985,7 @@ export function renderLessonPostFlow(flow) {
     ${quizLine}
     <p class="academy-post-hook">${lesson.takeaway}</p>
     ${exId ? `<button type="button" onclick="startLessonPractice('${exId}')" class="btn-primary w-full py-4 mb-3">🔬 Practicar ${exId} en laboratorio</button>` : ''}
-    <label class="academy-reflect-label">Reflexión (opcional, se guarda en diario)</label>
-    <p class="academy-reflect-prompt">"${lesson.reflect}"</p>
-    <textarea id="lesson-flow-reflect" class="input-field min-h-24 resize-none mt-2" placeholder="Escribe tu reflexión…"></textarea>
-    <button type="button" onclick="finishLessonFlow()" class="btn-primary w-full py-4 mt-4">Guardar y terminar</button>
-    <button type="button" onclick="finishLessonFlow(true)" class="btn-ghost w-full mt-2">Omitir reflexión</button>
+    <button type="button" onclick="finishLessonFlow(true)" class="btn-primary w-full py-4 mt-4">Terminar lección</button>
   </div>`
 }
 
@@ -1011,13 +1012,15 @@ export function isLegendaryLesson(lessonId) {
   return LEGENDARY_LESSON_IDS.has(lessonId)
 }
 
-/** 4 lecciones al inicio + 2 nuevas por semana (~14 semanas para 32) */
+/** 4 lecciones al inicio + 4 nuevas por semana (~12 semanas para 52) */
 export function getUnlockedLessonCount() {
-  return Math.min(LESSONS.length, 4 + getAcademyWeekIndex() * 2)
+  return Math.min(LESSONS.length, 4 + getAcademyWeekIndex() * 4)
 }
 
 export function isLessonUnlocked(lessonId) {
   if (isLegendaryLesson(lessonId)) return true
+  const currentWeek = getAcademyWeekIndex() + 1
+  if (isCurriculumLessonUnlocked(lessonId, currentWeek)) return true
   const idx = LESSONS.findIndex(l => l.id === lessonId)
   return idx >= 0 && idx < getUnlockedLessonCount()
 }
@@ -1027,7 +1030,7 @@ export function getLessonUnlockWeek(lessonId) {
   const idx = LESSONS.findIndex(l => l.id === lessonId)
   if (idx < 0) return null
   if (idx < 4) return 1
-  return Math.ceil((idx - 3) / 2) + 1
+  return Math.ceil((idx - 3) / 4) + 1
 }
 
 export function getWeeklyLesson() {
@@ -1108,6 +1111,7 @@ export function markLessonComplete(id) {
   if (!done.includes(id)) {
     done.push(id)
     setItem('lessons_done', done)
+    import('./school.js').then(m => m.scheduleLessonReview(id)).catch(() => {})
   }
   return done
 }
@@ -1150,7 +1154,7 @@ export function renderLessonFull(lesson) {
     ? `<button type="button" onclick="closeLesson();brainState.brainView='lab';startBrain('${exId}')" class="btn-secondary w-full mt-3">🔬 Practicar en laboratorio →</button>`
     : ''
   return `<div class="academy-lesson-full animate-fade-in">
-    <button type="button" onclick="closeLesson()" class="btn-ghost mb-4">← Volver a Academia</button>
+    <button type="button" onclick="closeLesson()" class="btn-ghost mb-4">← Volver a ${typeof brainState !== 'undefined' && brainState.brainView === 'school' ? 'Escuela' : 'Catálogo'}</button>
     <header class="academy-lesson-header">
       <span class="academy-lesson-cat" style="--cat-color:${cat.color}">${cat.icon} ${cat.label}</span>
       <h1 class="academy-lesson-full-title">${L.title} ${intensityBadge(L.intensity)}</h1>

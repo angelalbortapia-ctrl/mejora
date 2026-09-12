@@ -1,0 +1,241 @@
+/* ═══ FORGE — efectos visuales y micro-interacciones ═══ */
+
+#fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Confetti (celebración) ── */
+.fx-confetti {
+  position: absolute;
+  top: -10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  animation: fx-fall linear forwards;
+  box-shadow: 0 0 6px rgba(212, 160, 18, 0.35);
+}
+
+.fx-confetti:nth-child(3n) { border-radius: 50%; width: 6px; height: 6px; }
+.fx-confetti:nth-child(5n) { width: 4px; height: 10px; }
+
+@keyframes fx-fall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg) scale(0.6); opacity: 0; }
+}
+
+/* ── Chispas al completar hábito / misión ── */
+.fx-spark {
+  position: fixed;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--m-accent, #d4a012);
+  box-shadow: 0 0 8px var(--m-accent-glow, rgba(212, 160, 18, 0.4));
+  animation: fx-spark 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  margin-left: -2.5px;
+  margin-top: -2.5px;
+}
+
+@keyframes fx-spark {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fx-dx), var(--fx-dy)) scale(0); opacity: 0; }
+}
+
+/* ── Pulso en elemento ── */
+.fx-pulse {
+  animation: fx-pulse 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fx-pulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.05); box-shadow: 0 0 24px var(--m-accent-glow); }
+  100% { transform: scale(1); }
+}
+
+/* ── Toasts XP — FORGE ── */
+.xp-toast {
+  border-left-color: var(--m-accent) !important;
+  border-color: var(--m-border-strong) !important;
+  background: rgba(18, 22, 28, 0.95) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 20px var(--m-accent-glow) !important;
+  animation: forge-toast-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.xp-toast-level {
+  border-left-color: var(--m-accent-hover) !important;
+  background: linear-gradient(135deg, var(--m-surface), var(--m-accent-soft)) !important;
+  animation: forge-toast-in 0.55s cubic-bezier(0.22, 1, 0.36, 1), forge-toast-glow 1.2s ease 0.2s 2 !important;
+}
+
+@keyframes forge-toast-in {
+  from { opacity: 0; transform: translateX(120%) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes forge-toast-glow {
+  0%, 100% { box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 20px var(--m-accent-glow); }
+  50% { box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 32px var(--m-accent-glow); }
+}
+
+.unlock-toast {
+  border-left-color: var(--m-steel) !important;
+}
+
+/* ── Banner: flash al completar plan ── */
+.app-banner.banner-forge-flash {
+  animation: banner-flash 1s ease;
+}
+
+@keyframes banner-flash {
+  0%, 100% { box-shadow: none; }
+  30% { box-shadow: inset 0 -2px 0 var(--m-accent), 0 0 40px var(--m-accent-glow); }
+}
+
+.banner-metric-fill {
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-metric-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+  animation: fill-shine 2.5s ease-in-out infinite;
+}
+
+@keyframes fill-shine {
+  0%, 70%, 100% { transform: translateX(-100%); }
+  85% { transform: translateX(100%); }
+}
+
+/* ── Racha caliente ── */
+.banner-streak-hot .banner-metric-icon {
+  animation: forge-flame 1.6s ease-in-out infinite;
+}
+
+@keyframes forge-flame {
+  0%, 100% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 4px rgba(212, 160, 18, 0.5)); }
+  50% { transform: scale(1.15) rotate(3deg); filter: drop-shadow(0 0 12px rgba(212, 160, 18, 0.8)); }
+}
+
+/* ── Hábito completado ── */
+.habit-check.done {
+  animation: habit-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  border-color: var(--m-accent) !important;
+  background: var(--m-accent) !important;
+  color: var(--btn-text, #0a0c10) !important;
+  box-shadow: 0 0 16px var(--m-accent-glow);
+}
+
+@keyframes habit-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.habit-card.is-done,
+.habit-item.done {
+  animation: habit-row-done 0.4s ease;
+}
+
+@keyframes habit-row-done {
+  from { background: var(--m-surface); }
+  to { background: var(--m-accent-soft); }
+}
+
+/* ── Botones ── */
+.btn-primary {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 28px var(--m-accent-glow), 0 0 20px rgba(212, 160, 18, 0.15) !important;
+}
+
+/* ── Entrada de página ── */
+#app-content.route-enter {
+  animation: forge-route-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes forge-route-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-home .ds-panel,
+.page-home .home-glass,
+.page-plan .plan-mission-item {
+  animation: forge-stagger-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.page-home .ds-panel:nth-child(1) { animation-delay: 0.04s; }
+.page-home .ds-panel:nth-child(2) { animation-delay: 0.08s; }
+.page-home .ds-panel:nth-child(3) { animation-delay: 0.12s; }
+.page-home .home-glass { animation-delay: 0.06s; }
+
+@keyframes forge-stagger-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Logo ── */
+.logo-mark {
+  animation: logo-glow 4s ease-in-out infinite;
+}
+
+@keyframes logo-glow {
+  0%, 100% { box-shadow: 0 4px 16px var(--m-accent-glow); }
+  50% { box-shadow: 0 4px 24px var(--m-accent-glow), 0 0 12px rgba(212, 160, 18, 0.2); }
+}
+
+/* ── Meditación: anillo respiración ── */
+.breathe-circle,
+.meditation-ring {
+  animation: forge-breathe 4s ease-in-out infinite;
+}
+
+@keyframes forge-breathe {
+  0%, 100% { transform: scale(0.92); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 48px var(--m-accent-glow); }
+}
+
+/* ── Misión del plan completada ── */
+.plan-mission-item.is-done {
+  animation: mission-done 0.4s ease;
+}
+
+@keyframes mission-done {
+  from { opacity: 0.6; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Reducir movimiento ── */
+.reduce-motion .fx-confetti,
+.reduce-motion .fx-spark,
+.reduce-motion .logo-mark,
+.reduce-motion .breathe-circle,
+.reduce-motion .banner-metric-fill::after,
+.reduce-motion .banner-streak-hot .banner-metric-icon {
+  animation: none !important;
+}
+
+.reduce-motion #app-content.route-enter,
+.reduce-motion .page-home .ds-panel,
+.reduce-motion .habit-check.done {
+  animation: none !important;
+}
+
+.reduce-motion .btn-primary:active {
+  transform: none !important;
+}
