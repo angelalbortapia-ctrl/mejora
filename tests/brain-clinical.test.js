@@ -139,7 +139,7 @@ describe('brain-clinical — wisconsin, trail, ant', () => {
   })
 
   it('flujo wisconsin práctica → evaluado', () => {
-    const s = prepareClinicalState(initWisconsin('medio'))
+    const s = prepareClinicalState(initWisconsin(12, 'medio'))
     for (let i = 0; i < PRACTICE_TRIALS; i++) {
       logTrial(s.trialLog, { correct: true }, true)
       s.index++
