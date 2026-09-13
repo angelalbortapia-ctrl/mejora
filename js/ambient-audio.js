@@ -1,6 +1,6 @@
 /** Sonido ambiente — Web Audio gapless loops (CC0), ver public/audio/CREDITS.md */
 
-import { getCalmaAudioContext, unlockCalmaAudioOnGesture as unlockBusOnGesture } from './calma-audio-bus.js'
+import { getCalmaAudioContext, unlockCalmaAudioOnGesture as unlockBusOnGesture } from '/js/calma-audio-bus.js'
 
 const TRACKS = {
   rain: 'public/audio/rain.mp3',
@@ -211,7 +211,7 @@ export async function resumeAudioContext() {
 export async function playSingingBowl(variant = 'start') {
   try {
     const c = await resumeAudioContext()
-    const { getAmbientOutputNode } = await import('./calma-audio-bus.js')
+    const { getAmbientOutputNode } = await import('/js/calma-audio-bus.js')
     const out = getAmbientOutputNode()
     const t = c.currentTime
     const base = variant === 'end' ? 196 : 220
@@ -274,7 +274,7 @@ export async function startAmbientSound(type, volume = DEFAULT_VOL) {
     source.loopStart = 0
     source.loopEnd = buffer.duration
 
-    const { getAmbientOutputNode } = await import('./calma-audio-bus.js')
+    const { getAmbientOutputNode } = await import('/js/calma-audio-bus.js')
     const gain = ctx.createGain()
     gain.gain.value = 0
     source.connect(gain)

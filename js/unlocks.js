@@ -1,4 +1,4 @@
-import { getTotalLevel, getItem, setItem } from './core.js'
+import { getTotalLevel, getItem, setItem } from '/js/core.js'
 
 export const UNLOCKS = [
   { id: 'theme_ocean', level: 3, type: 'theme', name: 'Tema Océano', icon: '🌊', desc: 'Turquesa profundo' },
@@ -51,6 +51,10 @@ export function markUnlockSeen(id) {
 }
 
 export function applyTheme(themeId) {
+  if (document.body.classList.contains('theme-toy-story')) {
+    document.documentElement.removeAttribute('data-theme')
+    return 'default'
+  }
   const id = themeId || 'default'
   if (id !== 'default' && !isUnlocked(id)) {
     document.documentElement.removeAttribute('data-theme')

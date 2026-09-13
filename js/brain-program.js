@@ -1,4 +1,4 @@
-import { getItem, setItem, getToday, toDateStr } from './core.js'
+import { getItem, setItem, getToday, toDateStr } from '/js/core.js'
 
 /** Basado en: Miyake et al. (2000), Klingberg (2010), meta-análisis CCT 2024 */
 export const COGNITIVE_DOMAINS = {

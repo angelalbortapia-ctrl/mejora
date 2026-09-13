@@ -1,4 +1,4 @@
-import { enrichMission } from './coaching.js'
+import { enrichMission } from '/js/coaching.js'
 
 export const PREFIX = 'mejora_'
 export const SKILLS = {
@@ -34,7 +34,7 @@ export function getItem(key, fallback = null) {
 export function setItem(key, value) {
   localStorage.setItem(PREFIX + key, JSON.stringify(value))
   if (typeof window !== 'undefined') {
-    import('./cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
+    import('/js/cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
   }
 }
 

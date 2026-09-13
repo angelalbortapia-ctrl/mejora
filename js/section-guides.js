@@ -1,7 +1,7 @@
 /** Guías in-app por sección (post-onboarding) */
 
-import { getItem, setItem, needsOnboarding } from './core.js'
-import { navigate } from './router.js'
+import { getItem, setItem, needsOnboarding } from '/js/core.js'
+import { navigate } from '/js/router.js'
 
 const SECTIONS = {
   rutina: {

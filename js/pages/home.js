@@ -3,14 +3,14 @@
 import {
   esc, getSettings, getStreak, getToday, ensureDailyPlan, getPlanProgress,
   getHabits, isHabitComplete, getMood, needsOnboarding, syncGoals,
-} from '../core.js'
+} from '/js/core.js'
 import {
   HOME_SHORTCUTS, getDailyIntention, MOOD_COACH,
-} from '../coaching.js'
-import { homeInsightHTML } from '../apis.js'
-import { renderHomeNeuroCard } from '../brain-academy.js?v=145'
-import { renderHomeReviewBanner } from '../school.js?v=145'
-import { getPremiumCoach } from '../coach-engine.js'
+} from '/js/coaching.js'
+import { homeInsightHTML } from '/js/apis.js'
+import { renderHomeNeuroCard } from '/js/brain-academy.js'
+import { renderHomeReviewBanner } from '/js/school.js'
+import { getPremiumCoach } from '/js/coach-engine.js'
 
 function greeting() {
   const h = new Date().getHours()

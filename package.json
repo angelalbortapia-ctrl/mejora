@@ -5,7 +5,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "typecheck": "tsc --noEmit",
-    "serve": "python3 scripts/mejora-dev-server.py 5173"
+    "serve": "python3 scripts/mejora-dev-server.py 5173",
+    "sync-version": "node scripts/sync-asset-version.mjs || python3 scripts/sync-asset-version.py"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

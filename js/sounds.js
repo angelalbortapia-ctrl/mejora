@@ -1,6 +1,6 @@
 /** Audio UI — tonos contextuales */
 
-import { getSettings } from './core.js'
+import { getSettings } from '/js/core.js'
 
 let audioCtx = null
 

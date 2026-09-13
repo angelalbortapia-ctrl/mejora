@@ -1,8 +1,8 @@
 /** Contenido Calma mejorado con Gemini — guiones por día de programa */
 
-import { getItem, setItem, getSettings } from './core.js'
-import { ensureGeminiConfig, GEMINI_API_KEY } from './gemini-config.js'
-import { getMeditationById, getProgramDayPlan, MEDITATION_PROGRAMS } from './meditations.js?v=145'
+import { getItem, setItem, getSettings } from '/js/core.js'
+import { ensureGeminiConfig, GEMINI_API_KEY } from '/js/gemini-config.js'
+import { getMeditationById, getProgramDayPlan, MEDITATION_PROGRAMS } from '/js/meditations.js'
 
 const TEXT_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
 const CACHE_VERSION = 2

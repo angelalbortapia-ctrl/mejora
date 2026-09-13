@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0a0c10" />
-  <meta name="description" content="Mejora — disciplina, hábitos, neurociencia y calma bajo presión." />
+  <meta name="theme-color" content="#1a4d7a" />
+  <meta name="description" content="Mejora — al infinito y más allá. Hábitos, gimnasia cerebral y calma." />
   <script>
     try {
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
@@ -17,13 +17,13 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/utilities.css?v=145" />
-  <link rel="stylesheet" href="css/design-system.css?v=145" />
-  <link rel="stylesheet" href="css/forge.css?v=145" />
-  <link rel="stylesheet" href="css/school.css?v=145" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Fredoka:wght@400;500;600;700&family=Fredoka+One&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/utilities.css?v=147" />
+  <link rel="stylesheet" href="css/design-system.css?v=147" />
+  <link rel="stylesheet" href="css/forge.css?v=147" />
+  <link rel="stylesheet" href="css/school.css?v=147" />
 </head>
-<body class="mejora-forge">
+<body class="mejora-forge theme-toy-story">
   <div id="fx-layer" aria-hidden="true"></div>
   <div class="app-shell">
     <aside id="sidebar" class="sidebar">
@@ -136,6 +136,7 @@
       document.body.appendChild(box)
     })
   </script>
-  <script type="module" src="js/app.js?v=145"></script>
+    <script type="importmap" src="/js/import-map.json?v=147"></script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

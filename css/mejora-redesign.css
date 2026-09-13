@@ -4,7 +4,7 @@ body.mejora-v3,
 body.mejora-forge {
   font-family: var(--m-font) !important;
   background: var(--m-bg) !important;
-  color: var(--m-text) !important;
+  color: var(--m-text);
 }
 
 .app-shell { position: relative; z-index: 1; }

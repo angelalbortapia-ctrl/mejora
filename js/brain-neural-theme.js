@@ -1,6 +1,6 @@
 /** Tema neuronal compartido — hero, stats, pasos siguientes */
 
-import { esc } from './core.js'
+import { esc } from '/js/core.js'
 
 export function renderNeuralStat(val, label) {
   return `<div class="brain-neural-stat">

@@ -2,14 +2,14 @@
 
 import {
   getStreak, getToday, getMood, getWeekNumber,
-} from './core.js'
+} from '/js/core.js'
 import {
   getNextBestAction, getJourneySummary, getWeeklySummary, getHabitTrendWeeks,
-} from './analytics.js'
-import { MOOD_COACH, getDailyIntention } from './coaching.js'
-import { getWeeklyReviewPrompt } from './content.js'
-import { getMeditationStreak, getActiveProgramProgress } from './meditation-service.js?v=145'
-import { isSessionDoneToday } from './brain-program.js'
+} from '/js/analytics.js'
+import { MOOD_COACH, getDailyIntention } from '/js/coaching.js'
+import { getWeeklyReviewPrompt } from '/js/content.js'
+import { getMeditationStreak, getActiveProgramProgress } from '/js/meditation-service.js'
+import { isSessionDoneToday } from '/js/brain-program.js'
 
 function timeOfDay() {
   const h = new Date().getHours()

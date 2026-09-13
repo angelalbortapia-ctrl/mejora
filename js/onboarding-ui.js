@@ -2,7 +2,7 @@
 
 import {
   esc, getSettings, saveSettings, getHabits, setItem, needsOnboarding, GOAL_TEMPLATES,
-} from './core.js'
+} from '/js/core.js'
 
 export const TOTAL_ONBOARD_STEPS = 8
 

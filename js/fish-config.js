@@ -6,7 +6,7 @@ let configReady = null
 
 export function ensureFishConfig() {
   if (!configReady) {
-    configReady = import('./fish-config.local.js')
+    configReady = import('/js/fish-config.local.js')
       .then((local) => {
         if (local.FISH_API_KEY) FISH_API_KEY = local.FISH_API_KEY
         if (local.FISH_VOICE_ID) FISH_VOICE_ID = local.FISH_VOICE_ID

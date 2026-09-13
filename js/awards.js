@@ -1,9 +1,9 @@
 /** Toasts, XP y premios del plan del día */
 
-import { SKILLS, addXp, getTotalLevel } from './core.js'
-import { checkNewUnlocks, markUnlockSeen } from './unlocks.js'
-import { celebrate, pulseElement, flashPlanBanner } from './fx.js?v=145'
-import { playTone } from './sounds.js'
+import { SKILLS, addXp, getTotalLevel } from '/js/core.js'
+import { checkNewUnlocks, markUnlockSeen } from '/js/unlocks.js'
+import { celebrate, pulseElement, flashPlanBanner } from '/js/fx.js'
+import { playTone } from '/js/sounds.js'
 
 function ensureToastContainer() {
   let el = document.getElementById('toast-container')

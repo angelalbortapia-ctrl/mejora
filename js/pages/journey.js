@@ -1,15 +1,15 @@
 /** Mi viaje — resumen, actividad, hitos */
 
-import { getDomainProgress } from '../brain-program.js'
+import { getDomainProgress } from '/js/brain-program.js'
 import {
   getJourneySummary, getJourneyInsight, getHabitTrendWeeks,
   getWeeklySummary, getWeeklyActivityScores, getMilestones,
-} from '../analytics.js'
-import { getWeeklyReviewPrompt } from '../content.js'
-import { getItem, setItem, getWeekNumber } from '../core.js'
-import { getWeeklyReviewSuggestion } from '../coach-engine.js'
-import { tabBar, pageHero, sparklineSVG } from '../ui.js'
-import { heatmapHTML } from '../page-helpers.js'
+} from '/js/analytics.js'
+import { getWeeklyReviewPrompt } from '/js/content.js'
+import { getItem, setItem, getWeekNumber } from '/js/core.js'
+import { getWeeklyReviewSuggestion } from '/js/coach-engine.js'
+import { tabBar, pageHero, sparklineSVG } from '/js/ui.js'
+import { heatmapHTML } from '/js/page-helpers.js'
 
 let viajeTab = 'resumen'
 

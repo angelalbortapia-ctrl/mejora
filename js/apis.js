@@ -1,4 +1,4 @@
-import { getItem, setItem, getToday, getSettings, saveSettings, esc } from './core.js'
+import { getItem, setItem, getToday, getSettings, saveSettings, esc } from '/js/core.js'
 
 const CACHE_KEY = 'dailyApis'
 const BUNDLE_VERSION = 5

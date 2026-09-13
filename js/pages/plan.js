@@ -3,13 +3,13 @@
 import {
   esc, getProgress, saveProgress, getPlanProgress, checkPlanTask, ensureDailyPlan,
   getWeekNumber, isRoutineDoneToday, getHabits, isHabitComplete, getSettings,
-} from '../core.js'
-import { processPlanAwards } from '../awards.js'
-import { sunsetBannerHTML, bundleStatusHTML } from '../apis.js'
-import { getNextBestAction } from '../analytics.js'
-import { getMissionTone, getMissionChip } from '../coaching.js'
-import { pageHero } from '../ui.js'
-import { habitChartHTML } from '../page-helpers.js'
+} from '/js/core.js'
+import { processPlanAwards } from '/js/awards.js'
+import { sunsetBannerHTML, bundleStatusHTML } from '/js/apis.js'
+import { getNextBestAction } from '/js/analytics.js'
+import { getMissionTone, getMissionChip } from '/js/coaching.js'
+import { pageHero } from '/js/ui.js'
+import { habitChartHTML } from '/js/page-helpers.js'
 
 export function renderPlan(dailyApis) {
   processPlanAwards(checkPlanTask('plan_review'))

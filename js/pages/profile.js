@@ -2,10 +2,10 @@
 
 import {
   getProgress, getTotalLevel, getRank, getStats, getAchievements, getStreakShieldStatus,
-} from '../core.js'
-import { UNLOCKS, isUnlocked, getNextUnlock } from '../unlocks.js'
-import { tabBar, pageHero } from '../ui.js'
-import { skillBars } from '../page-helpers.js'
+} from '/js/core.js'
+import { UNLOCKS, isUnlocked, getNextUnlock } from '/js/unlocks.js'
+import { tabBar, pageHero } from '/js/ui.js'
+import { skillBars } from '/js/page-helpers.js'
 
 let profileTab = 'resumen'
 

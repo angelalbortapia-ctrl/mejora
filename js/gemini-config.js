@@ -5,7 +5,7 @@ let configReady = null
 
 export function ensureGeminiConfig() {
   if (!configReady) {
-    configReady = import('./gemini-config.local.js')
+    configReady = import('/js/gemini-config.local.js')
       .then((local) => {
         if (local.GEMINI_API_KEY) GEMINI_API_KEY = local.GEMINI_API_KEY
       })

@@ -1,8 +1,8 @@
 /** Pomodoro / Enfoque */
 
-import { getItem, setItem, checkPlanTask } from './core.js'
-import { awardXp, processPlanAwards } from './awards.js'
-import { playTone } from './sounds.js'
+import { getItem, setItem, checkPlanTask } from '/js/core.js'
+import { awardXp, processPlanAwards } from '/js/awards.js'
+import { playTone } from '/js/sounds.js'
 
 export let pomodoro = { minutes: 25, seconds: 0, active: false, mode: 'work' }
 export let pomodoroTimer = null

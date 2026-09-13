@@ -1,26 +1,26 @@
 /** Voz guiada Calma — Fish / Azure / Gemini (API) o navegador */
 
-import { getSettings, saveSettings } from './core.js'
+import { getSettings, saveSettings } from '/js/core.js'
 import {
   hasGeminiTts, speakGeminiMeditation, stopGeminiSpeech, previewGeminiVoice,
   getGeminiVoiceHint, getGeminiVoiceId, GEMINI_MEDITATION_VOICES, isGeminiSpeaking,
   prefetchGeminiTexts, speakGeminiSequence,
-} from './gemini-tts.js?v=145'
+} from '/js/gemini-tts.js'
 import {
   hasAzureTts, hasAzureTtsQuota, isAzureQuotaBlocked, isAzureSpeaking,
   speakAzureMeditation, stopAzureSpeech, previewAzureVoice,
   getAzureVoiceHint, getAzureVoiceId, AZURE_MEDITATION_VOICES,
   prefetchAzureTexts, speakAzureSequence,
-} from './azure-tts.js?v=145'
+} from '/js/azure-tts.js'
 import {
   hasFishTts, hasFishApiKey, speakFishMeditation, stopFishSpeech, previewFishVoice,
   getFishVoiceHint, getFishVoiceLabel, getLastFishError, isFishSpeaking,
   prefetchFishTexts, speakFishSequence,
-} from './fish-audio-tts.js?v=145'
-import { isAzureConfigFilePresent } from './azure-config.js'
-import { isFishConfigFilePresent } from './fish-config.js'
-import { duckAmbientForVoice, restoreAmbientAfterVoice, resumeAudioContext } from './ambient-audio.js?v=145'
-import { unlockCalmaAudioOnGesture, primeVoiceAudioOnGesture } from './calma-audio-bus.js'
+} from '/js/fish-audio-tts.js'
+import { isAzureConfigFilePresent } from '/js/azure-config.js'
+import { isFishConfigFilePresent } from '/js/fish-config.js'
+import { duckAmbientForVoice, restoreAmbientAfterVoice, resumeAudioContext } from '/js/ambient-audio.js'
+import { unlockCalmaAudioOnGesture, primeVoiceAudioOnGesture } from '/js/calma-audio-bus.js'
 
 let programVoiceOverride = null
 
@@ -375,7 +375,7 @@ export function getMeditationVoiceHint() {
       : 'Configura Fish Audio en Ajustes → Calma (fish.audio → API Keys).'
   }
   if ((getSettings().medVoiceEngine === 'azure' || isAzureConfigFilePresent()) && !hasAzureTts()) {
-    return 'Pega tu key de Azure en Ajustes → Calma (o recarga con ?v=145).'
+    return 'Pega tu key de Azure en Ajustes → Calma (o recarga con ).'
   }
   if (hasAzureTts() && getSettings().medVoiceEngine !== 'azure') {
     return 'Azure listo — en Ajustes elige motor Microsoft Azure Neural.'
@@ -724,12 +724,12 @@ export async function previewMeditationVoice() {
   )
 }
 
-export { hasGeminiTts, listGeminiVoiceOptions } from './gemini-tts.js?v=145'
-export { hasAzureTts, listAzureVoiceOptions, setAzureVoiceId, setAzureSpeechKey, setAzureSpeechRegion } from './azure-tts.js?v=145'
+export { hasGeminiTts, listGeminiVoiceOptions } from '/js/gemini-tts.js'
+export { hasAzureTts, listAzureVoiceOptions, setAzureVoiceId, setAzureSpeechKey, setAzureSpeechRegion } from '/js/azure-tts.js'
 export {
   hasFishTts, hasFishApiKey, listFishVoiceOptions, refreshFishVoiceList,
   setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed, FISH_TTS_MODELS,
-} from './fish-audio-tts.js?v=145'
+} from '/js/fish-audio-tts.js'
 
 export function resetBreathCues() {
   breathCueIndex = 0

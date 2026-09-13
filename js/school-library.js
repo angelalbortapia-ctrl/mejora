@@ -1,9 +1,9 @@
 /** Biblioteca Escuela — papers clave resumidos + APIs académicas */
 
-import { esc } from './core.js'
-import { getLesson } from './brain-academy.js?v=145'
-import { renderZoneHead } from './school-shell.js?v=145'
-export { fetchPaperLiveMeta, searchPubMed } from './library-apis.js?v=145'
+import { esc } from '/js/core.js'
+import { getLesson } from '/js/brain-academy.js'
+import { renderZoneHead } from '/js/school-shell.js'
+export { fetchPaperLiveMeta, searchPubMed } from '/js/library-apis.js'
 
 export const PAPER_TOPICS = {
   memory: { label: 'Memoria', icon: '🧩' },

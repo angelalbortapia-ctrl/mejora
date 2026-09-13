@@ -1,6 +1,6 @@
 /** Contexto de programa en sesiones guiadas — sin depender de Gemini */
 
-import { getProgramDayPlan } from './meditations.js?v=145'
+import { getProgramDayPlan } from '/js/meditations.js'
 
 const STEP_BRIDGES = [
   'Sigue conmigo.',

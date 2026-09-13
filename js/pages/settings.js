@@ -3,32 +3,32 @@
 import {
   PREFIX, DIFFICULTIES, esc, getToday, getItem, setItem, getSettings, saveSettings,
   getPlanProgress, resetAllData,
-} from '../core.js'
-import { guardDifficulty } from '../page-helpers.js'
-import { isUnlocked, applyTheme, THEMES, UNLOCKS, getNextUnlock } from '../unlocks.js'
+} from '/js/core.js'
+import { guardDifficulty } from '/js/page-helpers.js'
+import { isUnlocked, applyTheme, THEMES, UNLOCKS, getNextUnlock } from '/js/unlocks.js'
 import {
   canUseNotifications, getNotificationPermission, requestNotificationPermission, startReminderChecker,
-} from '../notifications.js'
+} from '/js/notifications.js'
 import {
   getCloudStatus, signIn, signUp, signOut, pullFromCloud, pushToCloud,
-} from '../cloud-sync.js'
-import { exportMonthlyReportText } from '../backup.js'
-import { restartOnboarding, resetOnboardingCache } from '../onboarding-ui.js'
-import { startTour } from '../tour.js'
-import { listSectionGuides, startSectionGuide, resetSectionGuides } from '../section-guides.js'
-import { tabBar, settingGroup, settingRow, pageLead } from '../ui.js'
-import { applyCompactSidebar } from '../layout.js?v=145'
-import { playSuccess } from '../sounds.js'
-import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '../gemini-tts.js?v=145'
-import { hasGeminiContent } from '../gemini-meditation-content.js?v=145'
-import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '../azure-tts.js?v=145'
-import { isAzureConfigFilePresent } from '../azure-config.js'
+} from '/js/cloud-sync.js'
+import { exportMonthlyReportText } from '/js/backup.js'
+import { restartOnboarding, resetOnboardingCache } from '/js/onboarding-ui.js'
+import { startTour } from '/js/tour.js'
+import { listSectionGuides, startSectionGuide, resetSectionGuides } from '/js/section-guides.js'
+import { tabBar, settingGroup, settingRow, pageLead } from '/js/ui.js'
+import { applyCompactSidebar } from '/js/layout.js'
+import { playSuccess } from '/js/sounds.js'
+import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '/js/gemini-tts.js'
+import { hasGeminiContent } from '/js/gemini-meditation-content.js'
+import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '/js/azure-tts.js'
+import { isAzureConfigFilePresent } from '/js/azure-config.js'
 import {
   listFishVoiceOptions, setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed,
   hasFishTts, hasFishApiKey, getFishVoiceId, refreshFishVoiceList, FISH_TTS_MODELS,
-} from '../fish-audio-tts.js?v=145'
-import { ensureFishConfig, isFishConfigFilePresent } from '../fish-config.js'
-import { previewMeditationVoice, unlockMeditationAudioOnGesture } from '../meditation-voice.js?v=145'
+} from '/js/fish-audio-tts.js'
+import { ensureFishConfig, isFishConfigFilePresent } from '/js/fish-config.js'
+import { previewMeditationVoice, unlockMeditationAudioOnGesture } from '/js/meditation-voice.js'
 
 let settingsTab = 'general'
 
@@ -442,7 +442,7 @@ export function bindSettingsGlobals(deps = {}) {
     } catch (e) {
       alert(e.message || 'Error al reproducir vista previa')
     }
-    const { getLastFishError } = await import('../fish-audio-tts.js?v=145')
+    const { getLastFishError } = await import('/js/fish-audio-tts.js')
     if (getLastFishError()) alert(getLastFishError())
   }
   ensureFishConfig().then(() => {
@@ -468,7 +468,7 @@ export function bindSettingsGlobals(deps = {}) {
     render()
   }
   window.requestLocationRefresh = async function() {
-    const { requestUserLocation } = await import('../apis.js')
+    const { requestUserLocation } = await import('/js/apis.js')
     const geo = await requestUserLocation()
     const s = getSettings()
     if (geo) {

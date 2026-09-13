@@ -1,6 +1,6 @@
 /** Componentes UI reutilizables */
 
-import { icon } from './icons.js'
+import { icon } from '/js/icons.js'
 
 /** Pestañas horizontales — stateVar: nombre de variable global (ej. mejoraTab) */
 export function tabBar(tabs, activeId, stateVar, extraOnClick = '') {

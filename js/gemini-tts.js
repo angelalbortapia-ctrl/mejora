@@ -1,7 +1,7 @@
 /** Voz Calma con Gemini TTS (API gratuita de AI Studio) */
 
-import { getSettings, saveSettings } from './core.js'
-import { ensureGeminiConfig, GEMINI_API_KEY } from './gemini-config.js'
+import { getSettings, saveSettings } from '/js/core.js'
+import { ensureGeminiConfig, GEMINI_API_KEY } from '/js/gemini-config.js'
 
 const TTS_MODELS = ['gemini-2.5-flash-preview-tts', 'gemini-3.1-flash-tts-preview']
 const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions'

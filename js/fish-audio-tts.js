@@ -1,8 +1,8 @@
 /** Voz Calma — Fish Audio TTS (clonación / voces naturales) */
 
-import { getSettings, saveSettings } from './core.js'
-import { ensureFishConfig, FISH_API_KEY, FISH_VOICE_ID } from './fish-config.js'
-import { getCalmaAudioContext, getVoiceOutputNode, getPrimedVoiceAudio, unlockCalmaAudioOnGesture } from './calma-audio-bus.js'
+import { getSettings, saveSettings } from '/js/core.js'
+import { ensureFishConfig, FISH_API_KEY, FISH_VOICE_ID } from '/js/fish-config.js'
+import { getCalmaAudioContext, getVoiceOutputNode, getPrimedVoiceAudio, unlockCalmaAudioOnGesture } from '/js/calma-audio-bus.js'
 
 /** Voces de la biblioteca pública — no necesitas grabarte ni clonar. */
 export const FISH_LIBRARY_VOICES = [

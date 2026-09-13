@@ -6,7 +6,7 @@ let configReady = null
 
 export function ensureSupabaseConfig() {
   if (!configReady) {
-    configReady = import('./supabase-config.local.js')
+    configReady = import('/js/supabase-config.local.js')
       .then((local) => {
         if (local.SUPABASE_URL) SUPABASE_URL = local.SUPABASE_URL
         if (local.SUPABASE_ANON_KEY) SUPABASE_ANON_KEY = local.SUPABASE_ANON_KEY

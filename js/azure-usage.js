@@ -1,6 +1,6 @@
 /** Uso local de Azure TTS — tope seguro bajo la capa gratis F0 (500k/mes). */
 
-import { getItem, setItem } from './core.js'
+import { getItem, setItem } from '/js/core.js'
 
 export const AZURE_FREE_CHARS_MONTH = 500_000
 /** Tope en app: 20k antes del límite real para no pasarte ni un cobro. */

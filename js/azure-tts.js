@@ -1,10 +1,10 @@
 /** Voz Calma — Microsoft Azure Neural TTS (capa gratuita F0) */
 
-import { getSettings, saveSettings } from './core.js'
-import { ensureAzureConfig, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION } from './azure-config.js'
+import { getSettings, saveSettings } from '/js/core.js'
+import { ensureAzureConfig, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION } from '/js/azure-config.js'
 import {
   trackAzureChars, formatAzureUsageHint, assertAzureQuota, isAzureQuotaExhausted,
-} from './azure-usage.js'
+} from '/js/azure-usage.js'
 
 /** Voces neurales en español — tier gratuito F0 */
 export const AZURE_MEDITATION_VOICES = [
@@ -110,7 +110,7 @@ export function getLastAzureError() {
 }
 
 async function ensureAudioContext() {
-  const { getCalmaAudioContext } = await import('./calma-audio-bus.js')
+  const { getCalmaAudioContext } = await import('/js/calma-audio-bus.js')
   audioCtx = await getCalmaAudioContext()
   return audioCtx
 }
@@ -201,7 +201,7 @@ export function stopAzureSpeech() {
 
 export async function playAzureBuffer(buffer) {
   const ctx = await ensureAudioContext()
-  const { getVoiceOutputNode } = await import('./calma-audio-bus.js')
+  const { getVoiceOutputNode } = await import('/js/calma-audio-bus.js')
   const out = getVoiceOutputNode()
   stopCurrentSource()
   return new Promise((resolve) => {
@@ -331,4 +331,4 @@ export function getAzureVoiceHint() {
 export {
   getAzureUsage, formatAzureUsageHint, formatAzureUsagePanel,
   isAzureQuotaExhausted, AZURE_USAGE_CAP,
-} from './azure-usage.js'
+} from '/js/azure-usage.js'

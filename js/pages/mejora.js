@@ -4,13 +4,13 @@ import {
   esc, getToday, getHabits, setItem, getHabitProgress, getLevel, completeHabit, uncompleteHabit,
   incrementHabit, decrementHabit, getHabitCount, isHabitComplete, getCompletedHabitsCount,
   checkPlanTask, setMood, getMood, getStreak,
-} from '../core.js'
-import { HABIT_CATEGORIES, HABIT_TEMPLATES } from '../content.js'
-import { emptyState } from '../ui.js'
-import { habitChartHTML } from '../page-helpers.js'
-import { awardXp, processPlanAwards } from '../awards.js'
-import { forgeSparkAt, pulseElement, haptic } from '../fx.js?v=145'
-import { playHabitDone } from '../sounds.js'
+} from '/js/core.js'
+import { HABIT_CATEGORIES, HABIT_TEMPLATES } from '/js/content.js'
+import { emptyState } from '/js/ui.js'
+import { habitChartHTML } from '/js/page-helpers.js'
+import { awardXp, processPlanAwards } from '/js/awards.js'
+import { forgeSparkAt, pulseElement, haptic } from '/js/fx.js'
+import { playHabitDone } from '/js/sounds.js'
 
 let editingHabits = false
 

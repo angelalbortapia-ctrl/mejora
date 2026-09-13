@@ -1,13 +1,13 @@
 /** Gimnasia — Inicio y Cuerpo */
 
-import { esc } from './core.js'
-import { getProgramStats, getDomainProgress, getTodaysSession } from './brain-program.js'
+import { esc } from '/js/core.js'
+import { getProgramStats, getDomainProgress, getTodaysSession } from '/js/brain-program.js'
 import {
   getBrainRegionProgress, getSchoolStats, getCurrentSchoolWeek, getDueReviews,
-} from './school.js?v=145'
-import { getWeeklyLesson, getCompletedLessons } from './brain-academy.js?v=145'
-import { renderNeuralHero, renderNextSteps } from './brain-neural-theme.js?v=145'
-import { subTabBar } from './ui.js?v=145'
+} from '/js/school.js'
+import { getWeeklyLesson, getCompletedLessons } from '/js/brain-academy.js'
+import { renderNeuralHero, renderNextSteps } from '/js/brain-neural-theme.js'
+import { subTabBar } from '/js/ui.js'
 
 const NUTRITION_PROTOCOLS = [
   { icon: '🐟', title: 'Omega-3 y DHA', lead: 'Grasas esenciales para membranas neuronales y plasticidad.', bullets: ['2–3 raciones/semana de pescado azul o alga DHA', 'Nueces, chía y linaza como respaldo vegetal', 'Evita freír: el calor oxida los ácidos grasos'], lesson: 'bdnf-exercise', tag: 'Membranas · sinapsis' },
@@ -109,9 +109,9 @@ export function renderInicioHub() {
   ])
 
   return `${renderNeuralHero({
-    kicker: 'Gimnasia cerebral',
+    kicker: 'Al infinito y más allá',
     title: 'Inicio',
-    sub: 'Tu mapa sináptico, progreso y qué hacer ahora.',
+    sub: 'Tu cuartel general — progreso, misiones y qué hacer ahora.',
     stats: [
       { val: `${synapseScore}%`, lbl: 'conexión' },
       { val: `${stats.percent}%`, lbl: 'currículo' },

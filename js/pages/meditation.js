@@ -1,12 +1,12 @@
 /** Página Calma — hub, sesiones, programas, timer libre, sueño */
 
-import { esc, getSettings, saveSettings, DIFFICULTIES } from '../core.js'
-import { isUnlocked } from '../unlocks.js'
+import { esc, getSettings, saveSettings, DIFFICULTIES } from '/js/core.js'
+import { isUnlocked } from '/js/unlocks.js'
 
 function guardDifficulty(d) {
   return d === 'experto' && !isUnlocked('diff_expert') ? 'medio' : d
 }
-import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '../meditations.js?v=145'
+import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '/js/meditations.js'
 import {
   medState, MED_DURATIONS, clearMedTimers, stopMeditationSession,
   startMeditation, startFreeTimer, finishFreeTimer, startProgramSession,
@@ -17,7 +17,7 @@ import {
   getSleepStats, getSleepLog, logSleep, getBreathCoherenceLog,
   medAmbientVol, syncMedVoiceFromSettings, setMedVoiceEnabled, getMedVoiceLabel,
   getBreathPhaseMs, toggleMeditationPause, pauseMeditationSession, resumeMeditationSession,
-} from '../meditation-service.js?v=145'
+} from '/js/meditation-service.js'
 import {
   initMeditationVoice, isMeditationVoiceSupported, getSelectedVoiceURI,
   setMeditationVoiceURI, getMedVoiceRate, setMedVoiceRate, previewMeditationVoice,
@@ -26,14 +26,14 @@ import {
   listAzureVoiceOptions, listGeminiVoiceOptions,
   getStepInstructionText, getStepCueText,
   unlockMeditationAudioOnGesture,
-} from '../meditation-voice.js?v=145'
+} from '/js/meditation-voice.js'
 import {
   listFishVoiceOptions, getFishVoiceId, getFishSpeed, setFishVoiceId, setFishSpeed,
-} from '../fish-audio-tts.js?v=145'
-import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '../meditation-adaptive.js'
-import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '../ambient-audio.js?v=145'
-import { sunsetBannerHTML } from '../apis.js'
-import { icon } from '../icons.js'
+} from '/js/fish-audio-tts.js'
+import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '/js/meditation-adaptive.js'
+import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '/js/ambient-audio.js'
+import { sunsetBannerHTML } from '/js/apis.js'
+import { icon } from '/js/icons.js'
 
 function difficultyPicker(current, setter) {
   return `<div class="med-diff-block">
@@ -760,12 +760,12 @@ export function bindMeditationGlobals() {
     window.render?.()
   }
   window.setAzureVoice = async (id) => {
-    const { setAzureVoiceId } = await import('../azure-tts.js?v=145')
+    const { setAzureVoiceId } = await import('/js/azure-tts.js')
     setAzureVoiceId(id)
     window.render?.()
   }
   window.setGeminiVoice = async (id) => {
-    const { setGeminiVoiceId } = await import('../gemini-tts.js?v=145')
+    const { setGeminiVoiceId } = await import('/js/gemini-tts.js')
     setGeminiVoiceId(id)
     window.render?.()
   }

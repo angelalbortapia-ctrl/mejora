@@ -1,8 +1,8 @@
-import { PREFIX, getSettings, saveSettings } from './core.js'
-import { exportAllData } from './backup.js'
+import { PREFIX, getSettings, saveSettings } from '/js/core.js'
+import { exportAllData } from '/js/backup.js'
 import {
   ensureSupabaseConfig, isSupabaseConfigured, SUPABASE_URL, SUPABASE_ANON_KEY,
-} from './supabase-config.js'
+} from '/js/supabase-config.js'
 
 const META_KEY = 'cloudSync'
 let client = null

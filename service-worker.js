@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const CACHE = 'mejora-v145'
+const CACHE = 'mejora-v147'
 const ASSETS = [
   `${BASE}/manifest.json`,
   `${BASE}/public/favicon.svg`,
@@ -33,6 +33,7 @@ const NETWORK_FIRST = [
   '/css/forge/04-legacy-pages.css',
   '/css/mejora-redesign.css',
   '/css/brain-wellness.css',
+  '/css/toy-story-theme.css',
   '/css/forge-pages.css',
   '/css/forge-meditation.css',
   '/css/forge-fx.css',
@@ -61,6 +62,7 @@ const NETWORK_FIRST = [
   '/js/fx.js',
   '/js/awards.js',
   '/js/app.js',
+  '/js/import-map.json',
   '/js/',
 ]
 

@@ -1,17 +1,17 @@
 /** Escuela Mejora — currículo, facultades, mapa cerebral, repaso espaciado */
 
-import { getItem, setItem, getToday, esc } from './core.js'
+import { getItem, setItem, getToday, esc } from '/js/core.js'
 import {
   LESSONS, LEGENDARY_HALL, getCompletedLessons, getAcademyWeekIndex,
   isLessonUnlocked, getLesson, renderLessonCard, getLessonQuiz,
   getDailyNeuroPunch, getWeeklyLessonMeta,
-} from './brain-academy.js?v=145'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=145'
-import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=145'
-import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=145'
-import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=145'
-import { renderLibraryList } from './school-library.js?v=145'
-import { renderExploreContent } from './school-catalog.js?v=145'
+} from '/js/brain-academy.js'
+import { APPLY_LESSONS } from '/js/school-apply-lessons.js'
+import { FACULTIES, CURRICULUM } from '/js/school-curriculum.js'
+import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from '/js/school-certificates.js'
+import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from '/js/school-shell.js'
+import { renderLibraryList } from '/js/school-library.js'
+import { renderExploreContent } from '/js/school-catalog.js'
 
 export { FACULTIES, CURRICULUM }
 

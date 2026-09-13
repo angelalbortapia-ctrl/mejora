@@ -1,15 +1,15 @@
 /** Página Rutina — respiración, Stroop, reflexión */
 
-import { DIFFICULTIES, getSettings, isRoutineDoneToday, getStats, updateStats } from '../core.js'
-import { getReflectionPrompt } from '../content.js'
-import { pageLead } from '../ui.js'
-import { difficultyPicker, guardDifficulty } from '../page-helpers.js'
-import { playTone } from '../sounds.js'
+import { DIFFICULTIES, getSettings, isRoutineDoneToday, getStats, updateStats } from '/js/core.js'
+import { getReflectionPrompt } from '/js/content.js'
+import { pageLead } from '/js/ui.js'
+import { difficultyPicker, guardDifficulty } from '/js/page-helpers.js'
+import { playTone } from '/js/sounds.js'
 import {
   routineState, ROUTINE_STROOP_INK, genRoutineStroop,
   startRoutine as startRoutineCore, finishRoutine as finishRoutineCore,
   startExpress as startExpressCore, exitRoutine,
-} from '../routine-service.js'
+} from '/js/routine-service.js'
 
 export function renderRoutine() {
   if (!routineState.active && routineState.step !== 4) {

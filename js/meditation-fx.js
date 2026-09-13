@@ -1,6 +1,6 @@
 /** FX inmersivos — Calma FORGE (runtime con ciclo de vida) */
 
-import { haptic, forgeSparkAt } from './fx.js?v=145'
+import { haptic, forgeSparkAt } from '/js/fx.js'
 
 const CATEGORY_RGB = {
   breath: [110, 231, 183],

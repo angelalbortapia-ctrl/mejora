@@ -3,24 +3,24 @@
 import {
   getToday, toDateStr, getItem, setItem, getStats, updateStats, recordActivity,
   checkPlanTask, addXp, getSettings, saveSettings, DIFFICULTIES,
-} from './core.js'
+} from '/js/core.js'
 import {
   MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById, getMeditationIntro,
   getSessionAmbient, getProgramCatalog, getProgramDayIntro, getProgramDayPlan,
-} from './meditations.js?v=145'
-import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=145'
-import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=145'
-import { enrichProgramSession } from './meditation-program-content.js?v=145'
-import { ensureFishConfig } from './fish-config.js'
-import { playTone } from './sounds.js'
-import { forgeSparkAt, pulseElement } from './fx.js?v=145'
+} from '/js/meditations.js'
+import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from '/js/ambient-audio.js'
+import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from '/js/gemini-meditation-content.js'
+import { enrichProgramSession } from '/js/meditation-program-content.js'
+import { ensureFishConfig } from '/js/fish-config.js'
+import { playTone } from '/js/sounds.js'
+import { forgeSparkAt, pulseElement } from '/js/fx.js'
 import {
   initMeditationVoice, unlockMeditationAudioOnGesture, speakMeditation, speakMeditationIntro,
   stopMeditationVoice, pauseMeditationVoice, resumeMeditationVoice, resetBreathCues,
   getMeditationVoiceName, isMeditationVoiceSupported, getStepSpeechText,
   usesApiMedVoice, usesFishMedVoice, warmMeditationVoiceCache,
   estimateSpeechDurationSec, isMeditationVoiceSpeaking, setProgramVoiceOverride,
-} from './meditation-voice.js?v=145'
+} from '/js/meditation-voice.js'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -137,7 +137,7 @@ export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
   stopMeditationVoice()
-  import('./meditation-fx.js?v=145').then(m => m.stopCalmaFx?.()).catch(() => {})
+  import('/js/meditation-fx.js').then(m => m.stopCalmaFx?.()).catch(() => {})
   setProgramVoiceOverride(null)
   medState.ambientPreview = false
   medState.freeTimer = null

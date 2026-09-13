@@ -3,40 +3,40 @@
 import {
   getItem, setItem, getToday, esc, getSettings, saveSettings, DIFFICULTIES,
   getStats, updateStats, recordActivity, checkPlanTask, addXp, setRecord,
-} from '../core.js'
+} from '/js/core.js'
 import {
-  genMathProblem, getMemoryConfig, getSimonConfig, getLogicPuzzles, getWordGroup, getAnagrams, pickSequence, COLORS,
-} from '../content.js'
+  genMathProblem, getMemoryConfig, getSimonConfig, getLogicPuzzles, pickSequence, COLORS,
+} from '/js/content.js'
 import {
   COGNITIVE_DOMAINS, EXERCISES, getTodaysSession, getDomainProgress, getProgramStats,
   completeSession, isSessionDoneToday, PROGRAM_DISCLAIMER, getExerciseLevel, updateExerciseLevel,
-} from '../brain-program.js'
+} from '/js/brain-program.js'
 import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
   initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
-} from '../brain-exercises.js'
-import { subTabBar, emptyState } from '../ui.js?v=145'
-import { playTone, playClick, playSuccess } from '../sounds.js'
-import { guardDifficulty, difficultyPicker } from '../page-helpers.js'
-import { showToast, awardXp, processPlanAwards } from '../awards.js'
-import { parsePath, navigate } from '../router.js'
+} from '/js/brain-exercises.js'
+import { subTabBar, emptyState } from '/js/ui.js'
+import { playTone, playClick, playSuccess } from '/js/sounds.js'
+import { guardDifficulty, difficultyPicker } from '/js/page-helpers.js'
+import { showToast, awardXp, processPlanAwards } from '/js/awards.js'
+import { parsePath, navigate } from '/js/router.js'
 import {
   LESSONS, LAB_EXERCISE_IDS, LAB_EXERCISE_GROUPS, EXERCISE_REAL_WORLD,
   renderLessonFull, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
   getSessionDebrief, isLessonUnlocked, getLessonBonusXp,
-} from '../brain-academy.js?v=145'
+} from '/js/brain-academy.js'
 import {
   renderSchoolHub, completeLessonReview,
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats, getBrainRegionProgress,
-} from '../school.js?v=145'
-import { patchCatalogUI } from '../school-catalog.js?v=145'
-import { wrapSchoolPage } from '../school-shell.js?v=145'
-import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '../school-library.js?v=145'
-import { downloadFacultyCertificate, checkAndIssueCertificates } from '../school-certificates.js?v=145'
-import { renderInicioHub, renderBodyHub } from '../brain-wellness.js?v=145'
-import { mountSynapseField, unmountSynapseField, isSynapseFieldMounted } from '../brain-synapse-fx.js?v=145'
-import { renderNeuralHero } from '../brain-neural-theme.js?v=145'
-import { normalizeBrainView, bindBrainNavGlobals, goTrain, goBrainTab, goLearn } from '../brain-nav.js?v=145'
+} from '/js/school.js'
+import { patchCatalogUI } from '/js/school-catalog.js'
+import { wrapSchoolPage } from '/js/school-shell.js'
+import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '/js/school-library.js'
+import { downloadFacultyCertificate, checkAndIssueCertificates } from '/js/school-certificates.js'
+import { renderInicioHub, renderBodyHub } from '/js/brain-wellness.js'
+import { mountSynapseField, unmountSynapseField, isSynapseFieldMounted } from '/js/brain-synapse-fx.js'
+import { renderNeuralHero } from '/js/brain-neural-theme.js'
+import { normalizeBrainView, bindBrainNavGlobals, goTrain, goBrainTab, goLearn } from '/js/brain-nav.js'
 
 let catalogFilterTimer = null
 let lastSynapseView = null
@@ -54,7 +54,7 @@ let brainState = {
   libraryFilter: { q: '', topic: 'all' }, pubmed: { query: '', results: [], loading: false },
   activePaper: null, paperMeta: null, reviewFlow: null,
   activeLesson: null, lessonFlow: null,
-  session: null, memory: {}, math: {}, words: {}, simon: {}, logic: {}, anagrams: {}, trivia: {},
+  session: null, memory: {}, math: {}, simon: {}, logic: {},
   nback: {}, stroop: {}, flanker: {}, switching: {}, gonogo: {}, corsi: {}, symbols: {},
 }
 let brainTimers = []
@@ -895,91 +895,6 @@ window.seqAnswer = function(n) {
   render()
 }
 
-function renderTriviaGame() {
-  const t = brainState.trivia
-  if (t.loading) return brainWrapper(`<div class="text-center py-8"><p class="text-muted">Cargando preguntas…</p></div>`)
-  if (!t.questions?.length) return brainWrapper(`${emptyState({
-    icon: '📡',
-    title: 'Sin conexión',
-    desc: 'La trivia en vivo necesita internet. Prueba otro ejercicio o vuelve cuando tengas red.',
-    ctaLabel: 'Volver a gimnasia',
-    ctaOnclick: "brainState.exercise=null;render()",
-  })}`)
-  if (t.finished) return brainWrapper(`<div class="text-center">
-    <p class="text-2xl mb-2">❓</p><p class="font-semibold mb-6">${t.score}/${t.total} correctas</p>
-    <button onclick="finishBrain(${t.score * 30})" class="btn-primary">Terminar (+${Math.floor(DIFFICULTIES[t.difficulty].xp * (t.score / t.total))} XP)</button></div>`)
-  const q = t.questions[t.round]
-  return brainWrapper(`<div>
-    <p class="text-xs text-muted mb-1">${esc(q.category)} · ${t.round + 1}/${t.total}</p>
-    <p class="font-medium text-main mb-4">${esc(q.question)}</p>
-    <div class="space-y-2">
-      ${q.options.map((opt, i) => {
-        let cls = 'trivia-option w-full p-3 rounded-xl text-left text-sm text-main cursor-pointer'
-        if (t.revealed && opt === q.correct) cls += ' correct'
-        else if (t.revealed && t.selected === i && opt !== q.correct) cls += ' wrong'
-        return `<button onclick="triviaAnswer(${i})" class="${cls}" ${t.revealed ? 'disabled' : ''}>${esc(opt)}</button>`
-      }).join('')}
-    </div>
-    ${t.revealed ? `<button onclick="triviaNext()" class="btn-primary w-full mt-4">${t.round + 1 >= t.total ? 'Ver resultado' : 'Siguiente'}</button>` : ''}
-  </div>`)
-}
-
-window.triviaAnswer = function(i) {
-  const t = brainState.trivia
-  if (t.revealed) return
-  const q = t.questions[t.round]
-  const opt = q.options[i]
-  t.selected = i
-  t.revealed = true
-  if (opt === q.correct) { t.score++; playTone(523) } else playTone(200)
-  render()
-}
-
-window.triviaNext = function() {
-  const t = brainState.trivia
-  t.round++
-  t.selected = null
-  t.revealed = false
-  if (t.round >= t.total) t.finished = true
-  render()
-}
-
-function renderAnagramGame() {
-  const a = brainState.anagrams
-  if (a.finished) return brainWrapper(`<div class="text-center">
-    <p class="text-2xl mb-2">🔤</p><p class="font-semibold mb-6">${a.score}/${a.total} correctos</p>
-    <button onclick="finishBrain(${a.score * 25})" class="btn-primary">Terminar (+${Math.floor(DIFFICULTIES[a.difficulty].xp * (a.score / a.total))} XP)</button></div>`)
-  const item = a.items[a.round]
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Ronda ${a.round + 1}/${a.total}</p>
-    <p class="font-display text-3xl font-bold text-main tracking-widest mb-2">${item.scrambled}</p>
-    <p class="text-muted text-sm mb-4">Ordena las letras para formar una palabra</p>
-    ${a.showHint ? `<p class="text-xs italic text-muted mb-3">Pista: ${item.hint}</p>` : `<button onclick="anagramHint()" class="btn-ghost text-xs mb-3">💡 Ver pista</button>`}
-    <input id="anagram-answer" class="input-field text-center text-lg mb-3 uppercase" placeholder="Tu respuesta" value="${esc(a.answer)}" oninput="brainState.anagrams.answer=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')submitAnagram()">
-    ${a.feedback === 'ok' ? '<p class="text-green-600 text-sm mb-2">✓ Correcto</p>' : ''}
-    ${a.feedback === 'bad' ? '<p class="text-red-500 text-sm mb-2">✗ Intenta de nuevo</p>' : ''}
-    <button onclick="submitAnagram()" class="btn-primary w-full">Comprobar</button>
-  </div>`)
-}
-
-window.anagramHint = function() { brainState.anagrams.showHint = true; render() }
-window.submitAnagram = function() {
-  const a = brainState.anagrams
-  const item = a.items[a.round]
-  const guess = (a.answer || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-  const target = item.answer.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-  if (guess === target) {
-    a.score++; a.feedback = 'ok'; playTone(523)
-    setTimeout(() => {
-      a.round++; a.answer = ''; a.feedback = null; a.showHint = false
-      if (a.round >= a.total) a.finished = true
-      render()
-    }, 600)
-  } else {
-    a.feedback = 'bad'; playTone(200); render()
-  }
-}
-
 function renderLogicGame() {
   const l = brainState.logic
   if (l.finished) return brainWrapper(`<div class="text-center">
@@ -1357,40 +1272,6 @@ window.mathSubmit = function(e) {
   m.answer = ''; m.problem = genMathProblem(m.difficulty)
   render()
   setTimeout(() => { m.feedback = null; render() }, 400)
-}
-
-function renderWordsGame() {
-  const w = brainState.words
-  if (w.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${w.score}/${w.total} aciertos</p>
-    <button onclick="finishBrain(${w.score * 20})" class="btn-primary">Terminar</button></div>`)
-  if (!w.group) w.group = getWordGroup(w.difficulty)
-  const shuffled = [...w.group.words].sort(() => Math.random() - 0.5)
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Ronda ${w.round + 1}/${w.total}</p>
-    <div class="grid grid-cols-2 gap-3">
-      ${shuffled.map(word => {
-        let cls = 'habit-item p-4 rounded-xl font-medium w-full'
-        let style = ''
-        if (w.selected === word) {
-          if (word === w.group.odd) cls += ' border-red-400'
-          else { cls += ' border-2'; style = 'border-color:var(--primary)' }
-        }
-        return `<button onclick="wordSelect('${word}')" ${w.selected ? 'disabled' : ''} class="${cls}" style="${style}">${word}</button>`
-      }).join('')}
-    </div></div>`)
-}
-
-window.wordSelect = function(word) {
-  const w = brainState.words
-  w.selected = word
-  if (word !== w.group.odd) w.score++
-  render()
-  setTimeout(() => {
-    w.round++; w.selected = null; w.group = getWordGroup(w.difficulty)
-    if (w.round >= w.total) w.finished = true
-    render()
-  }, 700)
 }
 
 export function syncGimnasiaRoute(sub = []) {

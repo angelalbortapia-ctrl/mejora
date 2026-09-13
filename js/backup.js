@@ -1,5 +1,5 @@
-import { PREFIX, getToday, getSettings, saveSettings } from './core.js'
-import { buildMonthlyReport } from './analytics.js'
+import { PREFIX, getToday, getSettings, saveSettings } from '/js/core.js'
+import { buildMonthlyReport } from '/js/analytics.js'
 
 export function exportAllData() {
   const data = {}

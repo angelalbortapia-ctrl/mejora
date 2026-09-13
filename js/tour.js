@@ -1,4 +1,4 @@
-import { getSettings, saveSettings, setItem, getItem } from './core.js'
+import { getSettings, saveSettings, setItem, getItem } from '/js/core.js'
 
 const STEPS = [
   {

@@ -2,11 +2,11 @@
 
 import {
   DIFFICULTIES, getSettings, getStats, updateStats, isRoutineDoneToday, checkPlanTask, recordActivity,
-} from './core.js'
-import { awardXp, processPlanAwards } from './awards.js'
-import { navigate } from './router.js'
-import { playTone } from './sounds.js'
-import { guardDifficulty } from './page-helpers.js'
+} from '/js/core.js'
+import { awardXp, processPlanAwards } from '/js/awards.js'
+import { navigate } from '/js/router.js'
+import { playTone } from '/js/sounds.js'
+import { guardDifficulty } from '/js/page-helpers.js'
 
 const ROUTINE_STROOP_INK = [
   { key: 'rojo', label: 'Rojo', name: 'ROJO', css: '#ef4444' },
