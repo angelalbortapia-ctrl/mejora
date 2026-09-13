@@ -109,7 +109,7 @@ export function renderInicioHub() {
   ])
 
   return `${renderNeuralHero({
-    kicker: 'Al infinito y más allá',
+    kicker: 'Misiones del héroe',
     title: 'Inicio',
     sub: 'Tu cuartel general — progreso, misiones y qué hacer ahora.',
     stats: [

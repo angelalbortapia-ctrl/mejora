@@ -51,7 +51,7 @@ export function markUnlockSeen(id) {
 }
 
 export function applyTheme(themeId) {
-  if (document.body.classList.contains('theme-toy-story')) {
+  if (document.body.classList.contains('theme-rpg')) {
     document.documentElement.removeAttribute('data-theme')
     return 'default'
   }

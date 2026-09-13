@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    FORGE Design System v2 — punto de entrada único
-   Tema Toy Story · habitación de Andy
+   Tema RPG · campaña del héroe
 
    Capas:
    1. tokens     — variables y superficie base
@@ -20,4 +20,5 @@
 @import url('onboarding.css');
 @import url('forge-lessons.css');
 @import url('brain-wellness.css');
-@import url('toy-story-theme.css');
+@import url('rpg-theme.css');
+@import url('rpg-fx.css');

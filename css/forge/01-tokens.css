@@ -1,6 +1,5 @@
-/* FORGE — tokens unificados (forge oscuro + Toy Story) y superficie base */
+/* FORGE — tokens unificados (forge oscuro + RPG) y superficie base */
 
-/* ── Forge (default) ── */
 :root {
   --m-bg: #0a0c10;
   --m-bg-2: #06080b;
@@ -25,23 +24,22 @@
   --m-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.45);
   --m-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
 
-  /* Toy Story palette (referencia; activa con body.theme-toy-story) */
-  --ts-sky: #5a9fd4;
-  --ts-sky-light: #87ceeb;
-  --ts-sky-deep: #3d7ab8;
-  --ts-cloud: #ffffff;
-  --ts-cream: #fff8e7;
-  --ts-cream-dark: #f0e6d0;
-  --ts-woody-yellow: #f5c518;
-  --ts-woody-star: #ffd54f;
-  --ts-woody-brown: #7b4b2a;
-  --ts-woody-red: #c41e3a;
-  --ts-buzz-green: #3cb371;
-  --ts-buzz-purple: #6b3fa0;
-  --ts-ink: #2c1810;
-  --ts-ink-muted: #6b5344;
+  /* RPG palette — cielo zafiro + oro cálido + jade */
+  --rpg-night: #0c1424;
+  --rpg-night-mid: #162238;
+  --rpg-night-light: #243352;
+  --rpg-parchment: #faf8f3;
+  --rpg-parchment-dark: #f0ece4;
+  --rpg-ink: #1c2230;
+  --rpg-ink-muted: #5a6272;
+  --rpg-gold: #f0c75e;
+  --rpg-gold-light: #ffe49a;
+  --rpg-coral: #f07288;
+  --rpg-jade: #5eb8a8;
+  --rpg-mana: #7eb8f0;
+  --rpg-slate: #121c2e;
+  --rpg-slate-light: #1e2d48;
 
-  /* Superficies — forge usa texto claro; toy-story lo sobreescribe */
   --on-surface-text: var(--m-text);
   --on-surface-muted: var(--m-muted);
   --m-border-card: var(--m-border);
@@ -80,47 +78,46 @@
 
 html { color-scheme: dark; }
 
-/* ── Toy Story — habitación de Andy ── */
-body.theme-toy-story {
-  --m-bg: var(--ts-sky);
-  --m-bg-2: var(--ts-sky-deep);
-  --m-text: #fffef8;
-  --m-muted: #d4e9f7;
-  --m-border: rgba(255, 255, 255, 0.22);
-  --m-border-strong: rgba(255, 255, 255, 0.38);
-  --m-surface: var(--ts-cream);
-  --m-surface-2: var(--ts-cloud);
-  --m-surface-3: var(--ts-cream-dark);
-  --on-surface-text: var(--ts-ink);
-  --on-surface-muted: var(--ts-ink-muted);
-  --m-border-card: rgba(123, 75, 42, 0.2);
-  --m-border-card-strong: rgba(123, 75, 42, 0.34);
-  --m-accent: var(--ts-woody-yellow);
-  --m-accent-hover: var(--ts-woody-star);
-  --m-accent-soft: rgba(245, 197, 24, 0.22);
-  --m-accent-glow: rgba(245, 197, 24, 0.3);
-  --m-steel: var(--ts-woody-brown);
-  --m-danger: var(--ts-woody-red);
-  --m-success: var(--ts-buzz-green);
-  --m-radius: 12px;
-  --m-radius-lg: 18px;
-  --m-display: 'Fredoka One', 'Barlow Condensed', system-ui, sans-serif;
-  --m-font: 'Fredoka', 'Inter', system-ui, sans-serif;
-  --m-shadow: 0 2px 8px rgba(30, 74, 114, 0.12);
-  --m-shadow-lg: 0 4px 16px rgba(30, 74, 114, 0.14);
+body.theme-rpg {
+  --m-bg: var(--rpg-night);
+  --m-bg-2: var(--rpg-night-mid);
+  --m-text: #f0f4fc;
+  --m-muted: rgba(220, 228, 245, 0.75);
+  --m-border: rgba(240, 199, 94, 0.22);
+  --m-border-strong: rgba(240, 199, 94, 0.4);
+  --m-surface: var(--rpg-parchment);
+  --m-surface-2: var(--rpg-parchment-dark);
+  --m-surface-3: #e4e0d8;
+  --on-surface-text: var(--rpg-ink);
+  --on-surface-muted: var(--rpg-ink-muted);
+  --m-border-card: rgba(28, 34, 48, 0.1);
+  --m-border-card-strong: rgba(28, 34, 48, 0.18);
+  --m-accent: var(--rpg-gold);
+  --m-accent-hover: var(--rpg-gold-light);
+  --m-accent-soft: rgba(240, 199, 94, 0.2);
+  --m-accent-glow: rgba(240, 199, 94, 0.38);
+  --m-steel: var(--rpg-jade);
+  --m-danger: var(--rpg-coral);
+  --m-success: var(--rpg-jade);
+  --m-radius: 10px;
+  --m-radius-lg: 14px;
+  --m-display: 'Cinzel', 'Georgia', serif;
+  --m-font: 'Crimson Pro', 'Georgia', serif;
+  --m-shadow: 0 4px 16px rgba(10, 8, 20, 0.25);
+  --m-shadow-lg: 0 8px 32px rgba(10, 8, 20, 0.32);
   --bg: var(--m-bg);
-  --bg-card: var(--m-surface);
+  --bg-card: var(--rpg-parchment);
   --text: var(--m-text);
   --text-muted: var(--m-muted);
   --border: var(--m-border);
-  --primary: var(--m-accent);
-  --btn-text: var(--ts-ink);
-  --secondary-bg: var(--m-surface-2);
-  --header-bg: rgba(90, 159, 212, 0.94);
-  --sidebar-bg: linear-gradient(180deg, #8b5a2b 0%, #6b3f1f 45%, #4a2a12 100%);
-  --gradient-card: linear-gradient(165deg, #fff 0%, var(--ts-cream) 100%);
-  --glass-bg: rgba(255, 248, 231, 0.92);
-  color-scheme: light;
+  --primary: var(--rpg-gold);
+  --btn-text: var(--rpg-ink);
+  --secondary-bg: var(--rpg-parchment-dark);
+  --header-bg: linear-gradient(180deg, var(--rpg-slate-light) 0%, var(--rpg-slate) 100%);
+  --sidebar-bg: linear-gradient(180deg, #2a4068 0%, var(--rpg-slate) 45%, #0a1020 100%);
+  --gradient-card: linear-gradient(165deg, #fff 0%, var(--rpg-parchment) 50%, var(--rpg-parchment-dark) 100%);
+  --glass-bg: rgba(250, 248, 243, 0.94);
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -147,13 +144,7 @@ body::before {
   background:
     radial-gradient(ellipse 80% 50% at 0% 0%, rgba(212, 160, 18, 0.06), transparent 50%),
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(92, 107, 122, 0.08), transparent 45%),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 47px,
-      rgba(255, 255, 255, 0.015) 47px,
-      rgba(255, 255, 255, 0.015) 48px
-    );
+    repeating-linear-gradient(0deg, transparent, transparent 47px, rgba(255, 255, 255, 0.015) 47px, rgba(255, 255, 255, 0.015) 48px);
 }
 
 #app-content,
@@ -164,7 +155,6 @@ body::before {
 
 .font-display {
   font-family: var(--m-display);
-  letter-spacing: 0.02em;
-  font-weight: 700;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }

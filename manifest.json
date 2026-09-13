@@ -1,14 +1,14 @@
 {
   "name": "Mejora",
   "short_name": "Mejora",
-  "description": "Al infinito y más allá — hábitos, gimnasia cerebral y calma",
+  "description": "Tu campaña — hábitos, gimnasia cerebral y calma",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "lang": "es",
-  "background_color": "#1a4d7a",
-  "theme_color": "#1a4d7a",
+  "background_color": "#0c1424",
+  "theme_color": "#f0c75e",
   "icons": [
     { "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "public/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
