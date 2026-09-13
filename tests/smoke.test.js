@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 describe('smoke — rutas y contenido', () => {
   it('app define rutas principales', () => {
     const app = readFileSync(join(root, 'js/app.js'), 'utf8')
-    for (const p of ['/', '/mejora', '/gimnasia', '/meditacion', '/settings']) {
+    for (const p of ['/', '/mejora', '/gimnasia', '/meditacion', '/ajustes']) {
       assert.match(app, new RegExp(`['"]${p.replace('/', '\\/')}['"]:`))
     }
   })
@@ -33,7 +33,7 @@ describe('smoke — rutas y contenido', () => {
   })
 
   it('ejercicios cerebrales definidos', () => {
-    assert.ok(Object.keys(EXERCISES).length >= 8)
+    assert.ok(Object.keys(EXERCISES).length >= 15)
   })
 })
 

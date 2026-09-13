@@ -150,12 +150,9 @@ export async function probeFishProxy() {
   if (!useFishProxy()) return Boolean(getApiKey())
   try {
     const res = await fetch(fishTtsUrl(), { method: 'OPTIONS' })
-    if (res.status === 404 || res.status === 501) {
-      fishProxyUnavailable = true
-      return false
-    }
-    fishProxyUnavailable = false
-    return true
+    const ok = res.status === 204 || res.status === 200
+    fishProxyUnavailable = !ok
+    return ok
   } catch {
     fishProxyUnavailable = true
     return false

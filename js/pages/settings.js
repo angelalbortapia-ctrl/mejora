@@ -331,7 +331,6 @@ export function bindSettingsGlobals(deps = {}) {
   const { invalidateDailyApis, reloadDailyApis } = deps
   const render = () => window.render?.()
 
-  window.toggleDark = (v) => { const s = getSettings(); s.darkMode = v; saveSettings(s); render() }
   window.toggleCompactSidebar = (v) => {
     const s = getSettings(); s.compactSidebar = v; saveSettings(s); applyCompactSidebar(v); render()
   }

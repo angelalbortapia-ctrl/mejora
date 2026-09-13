@@ -3,7 +3,7 @@
 :root {
   --ds-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ds-duration: 0.28s;
-  --ds-tabs-bg: rgba(15, 23, 42, 0.04);
+  --ds-tabs-bg: rgba(255, 255, 255, 0.04);
   --ds-panel-bg: var(--glass-bg, var(--bg-card));
   --ds-panel-border: var(--glass-border, var(--border));
   --ds-radius: var(--radius-lg);

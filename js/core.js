@@ -564,6 +564,11 @@ export const GOAL_TEMPLATES = [
   { title: '60 minutos meditados', metric: 'meditation', target: 60, skill: 'mindfulness', icon: '🧘', days: 30, pitch: 'Una hora de calma acumulada cambia cómo reaccionas bajo presión.' },
   { title: '20 rutinas con reflexión', metric: 'reflections', target: 20, skill: 'wisdom', icon: '📝', days: 45, pitch: 'Veinte mañanas donde paraste a pensar antes de actuar.' },
   { title: '100 hábitos completados', metric: 'habits', target: 100, skill: 'discipline', icon: '✅', days: 60, pitch: 'Sistema sobre motivación — cien pruebas de que funciona.' },
+  { title: '14 días de racha', metric: 'streak', target: 14, skill: 'discipline', icon: '🔥', days: 21, pitch: 'Dos semanas seguidas — el umbral donde el hábito empieza a sentirse normal.' },
+  { title: '200 minutos de calma', metric: 'meditation', target: 200, skill: 'mindfulness', icon: '🌊', days: 60, pitch: 'Tres horas de práctica acumulada — tu sistema nervioso lo nota.' },
+  { title: '50 lecciones de escuela', metric: 'brain', target: 50, skill: 'mental', icon: '🏛️', days: 120, pitch: 'Medio currículo dominado — cerebro con mapa, no solo hacks.' },
+  { title: '30 reflexiones escritas', metric: 'reflections', target: 30, skill: 'wisdom', icon: '📔', days: 45, pitch: 'Un mes de pensar en papel — claridad que no da el scroll.' },
+  { title: '21 días sin romper plan', metric: 'routines', target: 21, skill: 'discipline', icon: '⚔️', days: 30, pitch: 'Tres semanas donde el plan del día no fue opcional.' },
 ]
 
 export function getGoals() {

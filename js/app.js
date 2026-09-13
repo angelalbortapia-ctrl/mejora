@@ -116,7 +116,7 @@ window.onboardBack = function() {
   onboarding.step--
   resetOnboardingCache()
   playClick()
-  render()
+  render(true)
 }
 
 window.onboardNext = function() {
@@ -148,7 +148,19 @@ window.onboardNext = function() {
   onboarding.step++
   resetOnboardingCache()
   playClick()
-  render()
+  render(true)
+}
+
+window.skipOnboarding = function() {
+  const s = getSettings()
+  s.onboardingComplete = true
+  onboarding.forced = false
+  saveSettings(s)
+  onboarding.step = 0
+  resetOnboardingCache()
+  document.body.classList.remove('onboarding-open')
+  playClick()
+  render(true)
 }
 
 window.finishOnboarding = async function() {
@@ -238,64 +250,7 @@ function syncRouteFromHash() {
   if (path === '/meditacion') syncMeditationFromRoute(sub)
 }
 
-function renderCore() {
-  const { path, sub, full } = parsePath()
-  if (path === '/desafios') {
-    location.replace('#/plan')
-    return
-  }
-  syncRouteFromHash()
-  const prevRoute = getLastRenderPath()
-  const prevPath = parsePath(`#${prevRoute || '/'}`).path
-  if (prevPath === '/gimnasia' && path !== '/gimnasia') clearEphemeralBrainState()
-  if (prevPath === '/rutina' && path !== '/rutina') stopRoutineIfLeaving(path)
-  if (path !== '/meditacion') {
-    const medActive = medState.session || medState.freeTimer?.active
-    if (medActive && !medState.completed) {
-      stopMeditationSession()
-      medState.session = null
-      medState.completed = false
-      medState.view = 'hub'
-    } else if (medActive && medState.completed) {
-      medState.session = null
-      medState.completed = false
-      medState.view = 'hub'
-    } else if (medState.ambientPreview || isAmbientPlaying()) {
-      stopAmbientSound()
-      medState.ambientPreview = false
-    }
-  }
-  const content = document.getElementById('app-content')
-  const routeKey = full || '/'
-  const sameRoute = routeKey === prevRoute
-  const livePatch = sameRoute && patchLiveUI(path)
-
-  if (livePatch) {
-    content.classList.add('route-stable')
-    content.classList.remove('route-enter')
-    return
-  }
-
-  content.classList.remove('route-stable', 'route-enter')
-  try {
-    content.innerHTML = (routes[path] || routes['/'])()
-  } catch (err) {
-    console.error('[Mejora] render error', path, err)
-    content.innerHTML = `<div class="card" style="max-width:28rem;margin:2rem auto;padding:1.5rem">
-      <h2 style="margin:0 0 0.5rem">Algo falló al cargar esta vista</h2>
-      <p style="margin:0 0 1rem;line-height:1.5;color:var(--m-muted)">Recarga con <strong>Cmd+Shift+R</strong>. Si abriste <code>index.html</code> directo, usa el servidor local.</p>
-      <pre style="font-size:0.75rem;overflow:auto;padding:0.75rem;background:var(--m-surface-2,#f5f5f5);border-radius:8px">${esc(String(err.message || err))}</pre>
-      <button type="button" class="btn-primary mt-4" onclick="location.reload()">Recargar</button>
-    </div>`
-  }
-  if (!sameRoute) {
-    requestAnimationFrame(() => content.classList.add('route-enter'))
-    setLastRenderPath(routeKey)
-    maybeAutoSectionGuide(path)
-  } else {
-    content.classList.add('route-stable')
-  }
-
+function applyRenderChrome(path, prevPath, sameRoute) {
   setActiveNav(path)
   const progress = getPlanProgress()
   const rank = getRank()
@@ -352,6 +307,72 @@ function renderCore() {
   } else if (prevPath === '/meditacion') {
     import('/js/meditation-fx.js').then(m => m.stopCalmaFx?.()).catch(() => {})
   }
+}
+
+function renderCore() {
+  const { path, sub, full } = parsePath()
+  if (path === '/desafios') {
+    location.replace('#/plan')
+    return
+  }
+  syncRouteFromHash()
+  const prevRoute = getLastRenderPath()
+  const prevPath = parsePath(`#${prevRoute || '/'}`).path
+  if (prevPath === '/gimnasia' && path !== '/gimnasia') clearEphemeralBrainState()
+  if (prevPath === '/rutina' && path !== '/rutina') stopRoutineIfLeaving(path)
+  if (path !== '/meditacion') {
+    const medActive = medState.session || medState.freeTimer?.active
+    if (medActive && !medState.completed) {
+      stopMeditationSession()
+      medState.session = null
+      medState.completed = false
+      medState.view = 'hub'
+    } else if (medActive && medState.completed) {
+      medState.session = null
+      medState.completed = false
+      medState.view = 'hub'
+    } else if (medState.ambientPreview || isAmbientPlaying()) {
+      stopAmbientSound()
+      medState.ambientPreview = false
+    }
+  }
+  const content = document.getElementById('app-content')
+  const routeKey = full || '/'
+  const sameRoute = routeKey === prevRoute
+
+  if (path === '/gimnasia' && brainState.exercise && document.getElementById('brain-lab-runtime')) {
+    applyRenderChrome(path, prevPath, sameRoute)
+    return
+  }
+
+  const livePatch = sameRoute && patchLiveUI(path)
+
+  if (livePatch) {
+    content.classList.add('route-stable')
+    content.classList.remove('route-enter')
+  } else {
+    content.classList.remove('route-stable', 'route-enter')
+    try {
+      content.innerHTML = (routes[path] || routes['/'])()
+    } catch (err) {
+      console.error('[Mejora] render error', path, err)
+      content.innerHTML = `<div class="card" style="max-width:28rem;margin:2rem auto;padding:1.5rem">
+        <h2 style="margin:0 0 0.5rem">Algo falló al cargar esta vista</h2>
+        <p style="margin:0 0 1rem;line-height:1.5;color:var(--m-muted)">Recarga con <strong>Cmd+Shift+R</strong>. Si abriste <code>index.html</code> directo, usa el servidor local.</p>
+        <pre style="font-size:0.75rem;overflow:auto;padding:0.75rem;background:var(--m-surface-2,#1a2029);border-radius:8px;color:var(--m-muted,#8a8480)">${esc(String(err.message || err))}</pre>
+        <button type="button" class="btn-primary mt-4" onclick="location.reload()">Recargar</button>
+      </div>`
+    }
+    if (!sameRoute) {
+      requestAnimationFrame(() => content.classList.add('route-enter'))
+      setLastRenderPath(routeKey)
+      maybeAutoSectionGuide(path)
+    } else {
+      content.classList.add('route-stable')
+    }
+  }
+
+  applyRenderChrome(path, prevPath, sameRoute)
 }
 
 function showInstallBanner() {
@@ -412,11 +433,13 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 function showWrongServerBanner() {
   if (document.getElementById('mejora-server-banner')) return
+  const port = location.port || (location.protocol === 'https:' ? '443' : '80')
+  const correctUrl = `http://127.0.0.1:5173/?v=${ASSET_VERSION}`
   const box = document.createElement('div')
   box.id = 'mejora-server-banner'
   box.setAttribute('role', 'alert')
   box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:0.85rem 1rem;background:#3a1518;border-bottom:1px solid #c45c5c;color:#f5d6d6;font:500 0.92rem/1.45 system-ui,sans-serif;text-align:center'
-  box.innerHTML = 'La voz de Calma no funciona con este servidor. Cierra la pestaña, abre <strong>Mejora.app</strong> de nuevo o ejecuta <strong>start-server.command</strong>.'
+  box.innerHTML = `La voz de Calma no funciona en el puerto <strong>${port}</strong>. <a href="${correctUrl}" style="color:#ffd4d4;text-decoration:underline">Abrir en :5173</a> o ejecuta <strong>start-server.command</strong> / abre <strong>Mejora.app</strong>.`
   document.body.prepend(box)
 }
 

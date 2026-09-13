@@ -18,6 +18,13 @@ export const LOGIC_PUZZLES = [
   { q: 'Si ayer era mañana del jueves, ¿qué día es hoy?', options: ['Miércoles', 'Viernes', 'Sábado', 'Domingo'], answer: 2, diff: 'dificil', explain: 'Si ayer era “mañana del jueves”, ayer era viernes → hoy es sábado. Razonamiento temporal inverso.' },
   { q: 'Tienes una moneda falsa entre 12. Pesa distinto pero no sabes si más o menos. Con una balanza de dos platos, ¿mínimo de pesadas para encontrarla?', options: ['2', '3', '4', '6'], answer: 1, diff: 'experto', explain: 'Divide en 3 grupos de 4. Primera pesada identifica el grupo; segunda entre 4; tercera entre 2. Máximo 3 pesadas.' },
   { q: '¿Cuál afirmación es siempre verdadera? “Si llueve, llevo paraguas” vs “Si llevo paraguas, llueve”', options: ['Ambas', 'Solo la primera implica la segunda', 'Solo la segunda implica la primera', 'Ninguna implica la otra'], answer: 3, diff: 'medio', explain: 'Correr es condición suficiente para sudar, no necesaria. Llevar paraguas no implica lluvia (puede ser preventivo). Falacia del afirmar el consecuente.' },
+  { q: 'María es más alta que Luis. Luis es más alto que Ana. ¿Quién es el más bajo?', options: ['María', 'Luis', 'Ana', 'No se puede saber'], answer: 2, diff: 'facil', explain: 'Transividad: María > Luis > Ana → Ana es la más baja.' },
+  { q: 'Un tren sale a las 8:00 y tarda 2 h 15 min. ¿A qué hora llega?', options: ['10:00', '10:15', '10:30', '11:15'], answer: 1, diff: 'facil' },
+  { q: 'Si duplicas el radio de un círculo, ¿qué pasa con el área?', options: ['Se duplica', 'Se cuadruplica', 'Se triplica', 'No cambia'], answer: 1, diff: 'medio', explain: 'Área = πr². Si r → 2r, el área ×4.' },
+  { q: '¿Qué palabra completa? PAN, LECHE, ?, QUESO', options: ['HUEVO', 'MESA', 'AUTO', 'CIELO'], answer: 0, diff: 'facil', explain: 'Cuatro alimentos básicos; huevo encaja en la categoría.' },
+  { q: 'Tienes 3 cajas: una solo manzanas, una solo naranjas, una mezcladas. Todas mal etiquetadas. Sacas 1 fruta de la caja “mezcladas”. Es manzana. ¿Qué hay en la caja “naranjas”?', options: ['Solo naranjas', 'Solo manzanas', 'Mezcladas', 'Imposible'], answer: 1, diff: 'experto', explain: 'La caja mal etiquetada “mezcladas” no puede ser mezclada → es solo manzanas o solo naranjas. Si sacaste manzana, es solo manzanas. La caja “naranjas” es la mezclada real; la de “manzanas” son solo naranjas.' },
+  { q: 'Continúa: 81, 27, 9, 3, ?', options: ['0', '1', '2', '6'], answer: 1, diff: 'medio', explain: 'Cada término ÷3: 81→27→9→3→1.' },
+  { q: 'Si hoy es miércoles, ¿qué día será en 100 días?', options: ['Viernes', 'Sábado', 'Domingo', 'Lunes'], answer: 0, diff: 'medio', explain: '100 ÷ 7 = 14 semanas + 2 días. Miércoles + 2 = viernes.' },
 ]
 
 export const WORD_GROUPS = {
@@ -29,6 +36,8 @@ export const WORD_GROUPS = {
   ],
   medio: [
     { words: ['Metáfora', 'Símil', 'Hipérbole', 'Sustantivo'], odd: 'Sustantivo' },
+    { words: ['Atención', 'Memoria', 'Inhibición', 'Silla'], odd: 'Silla' },
+    { words: ['Meditar', 'Respirar', 'Escanear cuerpo', 'Correr'], odd: 'Correr' },
     { words: ['Fotosíntesis', 'Clorofila', 'Estoma', 'Hidrógeno'], odd: 'Hidrógeno' },
     { words: ['Democracia', 'República', 'Monarquía', 'Triángulo'], odd: 'Triángulo' },
     { words: ['Allegro', 'Adagio', 'Presto', 'Pianissimo'], odd: 'Pianissimo' },
@@ -36,6 +45,9 @@ export const WORD_GROUPS = {
   dificil: [
     { words: ['Epistemología', 'Ontología', 'Fenomenología', 'Biología'], odd: 'Biología' },
     { words: ['Mitocondria', 'Ribosoma', 'Lisosoma', 'Neurona'], odd: 'Neurona' },
+    { words: ['Hipocampo', 'Amígdala', 'Tálamo', 'Biblioteca'], odd: 'Biblioteca' },
+    { words: ['Dopamina', 'Serotonina', 'Noradrenalina', 'Café'], odd: 'Café' },
+    { words: ['Sinapsis', 'Axón', 'Dendrita', 'Ventana'], odd: 'Ventana' },
     { words: ['Catalizador', 'Reactivo', 'Producto', 'Gravedad'], odd: 'Gravedad' },
     { words: ['Surrealismo', 'Cubismo', 'Impresionismo', 'Capitalismo'], odd: 'Capitalismo' },
   ],
@@ -148,6 +160,23 @@ export const HABIT_TEMPLATES = [
   { id: 'tpl_music', name: 'Música sin distracciones', icon: '🎵', category: 'mente', type: 'check', target: 1, unit: 'sesión', difficulty: 1, xp: 15 },
   { id: 'tpl_review', name: 'Revisar el día', icon: '🌙', category: 'sabiduria', type: 'check', target: 1, unit: 'noche', difficulty: 2, xp: 25 },
   { id: 'tpl_stairs', name: 'Usar escaleras', icon: '🪜', category: 'salud', type: 'check', target: 1, unit: 'vez', difficulty: 1, xp: 15 },
+  { id: 'tpl_protein', name: 'Proteína en el desayuno', icon: '🥚', category: 'salud', type: 'check', target: 1, unit: 'comida', difficulty: 2, xp: 25 },
+  { id: 'tpl_journaling', name: 'Diario de 5 líneas', icon: '📓', category: 'sabiduria', type: 'check', target: 1, unit: 'entrada', difficulty: 2, xp: 30 },
+  { id: 'tpl_coldshower', name: 'Ducha fría (30 s)', icon: '🚿', category: 'salud', type: 'check', target: 1, unit: 'ronda', difficulty: 3, xp: 35 },
+  { id: 'tpl_posture', name: 'Chequeo postural', icon: '🧍', category: 'salud', type: 'counter', target: 3, unit: 'veces', difficulty: 1, xp: 20 },
+  { id: 'tpl_screen_limit', name: 'Límite de pantalla nocturno', icon: '🌙', category: 'productividad', type: 'check', target: 1, unit: 'noche', difficulty: 3, xp: 40 },
+  { id: 'tpl_cook', name: 'Cocinar en casa', icon: '🍳', category: 'salud', type: 'check', target: 1, unit: 'comida', difficulty: 2, xp: 30 },
+  { id: 'tpl_school', name: 'Lección de Escuela', icon: '🏛️', category: 'mente', type: 'check', target: 1, unit: 'lección', difficulty: 2, xp: 35 },
+  { id: 'tpl_walk_meal', name: 'Caminar después de comer', icon: '🚶‍♂️', category: 'salud', type: 'check', target: 1, unit: 'paseo', difficulty: 1, xp: 20 },
+  { id: 'tpl_bedtime', name: 'Hora fija de dormir', icon: '🛏️', category: 'salud', type: 'check', target: 1, unit: 'noche', difficulty: 3, xp: 35 },
+  { id: 'tpl_affirm', name: 'Afirmación concreta', icon: '✨', category: 'mente', type: 'check', target: 1, unit: 'frase', difficulty: 1, xp: 15 },
+  { id: 'tpl_strength', name: 'Fuerza / pesas', icon: '🏋️', category: 'salud', type: 'check', target: 1, unit: 'sesión', difficulty: 3, xp: 40 },
+  { id: 'tpl_partner', name: 'Tiempo de pareja', icon: '💑', category: 'relaciones', type: 'check', target: 1, unit: 'momento', difficulty: 2, xp: 30 },
+  { id: 'tpl_nature', name: '15 min en naturaleza', icon: '🌲', category: 'salud', type: 'check', target: 1, unit: 'salida', difficulty: 2, xp: 30 },
+  { id: 'tpl_budget', name: 'Revisar gastos', icon: '💰', category: 'productividad', type: 'check', target: 1, unit: 'revisión', difficulty: 2, xp: 25 },
+  { id: 'tpl_teeth', name: 'Hilo dental', icon: '🦷', category: 'salud', type: 'check', target: 1, unit: 'noche', difficulty: 1, xp: 15 },
+  { id: 'tpl_stretch_pm', name: 'Estirar antes de dormir', icon: '🌛', category: 'salud', type: 'check', target: 1, unit: 'rutina', difficulty: 1, xp: 20 },
+  { id: 'tpl_no_snack', name: 'Sin snack después de cena', icon: '🚫', category: 'salud', type: 'check', target: 1, unit: 'noche', difficulty: 2, xp: 25 },
 ]
 
 export const WEEKLY_REVIEW_PROMPTS = [
@@ -155,6 +184,10 @@ export const WEEKLY_REVIEW_PROMPTS = [
   '¿Qué hábito te costó más mantener?',
   '¿Qué aprendiste sobre ti mismo/a?',
   '¿Cuál es tu meta principal para la próxima semana?',
+  '¿Qué lección de Escuela o sesión de Calma más te marcó?',
+  '¿En qué momento perdiste más energía sin darte cuenta?',
+  '¿Qué harías distinto si repitieras esta semana?',
+  '¿A quién agradeces o apoyaste esta semana?',
 ]
 
 export function genMathProblem(difficulty) {
@@ -189,20 +222,20 @@ export function genMathProblem(difficulty) {
 
 export function getMemoryConfig(difficulty) {
   const configs = {
-    facil: { start: 3, colors: 4, speed: 700 },
-    medio: { start: 4, colors: 5, speed: 550 },
-    dificil: { start: 5, colors: 6, speed: 450 },
-    experto: { start: 6, colors: 6, speed: 350 },
+    facil: { start: 4, colors: 4, speed: 620 },
+    medio: { start: 5, colors: 5, speed: 480 },
+    dificil: { start: 6, colors: 6, speed: 380 },
+    experto: { start: 7, colors: 6, speed: 290 },
   }
   return configs[difficulty] || configs.medio
 }
 
 export function getSimonConfig(difficulty) {
   const configs = {
-    facil: { start: 3, max: 9, speed: 800 },
-    medio: { start: 4, max: 9, speed: 650 },
-    dificil: { start: 5, max: 9, speed: 500 },
-    experto: { start: 6, max: 9, speed: 400 },
+    facil: { start: 4, max: 9, speed: 720 },
+    medio: { start: 5, max: 9, speed: 560 },
+    dificil: { start: 6, max: 9, speed: 430 },
+    experto: { start: 7, max: 9, speed: 320 },
   }
   return configs[difficulty] || configs.medio
 }
@@ -238,12 +271,28 @@ export const ANAGRAMS = [
   { scrambled: 'PASTA', answer: 'TAPAS', hint: 'Comida española' },
   { scrambled: 'METAS', answer: 'TAMES', hint: 'Domar' },
   { scrambled: 'ARCA', answer: 'CARA', hint: 'Rostro' },
+  { scrambled: 'OMTRI', answer: 'RITMO', hint: 'Pulso musical' },
+  { scrambled: 'EHCON', answer: 'NOCHE', hint: 'Después del atardecer' },
+  { scrambled: 'LOFCA', answer: 'FOCAL', hint: 'Punto de atención' },
+  { scrambled: 'NEUORNA', answer: 'NEURONA', hint: 'Célula del cerebro' },
+  { scrambled: 'AICNEIC', answer: 'CIENCIA', hint: 'Método y conocimiento' },
+  { scrambled: 'SALPAT', answer: 'PLASTA', hint: 'Masa moldeable' },
+  { scrambled: 'AISNSPSI', answer: 'SINAPSIS', hint: 'Unión entre neuronas' },
+  { scrambled: 'SOCOF', answer: 'FOCOS', hint: 'Centros de atención' },
+  { scrambled: 'SAGAR', answer: 'GRASA', hint: 'Lípido corporal' },
+  { scrambled: 'SILTRA', answer: 'LISTAR', hint: 'Enumerar en orden' },
+  { scrambled: 'PLASTO', answer: 'POSTAL', hint: 'Correo tradicional' },
+  { scrambled: 'MENTAL', answer: 'LAMENT', hint: 'Queja o pesar' },
   { scrambled: 'RACHA', answer: 'CHARA', hint: 'Pájaro cantor' },
   { scrambled: 'LUNA', answer: 'ANUL', hint: 'Invalidar' },
   { scrambled: 'ONDA', answer: 'DANO', hint: 'Perjuicio' },
   { scrambled: 'SANO', answer: 'ANOS', hint: 'Unidades de tiempo' },
   { scrambled: 'TORMO', answer: 'MOTOR', hint: 'Máquina que impulsa' },
   { scrambled: 'CORTO', answer: 'TROCO', hint: 'Pedazo' },
+  { scrambled: 'ACORNE', answer: 'CORNEA', hint: 'Capa transparente del ojo' },
+  { scrambled: 'RADIO', answer: 'DARIO', hint: 'Nombre propio' },
+  { scrambled: 'PLATON', answer: 'PONTAL', hint: 'Estructura o puente' },
+  { scrambled: 'ANGRES', answer: 'SANGRE', hint: 'Líquido vital' },
 ]
 
 export const SEQUENCE_POOL = {

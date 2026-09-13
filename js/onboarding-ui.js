@@ -67,7 +67,7 @@ function overlayHTML() {
         <li><span class="onboarding-info-icon">2</span> Cuatro habilidades: mente, calma, disciplina, sabiduría</li>
         <li><span class="onboarding-info-icon">3</span> Todo se guarda en tu dispositivo (offline)</li>
       </ul>
-      ${actionsHTML('Empezar la guía', 'onboardNext')}
+      ${actionsHTML('Empezar la guía', 'onboardNext', { secondaryLabel: 'Saltar por ahora', secondaryFn: 'skipOnboarding' })}
     </div></div>`
   }
 

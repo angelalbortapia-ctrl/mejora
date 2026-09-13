@@ -6,15 +6,28 @@ import {
 } from '/js/core.js'
 import {
   genMathProblem, getMemoryConfig, getSimonConfig, getLogicPuzzles, pickSequence, COLORS,
+  getAnagrams, WORD_GROUPS,
 } from '/js/content.js'
 import {
-  COGNITIVE_DOMAINS, EXERCISES, getTodaysSession, getDomainProgress, getProgramStats,
+  COGNITIVE_DOMAINS, EXERCISES, EXERCISE_GUIDES, getExerciseGuide, getTodaysSession, getDomainProgress, getProgramStats,
   completeSession, isSessionDoneToday, PROGRAM_DISCLAIMER, getExerciseLevel, updateExerciseLevel,
 } from '/js/brain-program.js'
 import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
   initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
+  initReaction, reactionDelayMs, reactionGoWindowMs, scoreReactionRt, initOddOut, initAnagram, buildAnagramChoices,
+  initDualNBack, initCPT, initRevSpan, revSpanGenerate, initPasat,
+  initVisNBack, initTrailMaking, initWisconsin, initANT,
+  brainTrialCount, getIntensity,
 } from '/js/brain-exercises.js'
+import {
+  logTrial, renderPracticeBanner, renderTrialFlash, renderPaceRing,
+  isPractice, beginScoredBlock, PRACTICE_TRIALS, getProtocolHistory, analyzeSessionResults,
+} from '/js/brain-metrics.js'
+import {
+  mountClinicalHandlers, CLINICAL_PROTOCOLS, renderStroopSwatches,
+  stroopTrialMeta, stroopHudIndex, stroopHudTotal,
+} from '/js/brain-clinical-lab.js'
 import { subTabBar, emptyState } from '/js/ui.js'
 import { playTone, playClick, playSuccess } from '/js/sounds.js'
 import { guardDifficulty, difficultyPicker } from '/js/page-helpers.js'
@@ -38,13 +51,71 @@ import { mountSynapseField, unmountSynapseField, isSynapseFieldMounted } from '/
 import { renderNeuralHero } from '/js/brain-neural-theme.js'
 import { normalizeBrainView, bindBrainNavGlobals, goTrain, goBrainTab, goLearn } from '/js/brain-nav.js'
 
+let clinicalLab = null
+function ensureClinicalLab() {
+  if (clinicalLab) return clinicalLab
+  clinicalLab = mountClinicalHandlers({
+    brainState, render, brainDelay, playTone, markTrial,
+    renderProtocolIntro, brainFinishBtn, renderProtocolDebrief,
+    brainWrapper, brainHud, brainTimers,
+    getIntensity, brainTrialCount,
+  })
+  return clinicalLab
+}
+
 let catalogFilterTimer = null
 let lastSynapseView = null
 let synapseCanvasEl = null
 let mathTimer = null
+let trialDeadlineTimer = null
+let exerciseRenderRAF = null
+let exerciseRenderLock = false
+
+function flushExerciseRender() {
+  const stage = document.getElementById('brain-exercise-stage')
+  if (!brainState.exercise || !stage) return
+  if (exerciseRenderLock) return
+  exerciseRenderLock = true
+  brainState._patchOnly = true
+  try {
+    stage.innerHTML = renderBrainExercise()
+    syncBrainLabChrome()
+    patchTrialHudDOM()
+    requestAnimationFrame(() => {
+      const focusEl = document.getElementById('revspan-input')
+        || document.getElementById('pasat-answer')
+        || document.getElementById('math-answer')
+      focusEl?.focus()
+    })
+  } catch (err) {
+    console.error('[brain-lab] render error', brainState.exercise, err)
+    brainState._patchOnly = false
+    exerciseRenderLock = false
+    if (typeof window.render === 'function') window.render(true)
+    return
+  } finally {
+    brainState._patchOnly = false
+    exerciseRenderLock = false
+  }
+}
 
 function render(immediate = false) {
-  if (typeof window.render === 'function') window.render(immediate)
+  const stage = document.getElementById('brain-exercise-stage')
+  if (brainState.exercise && stage) {
+    if (immediate) {
+      if (exerciseRenderRAF) cancelAnimationFrame(exerciseRenderRAF)
+      exerciseRenderRAF = null
+      flushExerciseRender()
+      return
+    }
+    if (exerciseRenderRAF) return
+    exerciseRenderRAF = requestAnimationFrame(() => {
+      exerciseRenderRAF = null
+      flushExerciseRender()
+    })
+    return
+  }
+  if (typeof window.render === 'function') window.render(immediate || !!brainState.exercise)
 }
 
 let brainState = {
@@ -54,16 +125,185 @@ let brainState = {
   libraryFilter: { q: '', topic: 'all' }, pubmed: { query: '', results: [], loading: false },
   activePaper: null, paperMeta: null, reviewFlow: null,
   activeLesson: null, lessonFlow: null,
-  session: null, memory: {}, math: {}, simon: {}, logic: {},
+  session: null, protocolBrief: null, memory: {}, math: {}, simon: {}, logic: {},
   nback: {}, stroop: {}, flanker: {}, switching: {}, gonogo: {}, corsi: {}, symbols: {},
+  visnback: {}, trail: {}, wisconsin: {}, ant: {},
+  reaction: {}, anagram: {}, oddout: {},
+  gameMeta: { streak: 0, bestStreak: 0, lastRt: null },
 }
 let brainTimers = []
+function resetGameMeta() {
+  brainState.gameMeta = { streak: 0, bestStreak: 0, lastRt: null, multiplier: 1 }
+}
+function markTrial(correct, rt = null) {
+  bumpCombo(correct)
+  if (rt != null) brainState.gameMeta.lastRt = Math.round(rt)
+}
+function brainHud(current, total, label = '') {
+  const g = brainState.gameMeta
+  const pct = total > 0 ? Math.round((current / total) * 100) : 0
+  return `<div class="brain-lab-metrics" aria-label="Progreso">
+    <div class="brain-lab-metrics__row">
+      <span class="brain-lab-metrics__label">${esc(label || 'Progreso')}</span>
+      <span class="brain-lab-metrics__value">${current}/${total}</span>
+    </div>
+    <div class="brain-lab-metrics__track"><div class="brain-lab-metrics__fill" style="width:${pct}%"></div></div>
+    <div class="brain-lab-metrics__meta">
+      ${g.streak > 1 ? `<span class="brain-lab-metrics__streak">Racha ${g.streak}</span>` : ''}
+      ${g.lastRt ? `<span class="brain-lab-metrics__rt">${g.lastRt} ms</span>` : ''}
+      ${g.multiplier > 1 ? `<span class="brain-lab-metrics__mult">×${g.multiplier.toFixed(1)}</span>` : ''}
+    </div>
+  </div>`
+}
+function clearTrialDeadline() {
+  if (trialDeadlineTimer) {
+    clearInterval(trialDeadlineTimer)
+    trialDeadlineTimer = null
+  }
+  brainState.trialDeadlineMs = null
+  brainState.trialTimeLeft = null
+}
+function patchTrialHudDOM() {
+  if (brainState.trialTimeLeft == null || !brainState.trialDeadlineMs) return false
+  syncBrainLabChrome()
+  return true
+}
+
+const TIMED_TRIAL_HANDLERS = {
+  stroop: () => stroopAnswer('__timeout__'),
+  flanker: () => flankerAnswer('__timeout__'),
+  switching: () => switchAnswer('__timeout__'),
+  logic: () => logicAnswer(-1),
+  sequence: () => seqAnswer(-999999),
+  anagram: () => anagramPick(-1),
+  oddout: () => oddoutPick(-1),
+}
+
+function queueArmTrial() {
+  const id = brainState.exercise
+  const handler = TIMED_TRIAL_HANDLERS[id]
+  if (!handler) return
+  brainTimers.push(setTimeout(() => {
+    if (brainState.exercise !== id) return
+    const ms = getIntensity(brainState.difficulty).timeLimit
+    if (!ms) return
+    brainState.trialStart = Date.now()
+    startTrialDeadline(ms, handler)
+  }, 80))
+}
+
+function startTrialDeadline(ms, onExpire) {
+  clearTrialDeadline()
+  if (!ms || ms <= 0) return
+  brainState.trialDeadlineMs = ms
+  brainState.trialTimeLeft = ms
+  const start = Date.now()
+  trialDeadlineTimer = setInterval(() => {
+    const left = ms - (Date.now() - start)
+    brainState.trialTimeLeft = left
+    if (left <= 0) {
+      clearTrialDeadline()
+      onExpire()
+    } else {
+      patchTrialHudDOM()
+      syncBrainLabChrome()
+    }
+  }, 50)
+}
+function bumpCombo(correct) {
+  const g = brainState.gameMeta
+  if (correct) {
+    g.streak += 1
+    g.bestStreak = Math.max(g.bestStreak, g.streak)
+    g.multiplier = Math.min(3, 1 + g.streak * 0.12)
+  } else {
+    g.streak = 0
+    g.multiplier = 1
+  }
+}
+function brainDelay(fn, ms) {
+  const id = setTimeout(fn, ms)
+  brainTimers.push(id)
+  return id
+}
+
 function clearBrainTimers() {
-  brainTimers.forEach(t => clearTimeout(t))
+  brainTimers.forEach(t => { clearTimeout(t); clearInterval(t) })
   brainTimers = []
+  clearTrialDeadline()
   if (mathTimer) {
     clearInterval(mathTimer)
     mathTimer = null
+  }
+}
+
+function getExerciseLiveStatus() {
+  const id = brainState.exercise
+  const ex = EXERCISES[id]
+  if (!ex) return { trial: '', phase: '' }
+  if (brainState.protocolBrief === id) return { trial: '', phase: 'Briefing' }
+  const phase = (() => {
+    if (id === 'nback') return brainState.nback.phase === 'play' ? 'Estímulo' : 'Listo'
+    if (id === 'dualnback') return brainState.dualnback.phase === 'play' ? 'Estímulo' : 'Listo'
+    if (id === 'cpt') return brainState.cpt.phase === 'play' ? 'Vigilancia' : 'Listo'
+    if (id === 'pasat') return brainState.pasat.phase === 'play' ? 'Suma' : 'Listo'
+    if (id === 'revspan') {
+      const s = brainState.revspan
+      if (s.phase === 'showing') return 'Memoriza'
+      if (s.phase === 'input') return 'Respuesta'
+      return 'Listo'
+    }
+    if (id === 'corsi') {
+      const c = brainState.corsi
+      if (c.phase === 'showing') return 'Secuencia'
+      if (c.phase === 'input') return 'Repite'
+      return 'Listo'
+    }
+    if (id === 'gonogo') {
+      const g = brainState.gonogo
+      if (!g.started) return 'Briefing'
+      if (g.waiting) return 'Prepárate'
+      return g.trials[g.index]?.type === 'nogo' ? 'Inhibe' : 'Go'
+    }
+    if (id === 'reaction') {
+      const r = brainState.reaction
+      if (r.phase === 'wait') return 'Espera'
+      if (r.phase === 'go') return 'Responde'
+      return 'Listo'
+    }
+    return 'Activo'
+  })()
+  const trial = (() => {
+    if (id === 'nback') { const s = brainState.nback; return s.finished ? '' : `Trial ${Math.min(s.index + 1, s.total)}/${s.total}` }
+    if (id === 'dualnback') { const s = brainState.dualnback; return s.finished ? '' : `Trial ${Math.min(s.index + 1, s.total)}/${s.total}` }
+    if (id === 'stroop') { const s = brainState.stroop; return s.finished ? '' : `${s.index + 1}/${s.total}` }
+    if (id === 'flanker') { const s = brainState.flanker; return s.finished ? '' : `${s.index + 1}/${s.total}` }
+    if (id === 'switching') { const s = brainState.switching; return s.finished ? '' : `${s.index + 1}/${s.total}` }
+    if (id === 'cpt') { const s = brainState.cpt; return s.finished ? '' : `${s.index + 1}/${s.total}` }
+    if (id === 'pasat') { const s = brainState.pasat; return s.finished ? '' : `${s.index}/${s.total - 1}` }
+    if (id === 'symbols') { const s = brainState.symbols; return s.finished ? '' : `${s.index + 1}/${s.total}` }
+    if (id === 'logic') { const l = brainState.logic; return l.finished ? '' : `${l.index + 1}/${l.puzzles.length}` }
+    if (id === 'reaction') { const r = brainState.reaction; return r.finished ? '' : `${r.index + 1}/${r.total}` }
+    return ''
+  })()
+  return { trial, phase, paradigm: ex.paradigm, name: ex.name }
+}
+
+function syncBrainLabChrome() {
+  const status = getExerciseLiveStatus()
+  const trialEl = document.getElementById('brain-lab-trial')
+  const phaseEl = document.getElementById('brain-lab-phase')
+  if (trialEl) trialEl.textContent = status.trial || '—'
+  if (phaseEl) phaseEl.textContent = status.phase || '—'
+  const prog = document.getElementById('brain-lab-progress-fill')
+  if (prog) {
+    const pct = brainState.trialDeadlineMs && brainState.trialTimeLeft != null
+      ? Math.max(0, Math.round((brainState.trialTimeLeft / brainState.trialDeadlineMs) * 100))
+      : null
+    if (pct != null) {
+      prog.style.width = `${pct}%`
+      prog.parentElement?.classList.toggle('is-urgent', pct < 25)
+    }
   }
 }
 // --- Brain Gym (programa neurociencia + academia) ---
@@ -73,29 +313,124 @@ function getLabExercises() {
 
 function renderLabGameCard(ex) {
   const dom = COGNITIVE_DOMAINS[ex.domain]
-  const rw = EXERCISE_REAL_WORLD[ex.id]
-  return `<button onclick="startBrain('${ex.id}')" class="card game-card game-card--lab text-left">
-    <div class="flex items-start gap-4">
-      <span class="text-3xl game-icon">${ex.icon}</span>
-      <div class="flex-1">
-        <h3 class="font-semibold text-main">${ex.name}</h3>
-        <p class="text-xs text-muted mt-0.5">${ex.paradigm}</p>
-        <p class="text-sm text-muted mt-2">${ex.desc}</p>
-        ${ex.brainScan ? `<p class="text-xs mt-2 academy-brain-scan">🧠 fMRI: ${ex.brainScan}</p>` : ''}
-        ${rw ? `<p class="text-xs mt-2 academy-real-world">🌍 En la vida: ${rw}</p>` : ''}
-        ${dom ? `<p class="text-xs text-muted mt-2">${dom.icon} ${dom.name} · Nv.${getExerciseLevel(ex.id)}</p>` : ''}
+  const guide = getExerciseGuide(ex.id)
+  const rw = guide?.life || EXERCISE_REAL_WORLD[ex.id]
+  const adaptive = ex.adaptive ? '<span class="brain-protocol-tag">Adaptativo</span>' : ''
+  return `<button type="button" onclick="startBrain('${ex.id}')" class="card game-card game-card--lab game-card--protocol text-left">
+    <div class="brain-protocol-card">
+      <div class="brain-protocol-card__head">
+        <span class="brain-protocol-card__icon" aria-hidden="true">${ex.icon}</span>
+        <div>
+          <h3 class="brain-protocol-card__title">${ex.name}</h3>
+          <p class="brain-protocol-card__paradigm">${ex.paradigm} · ${ex.duration || '~5 min'}</p>
+        </div>
+        ${adaptive}
       </div>
+      ${guide ? `<p class="brain-protocol-card__purpose">${guide.purpose}</p>` : `<p class="brain-protocol-card__desc">${ex.desc}</p>`}
+      ${guide ? `<p class="brain-protocol-card__measures">📊 ${guide.measures}</p>` : ''}
+      ${ex.brainScan ? `<p class="brain-protocol-card__evidence">🧠 ${ex.brainScan}</p>` : guide?.brain ? `<p class="brain-protocol-card__evidence">🧠 ${guide.brain}</p>` : ''}
+      ${rw ? `<p class="brain-protocol-card__life">→ ${rw}</p>` : ''}
+      ${dom ? `<p class="brain-protocol-card__meta">${dom.name} · nivel ${getExerciseLevel(ex.id)}</p>` : ''}
+      ${(() => {
+        const last = getProtocolHistory(ex.id)[0]?.metrics?.accuracy
+        return last != null ? `<p class="brain-protocol-card__history">Última sesión: ${last}%</p>` : ''
+      })()}
     </div></button>`
 }
 
+function renderProtocolIntro(exId, startFn, extraHtml = '') {
+  const ex = EXERCISES[exId]
+  const guide = getExerciseGuide(exId)
+  const dom = ex ? COGNITIVE_DOMAINS[ex.domain] : null
+  if (!ex || !guide) {
+    return brainWrapper(`<div class="text-center">
+      <h3 class="font-display text-xl font-semibold mb-4">${ex?.name || 'Protocolo'}</h3>
+      ${extraHtml}
+      <button type="button" onclick="${startFn}" class="btn-primary mt-4">Iniciar</button>
+    </div>`)
+  }
+  return brainWrapper(`<div class="brain-protocol-brief">
+    <header class="brain-protocol-brief__head">
+      <span class="brain-protocol-brief__icon" aria-hidden="true">${ex.icon}</span>
+      <div>
+        <h3 class="brain-protocol-brief__title">${ex.name}</h3>
+        <p class="brain-protocol-brief__paradigm">${ex.paradigm} · ${dom?.name || ''}</p>
+      </div>
+    </header>
+    <section class="brain-protocol-brief__block">
+      <h4 class="brain-protocol-brief__label">¿Para qué sirve?</h4>
+      <p class="brain-protocol-brief__text">${guide.purpose}</p>
+    </section>
+    <section class="brain-protocol-brief__block">
+      <h4 class="brain-protocol-brief__label">En la vida real</h4>
+      <p class="brain-protocol-brief__text">${guide.life || EXERCISE_REAL_WORLD[exId] || ''}</p>
+    </section>
+    <section class="brain-protocol-brief__block">
+      <h4 class="brain-protocol-brief__label">Cómo hacerlo</h4>
+      <ol class="brain-protocol-brief__steps">${guide.howTo.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    </section>
+    <div class="brain-protocol-brief__meta">
+      <span>🧠 ${guide.brain || ex.brainScan || dom?.region || ''}</span>
+      <span>📊 ${guide.measures}</span>
+      <span>⏱ ${ex.duration || '~5 min'}</span>
+    </div>
+    ${extraHtml}
+    <button type="button" onclick="${startFn}" class="btn-primary w-full py-4 mt-4">Iniciar protocolo</button>
+  </div>`)
+}
+
+function renderProtocolDebrief(exId, score, total, finishBtnHtml) {
+  const guide = getExerciseGuide(exId)
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0
+  const tip = typeof guide?.debrief === 'function'
+    ? guide.debrief(pct)
+    : (guide?.life || 'La consistencia 3×/semana importa más que una sola sesión.')
+  return `<aside class="brain-protocol-debrief">
+    <p class="brain-protocol-debrief__score">${score}/${total} · ${pct}%</p>
+    <p class="brain-protocol-debrief__label">Qué significa</p>
+    <p class="brain-protocol-debrief__tip">${esc(tip)}</p>
+    ${finishBtnHtml}
+  </aside>`
+}
+
+function patchSymbolsTimerDOM() {
+  const timer = document.getElementById('symbols-timer')
+  if (!timer || !brainState.symbols?.active) return false
+  const s = brainState.symbols
+  timer.textContent = `⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}`
+  return true
+}
+
+function patchMathTimerDOM() {
+  const timer = document.getElementById('math-timer')
+  if (!timer || !brainState.math?.active) return false
+  const m = brainState.math
+  timer.textContent = `${m.timeLeft}s`
+  const score = document.getElementById('math-score')
+  if (score) score.textContent = `${m.score} ✓`
+  return true
+}
+
+const BRIEF_FIRST_EXERCISES = new Set([
+  'stroop', 'flanker', 'switching', 'logic', 'nback', 'cpt', 'gonogo',
+  'visnback', 'trail', 'wisconsin', 'ant',
+])
+
 function renderBrainExercise() {
   const id = brainState.exercise
+  if (brainState.protocolBrief === id && getExerciseGuide(id)) {
+    return renderProtocolIntro(id, 'clearProtocolBrief()')
+  }
   if (!LAB_EXERCISE_IDS.includes(id)) {
     brainState.exercise = null
     return `<div class="page-shell page-wide"><div class="card text-center p-8">
       <p class="text-muted mb-4">Ejercicio no disponible en el laboratorio.</p>
       <button onclick="exitExercise()" class="btn-primary">Volver</button></div></div>`
   }
+  if (id === 'dualnback') return renderDualNBackGame()
+  if (id === 'cpt') return renderCPTGame()
+  if (id === 'revspan') return renderRevSpanGame()
+  if (id === 'pasat') return renderPasatGame()
   if (id === 'nback') return renderNBackGame()
   if (id === 'stroop') return renderStroopGame()
   if (id === 'flanker') return renderFlankerGame()
@@ -108,6 +443,13 @@ function renderBrainExercise() {
   if (id === 'memory') return renderMemoryGame()
   if (id === 'simon') return renderSimonGame()
   if (id === 'sequence') return renderSequenceGame()
+  if (id === 'reaction') return renderReactionGame()
+  if (id === 'anagram') return renderAnagramGame()
+  if (id === 'oddout') return renderOddOutGame()
+  if (id === 'visnback') return ensureClinicalLab().renderVisNBackGame()
+  if (id === 'trail') return ensureClinicalLab().renderTrailGame()
+  if (id === 'wisconsin') return ensureClinicalLab().renderWisconsinGame()
+  if (id === 'ant') return ensureClinicalLab().renderANTGame()
   return ''
 }
 
@@ -186,13 +528,14 @@ function renderTrainHub() {
     [{ id: 'program', label: 'Programa', icon: '📋' }, { id: 'lab', label: 'Laboratorio', icon: '🔬' }],
     section,
     'brainState.trainSection',
+    `navigate('/gimnasia/'+(brainState.trainSection==='lab'?'laboratorio':'programa'));`,
   )
   const hero = renderNeuralHero({
     kicker: 'Entrenar',
     title: section === 'lab' ? 'Laboratorio' : 'Programa',
     sub: section === 'lab'
-      ? 'Protocolos con neuroimagen + práctica libre por dominio.'
-      : 'Sesión guiada diaria · meta 3× por semana.',
+      ? 'Protocolos clínicos con explicación: qué entrenan, qué mide cada uno y cómo aplicarlo en la vida real.'
+      : 'Sesión guiada de 6 paradigmas · ~20 min · evidencia en función ejecutiva (no juegos casuales).',
     stats: section === 'lab'
       ? [{ val: getLabExercises().length, lbl: 'ejercicios' }, { val: `${d.icon} ${d.label}`, lbl: 'dificultad' }]
       : [
@@ -329,25 +672,32 @@ function renderSessionIntro() {
   const s = brainState.session
   const ex = s.exercises[s.current]
   const dom = ex.domainInfo
+  const guide = getExerciseGuide(ex.id)
   return `<div class="animate-fade-in page-shell page-wide page-brain page-brain-neural">
     <div class="exercise-dashboard">
     <div class="exercise-side">
       <button onclick="cancelSession()" class="btn-ghost mb-4">← Cancelar</button>
-      <p class="text-sm text-muted">Ejercicio ${s.current + 1} de ${s.exercises.length}</p>
+      <p class="text-sm text-muted">Protocolo ${s.current + 1} de ${s.exercises.length}</p>
+      ${s.current === 0 ? '<p class="brain-session-warmup">Calentamiento: 3 trials de práctica por protocolo antes del bloque evaluado.</p>' : ''}
     </div>
-    <div class="card text-center exercise-stage">
-      <span class="text-5xl">${ex.icon}</span>
-      <h2 class="font-display text-2xl font-bold text-main mt-3">${ex.name}</h2>
-      <p class="text-sm text-muted mt-1">${ex.paradigm}</p>
-      <div class="mt-4 p-3 rounded-xl text-left" style="background:var(--primary-soft)">
-        <p class="text-xs font-semibold text-main mb-1">${dom.icon} ${dom.name}</p>
-        <p class="text-xs text-muted">${dom.theory}</p>
-        <p class="text-xs text-muted mt-2 italic">${ex.desc}</p>
-        ${ex.brainScan ? `<p class="text-xs mt-2 academy-brain-scan">🧠 ${ex.brainScan}</p>` : ''}
-        ${EXERCISE_REAL_WORLD[ex.id] ? `<p class="text-xs mt-2 academy-real-world">🌍 ${EXERCISE_REAL_WORLD[ex.id]}</p>` : ''}
-      </div>
-      <p class="text-xs text-muted mt-3">Nivel adaptativo: ${ex.level} · ~${ex.duration}</p>
-      <button onclick="launchSessionExercise()" class="btn-primary w-full py-4 mt-4">Comenzar ejercicio</button>
+    <div class="card exercise-stage brain-protocol-brief brain-protocol-brief--session">
+      <header class="brain-protocol-brief__head">
+        <span class="brain-protocol-brief__icon">${ex.icon}</span>
+        <div>
+          <h2 class="brain-protocol-brief__title">${ex.name}</h2>
+          <p class="brain-protocol-brief__paradigm">${ex.paradigm} · ${dom?.name || ''}</p>
+        </div>
+      </header>
+      ${guide ? `<section class="brain-protocol-brief__block">
+        <h4 class="brain-protocol-brief__label">¿Para qué sirve?</h4>
+        <p class="brain-protocol-brief__text">${guide.purpose}</p>
+      </section>
+      <section class="brain-protocol-brief__block">
+        <h4 class="brain-protocol-brief__label">En la vida real</h4>
+        <p class="brain-protocol-brief__text">${guide.life || EXERCISE_REAL_WORLD[ex.id] || ''}</p>
+      </section>
+      <p class="brain-protocol-brief__meta">📊 ${guide.measures} · Nivel ${ex.level} · ${ex.duration}</p>` : `<p class="brain-protocol-brief__text">${ex.desc}</p>`}
+      <button onclick="launchSessionExercise()" class="btn-primary w-full py-4 mt-4">Iniciar protocolo</button>
     </div>
     </div>
   </div>`
@@ -359,6 +709,7 @@ function renderSessionDebrief() {
     ? Math.round(s.results.reduce((a, r) => a + r.accuracy, 0) / s.results.length * 100)
     : 0
   const debrief = getSessionDebrief(s.results)
+  const analysis = analyzeSessionResults(s.results)
   return `<div class="animate-fade-in page-shell page-wide page-brain">
     <div class="session-debrief span-full">
       <header class="session-debrief-header text-center mb-6">
@@ -372,6 +723,11 @@ function renderSessionDebrief() {
           <span class="font-medium">${Math.round(r.accuracy * 100)}%</span>
         </div>`).join('')}
       </div>
+      ${analysis.weakest ? `<aside class="session-debrief-analysis card-static mb-4">
+        <p class="session-debrief-label">Análisis de sesión</p>
+        <p class="session-debrief-intro">${esc(analysis.tip)}</p>
+        ${analysis.strongest ? `<p class="text-sm text-muted mt-2">Más fuerte: ${esc(analysis.strongest.name)} (${Math.round(analysis.strongest.accuracy * 100)}%)</p>` : ''}
+      </aside>` : ''}
       <aside class="session-debrief-prompts card-static">
         <p class="session-debrief-label">Debrief · 30 segundos</p>
         <p class="session-debrief-intro">${debrief.intro}</p>
@@ -409,6 +765,7 @@ window.cancelSession = function() {
   brainState.session = null
   brainState.exercise = null
   goTrain('program')
+  if (typeof window.navigate === 'function') window.navigate('/gimnasia/programa')
 }
 
 window.launchSessionExercise = function() {
@@ -437,6 +794,7 @@ window.finishGuidedSession = function(avgPct) {
   brainState.session = null
   brainState.exercise = null
   goTrain('program')
+  navigate('/gimnasia/programa')
 }
 
 function endExerciseBlock(score, total, exerciseId) {
@@ -467,6 +825,7 @@ function endExerciseBlock(score, total, exerciseId) {
 window.setBrainDiff = (d) => { brainState.difficulty = guardDifficulty(d); render() }
 
 function startBrain(id, fromSession = false) {
+  clearBrainTimers()
   if (!LAB_EXERCISE_IDS.includes(id)) {
     showToast('Ejercicio no disponible', 0, 'mental')
     return
@@ -474,19 +833,112 @@ function startBrain(id, fromSession = false) {
   const diff = brainState.difficulty
   const level = fromSession ? getExerciseLevel(id) : 1
   brainState.exercise = id
-  if (id === 'nback') brainState.nback = initNBack(level, diff === 'experto' ? 24 : diff === 'facil' ? 14 : 18)
-  if (id === 'stroop') brainState.stroop = initStroop(diff === 'experto' ? 20 : 14)
-  if (id === 'flanker') brainState.flanker = initFlanker(diff === 'experto' ? 24 : 16)
-  if (id === 'switching') brainState.switching = initSwitching(diff === 'experto' ? 28 : 20)
-  if (id === 'gonogo') brainState.gonogo = initGoNoGo(diff === 'experto' ? 36 : 24)
-  if (id === 'corsi') brainState.corsi = initCorsi(level + 1)
-  if (id === 'symbols') brainState.symbols = initSymbols(16, diff === 'experto' ? 35 : 50)
-  if (id === 'logic') brainState.logic = { puzzles: getLogicPuzzles(diff, diff === 'experto' ? 8 : diff === 'dificil' ? 6 : 5), index: 0, score: 0, selected: null, finished: false, difficulty: diff }
-  if (id === 'math') brainState.math = { active: false, score: 0, timeLeft: diff === 'experto' ? 90 : diff === 'facil' ? 45 : 60, difficulty: diff, problem: null, answer: '', feedback: null }
+  resetGameMeta()
+  const inten = getIntensity(diff)
+  if (id === 'dualnback') brainState.dualnback = initDualNBack(level, brainTrialCount(24, diff), diff)
+  if (id === 'cpt') {
+    brainState.cpt = initCPT(brainTrialCount(70, diff), diff)
+    ensureClinicalLab().prepareClinicalState(brainState.cpt)
+  }
+  if (id === 'revspan') brainState.revspan = initRevSpan(3 + (diff === 'dificil' ? 1 : 0) + (diff === 'experto' ? 1 : 0), diff)
+  if (id === 'pasat') brainState.pasat = initPasat(brainTrialCount(35, diff), diff)
+  if (id === 'nback') {
+    brainState.nback = initNBack(level, brainTrialCount(16, diff), diff)
+    ensureClinicalLab().prepareClinicalState(brainState.nback)
+  }
+  if (id === 'visnback') {
+    brainState.visnback = initVisNBack(level, brainTrialCount(16, diff), diff)
+    ensureClinicalLab().prepareClinicalState(brainState.visnback)
+  }
+  if (id === 'trail') {
+    const variant = diff === 'experto' || diff === 'dificil' ? 'B' : 'A'
+    brainState.trail = initTrailMaking(variant, diff)
+    ensureClinicalLab().prepareClinicalState(brainState.trail)
+  }
+  if (id === 'wisconsin') {
+    brainState.wisconsin = initWisconsin(brainTrialCount(20, diff), diff)
+    ensureClinicalLab().prepareClinicalState(brainState.wisconsin)
+  }
+  if (id === 'ant') {
+    brainState.ant = initANT(brainTrialCount(30, diff), diff)
+    ensureClinicalLab().prepareClinicalState(brainState.ant)
+  }
+  if (id === 'stroop') {
+    brainState.stroop = initStroop(brainTrialCount(14, diff), diff)
+    brainState.stroop.practiceTrials = initStroop(PRACTICE_TRIALS, diff).trials
+    ensureClinicalLab().prepareClinicalState(brainState.stroop)
+  }
+  if (id === 'flanker') {
+    brainState.flanker = initFlanker(brainTrialCount(16, diff), diff)
+    brainState.flanker.practiceTrials = initFlanker(PRACTICE_TRIALS, diff).trials
+    ensureClinicalLab().prepareClinicalState(brainState.flanker)
+  }
+  if (id === 'switching') brainState.switching = initSwitching(brainTrialCount(20, diff), diff)
+  if (id === 'gonogo') {
+    const g = initGoNoGo(brainTrialCount(24, diff), diff)
+    g.fullTrials = g.trials
+    g.practiceTrials = initGoNoGo(PRACTICE_TRIALS, diff).trials
+    brainState.gonogo = g
+    ensureClinicalLab().prepareClinicalState(brainState.gonogo)
+  }
+  if (id === 'corsi') brainState.corsi = initCorsi(level + (diff === 'experto' ? 2 : diff === 'dificil' ? 1 : 0), diff)
+  if (id === 'symbols') brainState.symbols = initSymbols(brainTrialCount(18, diff), diff === 'experto' ? 28 : diff === 'dificil' ? 38 : diff === 'facil' ? 55 : 45)
+  if (id === 'logic') brainState.logic = { puzzles: getLogicPuzzles(diff, brainTrialCount(5, diff)), index: 0, score: 0, selected: null, finished: false, difficulty: diff, timeLimit: inten.timeLimit }
+  if (id === 'math') brainState.math = { active: false, score: 0, timeLeft: diff === 'experto' ? 75 : diff === 'dificil' ? 60 : diff === 'facil' ? 45 : 50, difficulty: diff, problem: null, answer: '', feedback: null }
   if (id === 'memory') brainState.memory = { phase: 'ready', level: 1, score: 0, config: getMemoryConfig(diff), sequence: [], input: [], highlight: null }
   if (id === 'simon') brainState.simon = { phase: 'ready', level: 1, score: 0, sequence: [], input: [], showing: -1, config: getSimonConfig(diff) }
-  if (id === 'sequence') brainState.sequence = { round: 0, total: 5, score: 0, difficulty: diff, seq: pickSequence(diff), answer: null, finished: false }
-  render()
+  if (id === 'sequence') {
+    brainState.sequence = {
+      round: 0, total: brainTrialCount(5, diff), score: 0, difficulty: diff,
+      current: pickSequence(diff), finished: false, timeLimit: inten.timeLimit,
+    }
+  }
+  if (id === 'reaction') {
+    brainState.reaction = initReaction(brainTrialCount(7, diff))
+    brainState.reaction.difficulty = diff
+  }
+  if (id === 'anagram') {
+    brainState.anagram = initAnagram(getAnagrams(brainTrialCount(6, diff)))
+    brainState.anagram.timeLimit = inten.timeLimit
+  }
+  if (id === 'oddout') {
+    const groups = [
+      ...(WORD_GROUPS.facil || []),
+      ...(diff !== 'facil' ? WORD_GROUPS.medio || [] : []),
+      ...(diff === 'dificil' || diff === 'experto' ? WORD_GROUPS.dificil || [] : []),
+    ]
+    brainState.oddout = initOddOut(groups, brainTrialCount(7, diff))
+    brainState.oddout.timeLimit = inten.timeLimit
+  }
+  brainState.protocolBrief = BRIEF_FIRST_EXERCISES.has(id) ? id : null
+  if (document.getElementById('brain-exercise-stage')) render(true)
+  else if (typeof window.render === 'function') window.render(true)
+  if (!brainState.protocolBrief && TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
+}
+
+window.clearProtocolBrief = function() {
+  const id = brainState.exercise
+  if (!id) return
+  brainState.protocolBrief = null
+  const stateKey = id === 'dualnback' ? 'dualnback' : id
+  const s = brainState[stateKey]
+  if (s && CLINICAL_PROTOCOLS.has(id)) {
+    try { ensureClinicalLab().prepareClinicalState(s) } catch (err) {
+      console.error('[brain-lab] clinical init', err)
+    }
+  }
+  if (exerciseRenderRAF) {
+    cancelAnimationFrame(exerciseRenderRAF)
+    exerciseRenderRAF = null
+  }
+  exerciseRenderLock = false
+  const stage = document.getElementById('brain-exercise-stage')
+  if (stage) {
+    flushExerciseRender()
+  } else if (typeof window.render === 'function') {
+    window.render(true)
+  }
+  if (TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
 }
 
 function finishBrain(score = 0) {
@@ -499,7 +951,8 @@ function finishBrain(score = 0) {
     challengesWon: getStats().challengesWon + 1,
   })
   if (score > 0) setRecord(game, diff, score)
-  const xp = Math.floor((DIFFICULTIES[diff]?.xp || 30) * (1 + score / 100))
+  const mult = brainState.gameMeta?.multiplier || 1
+  const xp = Math.floor((DIFFICULTIES[diff]?.xp || 30) * (1 + score / 100) * mult)
   awardXp('mental', xp, 'Ejercicio mental')
   processPlanAwards(checkPlanTask('brain'))
   brainState.exercise = null
@@ -509,185 +962,703 @@ function finishBrain(score = 0) {
 // --- Paradigmas neurociencia ---
 function renderNBackGame() {
   const s = brainState.nback
+  const lab = ensureClinicalLab()
   if (s.finished) return brainWrapper(`<div class="text-center">
     <p class="text-2xl mb-2">🔁</p><p class="font-semibold mb-2">${s.n}-Back completado</p>
-    <p class="text-muted mb-6">${s.score}/${s.trials} aciertos (${s.trials ? Math.round(s.score / s.trials * 100) : 0}%)</p>
-    ${brainFinishBtn(s.score, s.trials || 1, 'nback')}</div>`)
-  if (s.phase === 'ready') return brainWrapper(`<div class="text-center">
-    <h3 class="font-display text-xl font-semibold mb-2">${s.n}-Back auditivo-visual</h3>
-    <p class="text-sm text-muted mb-4">Pulsa <strong>COINCIDE</strong> cuando la letra sea igual a la de hace ${s.n} posición${s.n > 1 ? 'es' : ''}.</p>
-    <p class="text-xs text-muted mb-6">Entrena memoria de trabajo (red frontoparietal).</p>
-    <button onclick="nbackStart()" class="btn-primary">Iniciar</button></div>`)
-  const letter = s.stream[s.index]
-  const isMatch = s.index >= s.n && letter === s.stream[s.index - s.n]
-  return brainWrapper(`<div class="text-center">
-    <p class="text-xs text-muted mb-2">Trial ${s.index + 1}/${s.total + s.n} · ${s.n}-Back</p>
-    <p class="font-display text-6xl font-bold text-main mb-6">${letter}</p>
-    <div class="flex gap-3 justify-center">
-      <button onclick="nbackRespond(false)" class="btn-secondary flex-1">Pasar</button>
-      <button onclick="nbackRespond(true)" class="btn-primary flex-1">¡Coincide!</button>
+    ${lab.finishBlock('nback', s, s.score, s.trials || 1, 'nback')}</div>`)
+  if (s.phase === 'ready') return renderProtocolIntro('nback', 'nbackStart()',
+    `<p class="brain-protocol-brief__note">Nivel ${s.n} · ~${Math.round(s.paceMs / 100) / 10}s por letra · ${PRACTICE_TRIALS} trials de práctica</p>`)
+  const nIdx = isPractice(s) ? (s.practiceIdx || 0) : s.index
+  const letter = s.stream[nIdx]
+  const hudCur = nIdx + 1
+  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total + s.n
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${renderPracticeBanner(s)}
+    ${brainHud(hudCur, hudTot, `${s.n}-Back`)}
+    <div class="brain-nback-ring-wrap">
+      ${renderPaceRing(s.pacePct ?? 100)}
+      <p class="brain-stimulus brain-stimulus--letter">${letter}</p>
     </div>
-    ${s.feedback ? `<p class="text-sm mt-3 ${s.feedback === 'ok' ? 'text-green-600' : 'text-red-500'}">${s.feedback === 'ok' ? '✓' : '✗'}</p>` : ''}
-  </div>`)
+    <div class="brain-action-row">
+      <button onclick="nbackRespond(false)" class="btn-secondary flex-1">Pasar</button>
+      <button onclick="nbackRespond(true)" class="btn-primary flex-1 brain-btn-pulse">¡Coincide!</button>
+    </div>
+    ${renderTrialFlash(s)}
+    ${s.feedback ? `<p class="brain-feedback brain-feedback--${s.feedback === 'ok' ? 'ok' : 'bad'}">${s.feedback === 'ok' ? '✓ Precisión' : '✗ Error'}</p>` : ''}
+  </div>`, { arena: true })
+}
+
+function clearNbackPaceTick(s) {
+  if (s._paceTick == null) return
+  clearInterval(s._paceTick)
+  const i = brainTimers.indexOf(s._paceTick)
+  if (i >= 0) brainTimers.splice(i, 1)
+  s._paceTick = null
+}
+
+function nbackScheduleTick() {
+  const s = brainState.nback
+  if (s.phase !== 'play' || s.finished) return
+  clearNbackPaceTick(s)
+  const start = Date.now()
+  const tick = setInterval(() => {
+    const elapsed = Date.now() - start
+    s.pacePct = Math.max(0, 100 - (elapsed / s.paceMs) * 100)
+    if (brainState.exercise === 'nback') render()
+    if (elapsed >= s.paceMs) {
+      clearNbackPaceTick(s)
+      if (s.phase === 'play' && !s.responded && brainState.exercise === 'nback') nbackRespond(false)
+    }
+  }, 40)
+  s._paceTick = tick
+  brainTimers.push(tick)
 }
 
 window.nbackStart = function() {
   const s = brainState.nback
-  s.phase = 'play'; s.index = 0; render()
+  ensureClinicalLab().prepareClinicalState(s)
+  s.phase = 'play'
+  s.index = 0
+  s.practiceIdx = 0
+  render()
+  nbackScheduleTick()
 }
 
 window.nbackRespond = function(saidMatch) {
   const s = brainState.nback
   if (s.phase !== 'play' || s.responded) return
-  const isMatch = s.index >= s.n && s.stream[s.index] === s.stream[s.index - s.n]
+  clearNbackPaceTick(s)
+  const idx = isPractice(s) ? (s.practiceIdx || 0) : s.index
+  const isMatch = idx >= s.n && s.stream[idx] === s.stream[idx - s.n]
   const correct = saidMatch === isMatch
+  let type = 'cr'
+  if (isMatch && saidMatch) type = 'hit'
+  else if (isMatch && !saidMatch) type = 'miss'
+  else if (!isMatch && saidMatch) type = 'fa'
+  logTrial(s.trialLog, { correct, type }, isPractice(s))
   if (correct) s.score++
+  markTrial(correct)
+  s.flash = correct ? 'ok' : 'bad'
   if (correct) { s.feedback = 'ok'; playTone(523) } else { s.feedback = 'bad'; playTone(200) }
   s.trials++; s.responded = true
   render()
   brainTimers.push(setTimeout(() => {
-    s.feedback = null; s.responded = false; s.index++
-    if (s.index >= s.total + s.n) s.finished = true
+    s.feedback = null; s.flash = null; s.responded = false
+    if (isPractice(s)) {
+      s.practiceIdx = (s.practiceIdx || 0) + 1
+      if (s.practiceIdx >= PRACTICE_TRIALS) {
+        const fresh = initNBack(getExerciseLevel('nback'), s.total, brainState.difficulty)
+        beginScoredBlock(s)
+        s.stream = fresh.stream
+        s.n = fresh.n
+        s.index = 0
+        s.practiceIdx = 0
+      }
+      render()
+      nbackScheduleTick()
+      return
+    }
+    s.index++
+    if (s.index >= s.total + s.n) {
+      ensureClinicalLab().completeClinicalReport('nback', s)
+      return
+    }
     render()
-  }, 500))
+    nbackScheduleTick()
+  }, correct ? 280 : 420))
+}
+
+function dualNbackGrid(pos, activePos) {
+  return `<div class="brain-dual-grid" role="presentation">
+    ${Array.from({ length: 9 }, (_, i) =>
+      `<span class="brain-dual-cell ${i === activePos ? 'is-active' : ''}"></span>`
+    ).join('')}
+  </div>`
+}
+
+function renderDualNBackGame() {
+  const s = brainState.dualnback
+  if (s.finished) {
+    const pct = s.trials ? Math.round(s.score / (s.trials * 2) * 100) : 0
+    return brainWrapper(`<div class="text-center">
+      <p class="font-display text-xl font-semibold mb-2">Dual ${s.n}-Back</p>
+      <p class="text-muted mb-2">Letra ${s.letterScore}/${s.trials} · Posición ${s.posScore}/${s.trials}</p>
+      ${renderProtocolDebrief('dualnback', s.score, s.trials * 2 || 1, brainFinishBtn(s.score, s.trials * 2 || 1, 'dualnback'))}</div>`)
+  }
+  if (s.phase === 'ready') {
+    return renderProtocolIntro('dualnback', 'dualNbackStart()',
+      `<p class="brain-protocol-brief__note">Nivel ${s.n} · estímulo cada ~${Math.round(s.paceMs / 100) / 10}s</p>`)
+  }
+  const t = s.stream[s.index]
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(s.index + 1, s.total + s.n, `Dual ${s.n}-Back`)}
+    ${dualNbackGrid(t.pos, t.pos)}
+    <p class="brain-stimulus brain-stimulus--letter">${t.letter}</p>
+    <p class="brain-hint">Marca antes de que avance el estímulo</p>
+    <div class="brain-action-row brain-action-row--dual">
+      <button type="button" onclick="dualNbackToggle('letter')" class="btn-secondary flex-1 ${s.pressedLetter ? 'is-lit' : ''}">Letra</button>
+      <button type="button" onclick="dualNbackToggle('pos')" class="btn-secondary flex-1 ${s.pressedPos ? 'is-lit' : ''}">Posición</button>
+    </div>
+    ${s.feedback ? `<p class="brain-feedback brain-feedback--${s.feedback === 'ok' ? 'ok' : 'bad'}">${s.feedback === 'ok' ? '✓' : '✗'}</p>` : ''}
+  </div>`, { arena: true })
+}
+
+function dualNbackScheduleTick() {
+  const s = brainState.dualnback
+  if (s.phase !== 'play' || s.finished) return
+  brainTimers.push(setTimeout(() => {
+    if (s.phase === 'play' && !s.responded && brainState.exercise === 'dualnback') dualNbackCommit()
+  }, s.paceMs))
+}
+
+window.dualNbackStart = function() {
+  const s = brainState.dualnback
+  s.phase = 'play'; s.index = 0; s.pressedLetter = false; s.pressedPos = false
+  render()
+  dualNbackScheduleTick()
+}
+
+window.dualNbackToggle = function(kind) {
+  const s = brainState.dualnback
+  if (s.phase !== 'play' || s.responded) return
+  if (kind === 'letter') s.pressedLetter = !s.pressedLetter
+  else s.pressedPos = !s.pressedPos
+  render()
+}
+
+function dualNbackCommit() {
+  const s = brainState.dualnback
+  if (s.phase !== 'play' || s.responded) return
+  const n = s.n
+  const letterMatch = s.index >= n && s.stream[s.index].letter === s.stream[s.index - n].letter
+  const posMatch = s.index >= n && s.stream[s.index].pos === s.stream[s.index - n].pos
+  const letterOk = s.pressedLetter === letterMatch
+  const posOk = s.pressedPos === posMatch
+  if (letterOk) { s.letterScore++; s.score++ }
+  if (posOk) { s.posScore++; s.score++ }
+  const ok = letterOk && posOk
+  markTrial(ok)
+  s.feedback = ok ? 'ok' : 'bad'
+  if (ok) playTone(523); else playTone(200)
+  s.trials++; s.responded = true
+  render()
+  brainTimers.push(setTimeout(() => {
+    s.feedback = null; s.responded = false
+    s.pressedLetter = false; s.pressedPos = false
+    s.index++
+    if (s.index >= s.total + n) { s.finished = true; render(); return }
+    render()
+    dualNbackScheduleTick()
+  }, ok ? 260 : 400))
+}
+
+function renderCPTGame() {
+  const s = brainState.cpt
+  const lab = ensureClinicalLab()
+  if (s.finished) {
+    const totalTargets = s.trials.filter(t => t.isTarget).length
+    return brainWrapper(`<div class="text-center">
+      <p class="font-display text-xl font-semibold mb-2">CPT-X completado</p>
+      <p class="text-sm text-muted mb-2">Aciertos ${s.hits}/${totalTargets} · Omisiones ${s.misses} · Falsas alarmas ${s.falseAlarms}</p>
+      ${lab.finishBlock('cpt', s, s.hits, totalTargets || 1, 'cpt')}</div>`)
+  }
+  if (s.phase === 'ready') {
+    return renderProtocolIntro('cpt', 'cptStart()',
+      `<p class="brain-protocol-brief__note">${s.total} estímulos · ~${Math.round(s.isi / 100) / 10}s cada uno · objetivo: <span class="brain-cpt-target">X</span></p>`)
+  }
+  const t = s.trials[s.index]
+  const hudCur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
+  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${renderPracticeBanner(s)}
+    ${brainHud(hudCur, hudTot, 'CPT-X')}
+    <p class="brain-cpt-letter is-enter ${t.isTarget ? 'is-target' : ''}" key="cpt-${s.index}">${t.letter}</p>
+    <button type="button" onclick="cptRespond()" class="btn-primary w-full py-4">Responder (solo X)</button>
+    ${renderTrialFlash(s)}
+  </div>`, { arena: true })
+}
+
+function cptScheduleTick() {
+  const s = brainState.cpt
+  if (s.phase !== 'play' || s.finished) return
+  brainTimers.push(setTimeout(() => {
+    if (brainState.exercise !== 'cpt' || s.phase !== 'play') return
+    const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
+    if (!s.responded && t?.isTarget) {
+      s.misses++
+      logTrial(s.trialLog, { correct: false, type: 'miss', isTarget: true }, isPractice(s))
+      s.flash = 'bad'
+    }
+    s.responded = false
+    if (isPractice(s)) {
+      s.practiceIdx = (s.practiceIdx || 0) + 1
+      if (s.practiceIdx >= PRACTICE_TRIALS) {
+        beginScoredBlock(s)
+        s.practiceIdx = 0
+        s.index = 0
+        s.hits = 0
+        s.misses = 0
+        s.falseAlarms = 0
+        render()
+        cptScheduleTick()
+        return
+      }
+      render()
+      cptScheduleTick()
+      return
+    }
+    s.index++
+    if (s.index >= s.total) {
+      ensureClinicalLab().completeClinicalReport('cpt', s)
+      return
+    }
+    render()
+    cptScheduleTick()
+  }, s.isi))
+}
+
+window.cptStart = function() {
+  const s = brainState.cpt
+  ensureClinicalLab().prepareClinicalState(s)
+  s.practiceTrials = initCPT(PRACTICE_TRIALS, s.difficulty || brainState.difficulty).trials
+  s.phase = 'play'
+  s.index = 0
+  s.practiceIdx = 0
+  render()
+  cptScheduleTick()
+}
+
+window.cptRespond = function() {
+  const s = brainState.cpt
+  if (s.phase !== 'play' || s.responded) return
+  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
+  s.responded = true
+  const ok = t.isTarget
+  logTrial(s.trialLog, { correct: ok, type: ok ? 'hit' : 'fa', isTarget: t.isTarget }, isPractice(s))
+  s.flash = ok ? 'ok' : 'bad'
+  if (t.isTarget) { s.hits++; playTone(523) }
+  else { s.falseAlarms++; playTone(200) }
+  render()
+}
+
+function renderRevSpanGame() {
+  const s = brainState.revspan
+  if (s.finished) {
+    return brainWrapper(`<div class="text-center">
+      <p class="font-display text-xl font-semibold mb-2">Span inverso</p>
+      <p class="text-muted mb-2">${s.score} secuencias · techo ${s.length} dígitos</p>
+      ${renderProtocolDebrief('revspan', s.score, s.maxRounds || 1, brainFinishBtn(s.score, s.maxRounds || 1, 'revspan'))}</div>`)
+  }
+  if (s.phase === 'ready') {
+    return renderProtocolIntro('revspan', 'revSpanStart()',
+      `<p class="brain-protocol-brief__note">Empiezas con ${s.length} dígitos · escala hasta ${s.maxLen}</p>`)
+  }
+  if (s.phase === 'showing') {
+    const digit = s.sequence[s.showIdx]
+    return brainWrapper(`<div class="text-center brain-arena">
+      ${brainHud(s.round + 1, s.maxRounds, 'Span inverso')}
+      <p class="brain-hint" id="revspan-hint">Longitud ${s.length} · memoriza</p>
+      <p class="brain-stimulus brain-stimulus--digit" id="revspan-digit">${digit}</p>
+    </div>`, { arena: true })
+  }
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(s.round + 1, s.maxRounds, 'Span inverso')}
+    <p class="brain-hint">Escribe los ${s.length} dígitos al revés</p>
+    <form onsubmit="revSpanSubmit(event)" class="brain-revspan-form">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="${s.length}" id="revspan-input"
+        class="input-field text-center text-3xl tracking-widest" autocomplete="off" autofocus>
+      <button type="submit" class="btn-primary w-full mt-4">Confirmar</button>
+    </form>
+    ${s.feedback === 'bad' ? '<p class="text-red-400 mt-2">Secuencia incorrecta</p>' : ''}
+  </div>`, { arena: true })
+}
+
+window.revSpanStart = function() {
+  const s = brainState.revspan
+  s.phase = 'showing'; s.round = 0; s.score = 0
+  revSpanNextRound()
+}
+
+function revSpanNextRound() {
+  const s = brainState.revspan
+  s.sequence = revSpanGenerate(s.length)
+  s.showIdx = 0; s.phase = 'showing'; s.feedback = null
+  render()
+  revSpanShowDigit()
+}
+
+function patchRevSpanUI() {
+  const s = brainState.revspan
+  if (!s || s.phase !== 'showing') return false
+  const el = document.getElementById('revspan-digit')
+  if (!el) return false
+  el.textContent = s.sequence[s.showIdx]
+  const hint = document.getElementById('revspan-hint')
+  if (hint) hint.textContent = `Longitud ${s.length} · memoriza`
+  syncBrainLabChrome()
+  return true
+}
+
+function revSpanShowDigit() {
+  const s = brainState.revspan
+  const speed = s.difficulty === 'experto' ? 700 : s.difficulty === 'dificil' ? 850 : 1000
+  brainDelay(() => {
+    if (brainState.exercise !== 'revspan') return
+    s.showIdx++
+    if (s.showIdx < s.sequence.length) {
+      if (!patchRevSpanUI()) render()
+      revSpanShowDigit()
+    } else {
+      s.phase = 'input'
+      render()
+    }
+  }, speed)
+}
+
+window.revSpanSubmit = function(e) {
+  e.preventDefault()
+  const s = brainState.revspan
+  const val = document.getElementById('revspan-input')?.value?.trim() || ''
+  const expected = [...s.sequence].reverse().join('')
+  if (val === expected) {
+    s.score++; s.round++
+    playTone(523)
+    if (s.round >= s.maxRounds || s.length >= s.maxLen) { s.finished = true; render(); return }
+    s.length++
+    revSpanNextRound()
+  } else {
+    s.feedback = 'bad'
+    playTone(200)
+    s.finished = true
+    render()
+  }
+}
+
+function renderPasatGame() {
+  const s = brainState.pasat
+  if (s.finished) {
+    return brainWrapper(`<div class="text-center">
+      <p class="font-display text-xl font-semibold mb-2">PASAT</p>
+      ${renderProtocolDebrief('pasat', s.score, s.total - 1 || 1, brainFinishBtn(s.score, s.total - 1 || 1, 'pasat'))}</div>`)
+  }
+  if (s.phase === 'ready') {
+    return renderProtocolIntro('pasat', 'pasatStart()',
+      `<p class="brain-protocol-brief__note">Ritmo: ~${Math.round(s.paceMs / 100) / 10}s por dígito · ${s.total - 1} sumas</p>`)
+  }
+  const cur = s.digits[s.index]
+  const prev = s.digits[s.index - 1]
+  const target = cur + prev
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(s.index, s.total, 'PASAT')}
+    <p class="brain-hint">Suma: dígito actual + anterior</p>
+    <p class="brain-pasat-digits"><span>${prev}</span> + <span class="is-current">${cur}</span> = ?</p>
+    <form onsubmit="pasatSubmit(event, ${target})">
+      <input type="number" id="pasat-answer" class="input-field text-center text-2xl" autocomplete="off" autofocus>
+      <button type="submit" class="btn-primary w-full mt-4">Enviar</button>
+    </form>
+    ${s.feedback === 'bad' ? '<p class="text-red-400 mt-2">Incorrecto</p>' : ''}
+  </div>`, { arena: true })
+}
+
+function speakPasatDigit(n) {
+  playTone(440 + n * 30, 0.08)
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.cancel()
+    const u = new SpeechSynthesisUtterance(String(n))
+    u.lang = 'es-ES'
+    u.rate = 1.05
+    speechSynthesis.speak(u)
+  }
+}
+
+window.pasatStart = function() {
+  const s = brainState.pasat
+  s.phase = 'play'; s.index = 1; s.misses = 0; s.answeredThisTrial = false
+  speakPasatDigit(s.digits[s.index])
+  render()
+  pasatScheduleTick()
+}
+
+function pasatScheduleTick() {
+  const s = brainState.pasat
+  if (s.phase !== 'play' || s.finished) return
+  brainTimers.push(setTimeout(() => {
+    if (brainState.exercise !== 'pasat' || s.phase !== 'play') return
+    if (!s.answeredThisTrial) {
+      s.misses = (s.misses || 0) + 1
+      s.feedback = 'bad'
+    }
+    s.answeredThisTrial = false
+    s.index++
+    if (s.index >= s.digits.length) { s.finished = true; render(); return }
+    speakPasatDigit(s.digits[s.index])
+    render()
+    pasatScheduleTick()
+  }, s.paceMs))
+}
+
+window.pasatSubmit = function(e, target) {
+  e.preventDefault()
+  const s = brainState.pasat
+  if (s.answeredThisTrial) return
+  const val = parseInt(document.getElementById('pasat-answer')?.value, 10)
+  s.answeredThisTrial = true
+  if (val === target) { s.score++; s.feedback = null; playTone(523) }
+  else { s.feedback = 'bad'; playTone(200) }
+  const pasatInput = document.getElementById('pasat-answer')
+  if (pasatInput) pasatInput.value = ''
+  render()
 }
 
 function renderStroopGame() {
   const s = brainState.stroop
+  const lab = ensureClinicalLab()
   if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${s.score}/${s.total} · Stroop</p>
-    ${brainFinishBtn(s.score, s.total, 'stroop')}</div>`)
-  const t = s.trials[s.index]
-  return brainWrapper(`<div class="text-center">
-    <p class="text-xs text-muted mb-4">${s.index + 1}/${s.total} · Nombra el COLOR de la tinta</p>
-    <p class="font-display text-4xl font-bold mb-6" style="color:${t.ink}">${t.word}</p>
-    <div class="grid grid-cols-2 gap-2">
-      ${STROOP_COLORS.map(c => `<button onclick="stroopAnswer('${c.name}')" class="p-3 rounded-xl font-semibold text-sm" style="border:2px solid ${c.hex};color:${c.hex}">${c.name}</button>`).join('')}
-    </div></div>`)
+    <p class="font-semibold mb-2">Stroop completado</p>
+    ${lab.finishBlock('stroop', s, s.score, s.total, 'stroop')}</div>`)
+  const t = stroopTrialMeta(s)
+  if (!t) return brainWrapper('<p class="text-muted">Cargando…</p>')
+  const conflict = t.congruent ? 'Congruente' : 'Conflicto'
+  return brainWrapper(`<div class="text-center brain-arena" id="brain-stroop-root">
+    ${renderPracticeBanner(s)}
+    ${brainHud(stroopHudIndex(s), stroopHudTotal(s), 'Stroop')}
+    <p class="brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}">${conflict}</p>
+    <p class="brain-stroop-word" style="--stroop-ink:${t.ink}">${t.word}</p>
+    <p class="brain-hint">Tinta, no palabra</p>
+    ${renderStroopSwatches('stroopAnswer')}
+    ${renderTrialFlash(s)}
+  </div>`, { arena: true })
 }
 
 window.stroopAnswer = function(name) {
+  if (brainState._trialBusy) return
+  clearTrialDeadline()
   const s = brainState.stroop
-  const t = s.trials[s.index]
-  if (name === t.correct) { s.score++; playTone(523) } else playTone(200)
-  s.index++
-  if (s.index >= s.total) s.finished = true
-  render()
+  if (s.finished) return
+  const t = stroopTrialMeta(s)
+  if (!t) return
+  const rt = brainState.trialStart ? Date.now() - brainState.trialStart : null
+  const ok = name !== '__timeout__' && name === t.correct
+  logTrial(s.trialLog, { correct: ok, congruent: t.congruent, rt }, isPractice(s))
+  s.flash = ok ? 'ok' : 'bad'
+  if (ok) { s.score++; playTone(523) } else playTone(200)
+  markTrial(ok, rt)
+  brainState.trialStart = null
+  advanceTimedTrial(patchStroopUI, () => {
+    if (isPractice(s)) {
+      s.practiceIdx = (s.practiceIdx || 0) + 1
+      if (s.practiceIdx >= PRACTICE_TRIALS) {
+        beginScoredBlock(s)
+        s.practiceIdx = 0
+        s.index = 0
+        queueArmTrial()
+        return
+      }
+      queueArmTrial()
+      return
+    }
+    s.index++
+    if (s.index >= s.total) {
+      ensureClinicalLab().completeClinicalReport('stroop', s)
+      return
+    }
+    queueArmTrial()
+  })
 }
 
 function renderFlankerGame() {
   const s = brainState.flanker
+  const lab = ensureClinicalLab()
   if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${s.score}/${s.total}</p>
-    ${brainFinishBtn(s.score, s.total, 'flanker')}</div>`)
-  const t = s.trials[s.index]
-  return brainWrapper(`<div class="text-center">
-    <p class="text-xs text-muted mb-6">${s.index + 1}/${s.total} · Dirección de la flecha CENTRAL</p>
-    <p class="font-display text-3xl tracking-widest text-main mb-8">${flankerArrows(t)}</p>
-    <div class="flex gap-3 justify-center">
-      <button onclick="flankerAnswer('left')" class="btn-secondary flex-1 text-2xl">←</button>
-      <button onclick="flankerAnswer('right')" class="btn-secondary flex-1 text-2xl">→</button>
-    </div></div>`)
+    <p class="font-semibold mb-2">Flanker completado</p>
+    ${lab.finishBlock('flanker', s, s.score, s.total, 'flanker')}</div>`)
+  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
+  const arrows = flankerArrows(t)
+  const hudCur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
+  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total
+  return brainWrapper(`<div class="text-center brain-arena" id="brain-flanker-root">
+    ${renderPracticeBanner(s)}
+    ${brainHud(hudCur, hudTot, 'Flanker')}
+    <p class="brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}">${t.congruent ? 'Alineadas' : 'Interferencia'}</p>
+    <p class="brain-flanker-row" aria-hidden="true">${arrows.split('').map((ch, i) => `<span class="brain-flanker-char ${i === 2 ? 'is-center' : ''}">${ch}</span>`).join('')}</p>
+    <div class="brain-action-row">
+      <button type="button" onclick="flankerAnswer('left')" class="btn-secondary flex-1 brain-dir-btn">←</button>
+      <button type="button" onclick="flankerAnswer('right')" class="btn-secondary flex-1 brain-dir-btn">→</button>
+    </div>
+    ${renderTrialFlash(s)}
+  </div>`, { arena: true })
 }
 
 window.flankerAnswer = function(dir) {
+  if (brainState._trialBusy) return
+  clearTrialDeadline()
   const s = brainState.flanker
-  const t = s.trials[s.index]
-  if (dir === t.dir) { s.score++; playTone(523) } else playTone(200)
-  s.index++
-  if (s.index >= s.total) s.finished = true
-  render()
+  if (s.finished) return
+  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
+  if (!t) return
+  const rt = brainState.trialStart ? Date.now() - brainState.trialStart : null
+  const ok = dir !== '__timeout__' && dir === t.dir
+  logTrial(s.trialLog, { correct: ok, congruent: t.congruent, rt }, isPractice(s))
+  s.flash = ok ? 'ok' : 'bad'
+  if (ok) { s.score++; playTone(523) } else playTone(200)
+  markTrial(ok, rt)
+  brainState.trialStart = null
+  advanceTimedTrial(patchFlankerUI, () => {
+    if (isPractice(s)) {
+      s.practiceIdx = (s.practiceIdx || 0) + 1
+      if (s.practiceIdx >= PRACTICE_TRIALS) {
+        beginScoredBlock(s)
+        s.practiceIdx = 0
+        s.index = 0
+        queueArmTrial()
+        return
+      }
+      queueArmTrial()
+      return
+    }
+    s.index++
+    if (s.index >= s.total) {
+      ensureClinicalLab().completeClinicalReport('flanker', s)
+      return
+    }
+    queueArmTrial()
+  })
 }
 
 function renderSwitchingGame() {
   const s = brainState.switching
   if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${s.score}/${s.total}</p>
-    ${brainFinishBtn(s.score, s.total, 'switching')}</div>`)
+    <p class="font-semibold mb-2">Task switching completado</p>
+    ${renderProtocolDebrief('switching', s.score, s.total, brainFinishBtn(s.score, s.total, 'switching'))}</div>`)
   const t = s.trials[s.index]
   const ruleLabel = t.rule === 'parity' ? '¿Es PAR o IMPAR?' : '¿Es mayor o menor que 5?'
-  return brainWrapper(`<div class="text-center">
-    <p class="text-xs text-muted mb-2">${s.index + 1}/${s.total}</p>
-    <p class="badge-diff mb-4">${ruleLabel}</p>
-    <p class="font-display text-5xl font-bold text-main mb-8">${t.num}</p>
-    ${t.rule === 'parity'
-      ? `<div class="flex gap-3"><button onclick="switchAnswer('even')" class="btn-secondary flex-1">Par</button><button onclick="switchAnswer('odd')" class="btn-secondary flex-1">Impar</button></div>`
-      : `<div class="flex gap-3"><button onclick="switchAnswer('low')" class="btn-secondary flex-1">≤ 5</button><button onclick="switchAnswer('high')" class="btn-secondary flex-1">&gt; 5</button></div>`}
-  </div>`)
+  return brainWrapper(`<div class="text-center brain-arena" id="brain-switch-root">
+    ${brainHud(s.index + 1, s.total, 'Cambio de regla')}
+    <p class="brain-switch-badge badge-diff mb-4">${ruleLabel}</p>
+    <p class="brain-switch-num font-display text-5xl font-bold text-main mb-8">${t.num}</p>
+    <div id="brain-switch-actions" class="flex gap-3">
+      ${t.rule === 'parity'
+        ? `<button type="button" onclick="switchAnswer('even')" class="btn-secondary flex-1">Par</button><button type="button" onclick="switchAnswer('odd')" class="btn-secondary flex-1">Impar</button>`
+        : `<button type="button" onclick="switchAnswer('low')" class="btn-secondary flex-1">≤ 5</button><button type="button" onclick="switchAnswer('high')" class="btn-secondary flex-1">&gt; 5</button>`}
+    </div>
+  </div>`, { arena: true })
 }
 
 window.switchAnswer = function(ans) {
+  if (brainState._trialBusy) return
+  clearTrialDeadline()
   const s = brainState.switching
+  if (s.finished) return
   const t = s.trials[s.index]
-  if (getSwitchAnswer(t, ans)) { s.score++; playTone(523) } else playTone(200)
-  s.index++
-  if (s.index >= s.total) s.finished = true
-  render()
+  if (!t) return
+  const ok = ans !== '__timeout__' && getSwitchAnswer(t, ans)
+  if (ok) { s.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
+  brainState.trialStart = null
+  advanceTimedTrial(patchSwitchingUI, () => {
+    s.index++
+    if (s.index >= s.total) s.finished = true
+    else queueArmTrial()
+  })
 }
 
 function renderGoNoGoGame() {
   const s = brainState.gonogo
+  const lab = ensureClinicalLab()
   if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${s.score}/${s.total}</p>
-    ${brainFinishBtn(s.score, s.total, 'gonogo')}</div>`)
-  if (!s.started) {
-    brainTimers.push(setTimeout(() => { if (brainState.exercise === 'gonogo') { s.started = true; gonogoNext() } }, 100))
-    return brainWrapper(`<div class="text-center py-12"><p class="text-muted">Iniciando Go/No-Go...</p></div>`)
-  }
+    <p class="font-semibold mb-2">Go/No-Go completado</p>
+    ${lab.finishBlock('gonogo', s, s.score, s.total, 'gonogo')}</div>`)
+  if (!s.started) return renderProtocolIntro('gonogo', 'gonogoManualStart()')
   if (s.waiting) return brainWrapper(`<div class="text-center py-12"><p class="text-muted">Prepárate...</p></div>`)
   const t = s.trials[s.index]
-  const color = t.type === 'go' ? '#00f5d4' : '#fb7185'
-  const label = t.type === 'go' ? 'GO' : 'NO-GO'
-  return brainWrapper(`<div class="text-center">
-    <p class="text-xs text-muted mb-4">${s.index + 1}/${s.total}</p>
-    <div class="w-32 h-32 rounded-full mx-auto mb-6 flex items-center justify-center font-bold text-white text-xl" style="background:${color}">${label}</div>
-    ${t.type === 'go'
-      ? `<button onclick="gonogoTap()" class="btn-primary w-full py-4">¡Tocar!</button>`
-      : `<p class="text-sm text-muted">No toques — espera...</p>`}
-  </div>`)
+  const isGo = t.type === 'go'
+  const label = isGo ? 'GO' : 'NO-GO'
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${renderPracticeBanner(s)}
+    ${brainHud(s.index + 1, s.total, 'Go / No-Go')}
+    <div class="brain-gonogo-signal ${isGo ? 'is-go' : 'is-nogo'}">
+      <span class="brain-gonogo-ring"></span>
+      <span class="brain-gonogo-label">${label}</span>
+    </div>
+    ${isGo
+      ? `<button type="button" onclick="gonogoTap()" class="btn-primary w-full py-4 brain-btn-pulse">¡Tocar!</button>`
+      : `<p class="brain-hint">Aguanta — no toques</p>`}
+    ${renderTrialFlash(s)}
+  </div>`, { arena: true })
 }
 
 window.gonogoTap = function() {
   const s = brainState.gonogo
   const t = s.trials[s.index]
-  if (t.type === 'go') { s.score++; playTone(523) } else playTone(200)
+  const ok = t.type === 'go'
+  logTrial(s.trialLog, { correct: ok, type: ok ? 'go_hit' : 'commission' }, isPractice(s))
+  s.flash = ok ? 'ok' : 'bad'
+  if (ok) { s.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
   gonogoNext()
 }
 
 function gonogoNext() {
   const s = brainState.gonogo
   s.index++
-  if (s.index >= s.total) { s.finished = true; render(); return }
-  s.waiting = true; render()
+  if (s.index >= s.total) {
+    if (isPractice(s)) {
+      beginScoredBlock(s)
+      s.trials = s.fullTrials
+      s.total = s.fullTrials.length
+      s.index = -1
+      s.score = 0
+      s.flash = null
+      gonogoNext()
+      return
+    }
+    ensureClinicalLab().completeClinicalReport('gonogo', s)
+    return
+  }
+  s.waiting = true; render(true)
+  const waitMs = s.waitMs || 600
+  const nogoMs = s.nogoMs || 1200
   brainTimers.push(setTimeout(() => {
-    s.waiting = false; render()
+    s.waiting = false; render(true)
     const t = s.trials[s.index]
     if (t.type === 'nogo') {
       brainTimers.push(setTimeout(() => {
         if (s.index < s.total && !s.finished && brainState.exercise === 'gonogo') {
-          s.score++; playTone(523); gonogoNext()
+          logTrial(s.trialLog, { correct: true, type: 'nogo_ok' }, isPractice(s))
+          s.score++; markTrial(true); playTone(523); gonogoNext()
         }
-      }, 1200))
+      }, nogoMs))
     }
-  }, 600))
+  }, waitMs))
 }
 
-window.gonogoStart = function() { gonogoNext() }
+window.gonogoManualStart = function() {
+  const s = brainState.gonogo
+  if (s.started) return
+  ensureClinicalLab().prepareClinicalState(s)
+  if (isPractice(s)) {
+    s.trials = s.practiceTrials
+    s.total = PRACTICE_TRIALS
+  }
+  s.started = true
+  s.index = -1
+  gonogoNext()
+}
+
+window.gonogoStart = function() { gonogoManualStart() }
 
 function renderCorsiGame() {
   const c = brainState.corsi
   if (c.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">Span ${c.level - 1} · ${c.score} pts</p>
-    ${brainFinishBtn(c.score, c.maxRounds, 'corsi')}</div>`)
-  if (c.phase === 'ready') return brainWrapper(`<div class="text-center">
-    <h3 class="font-display text-xl font-semibold mb-2">Bloques Corsi</h3>
-    <p class="text-sm text-muted mb-6">Memoria espacial · secuencia de ${c.level} bloques</p>
-    <button onclick="corsiStart()" class="btn-primary">Comenzar</button></div>`)
+    <p class="font-semibold mb-2">Corsi · span ${Math.max(c.level - 1, 1)}</p>
+    ${renderProtocolDebrief('corsi', c.score, c.maxRounds, brainFinishBtn(c.score, c.maxRounds, 'corsi'))}</div>`)
+  if (c.phase === 'ready') return renderProtocolIntro('corsi', 'corsiStart()',
+    `<p class="brain-protocol-brief__note">Empiezas con secuencias de ${c.level} bloques</p>`)
   return brainWrapper(`<div class="brain-game-panel text-center">
     <p id="corsi-label" class="brain-game-label">Nivel ${c.level} · Ronda ${c.rounds + 1}/${c.maxRounds}</p>
     <div id="corsi-grid" class="brain-grid brain-grid--3" role="group" aria-label="Bloques Corsi">
       ${Array.from({ length: 9 }, (_, i) => `<button type="button" id="corsi-cell-${i}" onclick="corsiTap(${i})" ${c.phase !== 'input' ? 'disabled' : ''}
-        class="brain-grid-cell corsi-cell ${c.highlight === i ? 'is-lit' : ''}" aria-label="Bloque ${i + 1}"></button>`).join('')}
+        class="brain-grid-cell corsi-cell brain-corsi-3d ${c.highlight === i ? 'is-lit' : ''}" aria-label="Bloque ${i + 1}"></button>`).join('')}
     </div>
     <p id="corsi-hint" class="brain-game-hint">${CORSI_HINTS[c.phase] || ''}</p>
   </div>`)
@@ -700,8 +1671,17 @@ window.corsiStart = function() {
   let i = 0
   function show() {
     if (i < c.sequence.length) {
-      c.highlight = c.sequence[i]; render(); playTone(400 + i * 80, 0.12)
-      brainTimers.push(setTimeout(() => { c.highlight = -1; render(); i++; brainTimers.push(setTimeout(show, 300)) }, 500))
+      const pace = Math.round(500 * getIntensity(c.difficulty || brainState.difficulty).pace)
+      const gap = Math.round(300 * getIntensity(c.difficulty || brainState.difficulty).pace)
+      c.highlight = c.sequence[i]
+      if (!patchCorsiUI()) render()
+      playTone(400 + i * 80, 0.12)
+      brainTimers.push(setTimeout(() => {
+        c.highlight = -1
+        if (!patchCorsiUI()) render()
+        i++
+        brainTimers.push(setTimeout(show, gap))
+      }, pace))
     } else { c.phase = 'input'; render() }
   }
   brainTimers.push(setTimeout(show, 400))
@@ -726,15 +1706,12 @@ window.corsiTap = function(pos) {
 function renderSymbolsGame() {
   const s = brainState.symbols
   if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-6">${s.score} aciertos</p>
-    ${brainFinishBtn(s.score, s.total, 'symbols')}</div>`)
-  if (!s.active) return brainWrapper(`<div class="text-center">
-    <h3 class="font-display text-xl font-semibold mb-2">Símbolos-Dígitos</h3>
-    <p class="text-sm text-muted mb-4">Velocidad de procesamiento (WAIS-IV adaptado)</p>
-    <div class="flex justify-center gap-4 mb-6 text-sm">
+    ${renderProtocolDebrief('symbols', s.score, s.total, brainFinishBtn(s.score, s.total, 'symbols'))}</div>`)
+  if (!s.active) return renderProtocolIntro('symbols', 'symbolsStart()',
+    `<div class="brain-protocol-brief__table flex justify-center gap-3 mb-2 text-sm">
       ${s.map.map(m => `<span>${m.sym} = ${m.digit}</span>`).join('')}
     </div>
-    <button onclick="symbolsStart()" class="btn-primary">Iniciar (${s.timeLeft}s)</button></div>`)
+    <p class="brain-protocol-brief__note text-center">Tiempo: ${s.timeLeft}s</p>`)
   const t = s.trials[s.index]
   return brainWrapper(`<div class="text-center">
     <p id="symbols-timer" class="text-sm text-muted mb-2">⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}</p>
@@ -751,7 +1728,7 @@ window.symbolsStart = function() {
   const tick = setInterval(() => {
     s.timeLeft--
     if (s.timeLeft <= 0) { clearInterval(tick); s.finished = true; render() }
-    else if (!patchLiveUI('/gimnasia')) render()
+    else patchSymbolsTimerDOM()
   }, 1000)
   brainTimers.push(tick)
   render()
@@ -767,25 +1744,59 @@ window.symbolAnswer = function(digit) {
   render()
 }
 
+function brainFinishPct(score, total, id) {
+  if (!total || total <= 0) return 0
+  if (id === 'math') return Math.min(100, score * 10)
+  if (id === 'memory' || id === 'simon') return Math.min(100, score)
+  return Math.min(100, Math.round((score / total) * 100))
+}
+
 function brainFinishBtn(score, total, id, xpLabel = 'Continuar') {
+  const finishArg = brainState.mode === 'session' ? score : brainFinishPct(score, total, id)
   const fn = brainState.mode === 'session'
     ? `endExerciseBlock(${score},${total},'${id}')`
-    : `finishBrain(${score})`
+    : `finishBrain(${finishArg})`
   return `<button onclick="${fn}" class="btn-primary">${xpLabel}</button>`
 }
 
-function brainWrapper(content) {
+function buildArenaBody(content, opts = {}) {
+  const pressure = brainState.difficulty === 'experto'
+    ? '<p class="brain-lab-pressure brain-lab-pressure--max">Presión máxima · límite de tiempo activo</p>'
+    : brainState.difficulty === 'dificil'
+      ? '<p class="brain-lab-pressure">Alta demanda cognitiva</p>'
+      : ''
+  return `<div class="brain-lab-body${opts.arena ? ' brain-lab-body--arena' : ''}">${pressure}${content}</div>`
+}
+
+function renderBrainLabShell(body, opts = {}) {
+  const ex = EXERCISES[brainState.exercise] || {}
   const d = DIFFICULTIES[brainState.difficulty]
   const backFn = brainState.mode === 'session' ? 'cancelSession()' : 'exitExercise()'
-  return `<div class="page-shell page-exercise route-enter">
-    <div class="exercise-dashboard exercise-dashboard--focus">
-      <div class="exercise-focus-bar">
-        <button type="button" onclick="${backFn}" class="btn-ghost">← Volver</button>
-        <span class="ds-chip ds-chip--accent">${d.icon} ${d.label}</span>
+  const status = getExerciseLiveStatus()
+  const domain = COGNITIVE_DOMAINS[ex.domain]
+  return `<div id="brain-lab-runtime" class="page-shell page-brain-lab-runtime route-enter">
+    <header class="brain-lab-header" id="brain-lab-header">
+      <button type="button" onclick="${backFn}" class="brain-lab-header__exit">Salir</button>
+      <div class="brain-lab-header__main">
+        <p class="brain-lab-header__domain">${domain?.name || 'Entrenamiento cognitivo'}</p>
+        <h1 class="brain-lab-header__title">${ex.name || 'Protocolo'}</h1>
+        <p class="brain-lab-header__paradigm">${ex.paradigm || status.paradigm || ''}</p>
       </div>
-      <div class="card exercise-stage exercise-stage--focus">${content}</div>
-    </div>
+      <div class="brain-lab-header__telemetry">
+        <span class="brain-lab-telemetry__item"><em>Fase</em><strong id="brain-lab-phase">${status.phase || '—'}</strong></span>
+        <span class="brain-lab-telemetry__item"><em>Trial</em><strong id="brain-lab-trial">${status.trial || '—'}</strong></span>
+        <span class="brain-lab-telemetry__item"><em>Nivel</em><strong>${d.label}</strong></span>
+      </div>
+      <div class="brain-lab-header__timer" id="brain-lab-timer"><div class="brain-lab-header__timer-fill" id="brain-lab-progress-fill"></div></div>
+    </header>
+    <main id="brain-exercise-stage" class="brain-lab-stage${opts.arena ? ' brain-lab-stage--arena' : ''}">${body}</main>
   </div>`
+}
+
+function brainWrapper(content, opts = {}) {
+  const body = buildArenaBody(content, opts)
+  if (brainState._patchOnly) return body
+  return renderBrainLabShell(body, opts)
 }
 
 const CORSI_HINTS = { showing: 'Observa la secuencia', input: 'Repite la secuencia', success: '✓ Correcto' }
@@ -844,32 +1855,101 @@ function patchSimonUI() {
   return true
 }
 
+function patchStroopUI() {
+  const s = brainState.stroop
+  if (!s || s.finished || brainState.protocolBrief === 'stroop') return false
+  const word = document.querySelector('.brain-stroop-word')
+  const grid = document.querySelector('.brain-color-grid')
+  if (!word || !grid) return false
+  const t = stroopTrialMeta(s)
+  if (!t) return false
+  word.textContent = t.word
+  word.style.setProperty('--stroop-ink', t.ink)
+  const tag = document.querySelector('.brain-tag')
+  if (tag) {
+    tag.textContent = t.congruent ? 'Congruente' : 'Conflicto'
+    tag.className = `brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}`
+  }
+  const fill = document.querySelector('.brain-lab-metrics__fill')
+  const val = document.querySelector('.brain-lab-metrics__value')
+  const cur = stroopHudIndex(s)
+  const tot = stroopHudTotal(s)
+  if (fill) fill.style.width = `${Math.round((cur / tot) * 100)}%`
+  if (val) val.textContent = `${cur}/${tot}`
+  syncBrainLabChrome()
+  return true
+}
+
+function patchFlankerUI() {
+  const s = brainState.flanker
+  if (!s || s.finished || brainState.protocolBrief === 'flanker') return false
+  const row = document.querySelector('.brain-flanker-row')
+  if (!row) return false
+  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
+  if (!t) return false
+  const arrows = flankerArrows(t)
+  row.innerHTML = arrows.split('').map((ch, i) =>
+    `<span class="brain-flanker-char ${i === 2 ? 'is-center' : ''}">${ch}</span>`).join('')
+  const tag = document.querySelector('.brain-tag')
+  if (tag) {
+    tag.textContent = t.congruent ? 'Alineadas' : 'Interferencia'
+    tag.className = `brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}`
+  }
+  const fill = document.querySelector('.brain-lab-metrics__fill')
+  const val = document.querySelector('.brain-lab-metrics__value')
+  const cur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
+  const tot = isPractice(s) ? PRACTICE_TRIALS : s.total
+  if (fill) fill.style.width = `${Math.round((cur / tot) * 100)}%`
+  if (val) val.textContent = `${cur}/${tot}`
+  syncBrainLabChrome()
+  return true
+}
+
+function patchSwitchingUI() {
+  const s = brainState.switching
+  if (!s || s.finished || brainState.protocolBrief === 'switching') return false
+  const num = document.querySelector('.brain-switch-num')
+  const badge = document.querySelector('.brain-switch-badge')
+  const actions = document.getElementById('brain-switch-actions')
+  if (!num || !badge || !actions) return false
+  const t = s.trials[s.index]
+  if (!t) return false
+  num.textContent = String(t.num)
+  const ruleLabel = t.rule === 'parity' ? '¿Es PAR o IMPAR?' : '¿Es mayor o menor que 5?'
+  badge.textContent = ruleLabel
+  actions.innerHTML = t.rule === 'parity'
+    ? `<button type="button" onclick="switchAnswer('even')" class="btn-secondary flex-1">Par</button><button type="button" onclick="switchAnswer('odd')" class="btn-secondary flex-1">Impar</button>`
+    : `<button type="button" onclick="switchAnswer('low')" class="btn-secondary flex-1">≤ 5</button><button type="button" onclick="switchAnswer('high')" class="btn-secondary flex-1">&gt; 5</button>`
+  const fill = document.querySelector('.brain-lab-metrics__fill')
+  const val = document.querySelector('.brain-lab-metrics__value')
+  if (fill) fill.style.width = `${Math.round(((s.index + 1) / s.total) * 100)}%`
+  if (val) val.textContent = `${s.index + 1}/${s.total}`
+  syncBrainLabChrome()
+  return true
+}
+
 function patchBrainExerciseUI() {
   const id = brainState.exercise
   if (!id) return false
   if (id === 'corsi') return patchCorsiUI()
   if (id === 'memory') return patchMemoryUI()
   if (id === 'simon') return patchSimonUI()
-  if (id === 'symbols' && brainState.symbols.active && !brainState.symbols.finished) {
-    const timer = document.getElementById('symbols-timer')
-    if (!timer) return false
-    const s = brainState.symbols
-    timer.textContent = `⏱ ${s.timeLeft}s · ${s.index + 1}/${s.total}`
-    return true
-  }
-  if (id === 'math' && brainState.math.active && brainState.math.timeLeft > 0) {
-    const timer = document.getElementById('math-timer')
-    const score = document.getElementById('math-score')
-    if (!timer) return false
-    timer.textContent = `${brainState.math.timeLeft}s`
-    if (score) score.textContent = `${brainState.math.score} ✓`
-    return true
-  }
+  if (id === 'stroop') return patchStroopUI()
+  if (id === 'flanker') return patchFlankerUI()
+  if (id === 'switching') return patchSwitchingUI()
   return false
 }
 
-function genSequence(difficulty) {
-  return pickSequence(difficulty)
+function advanceTimedTrial(patchFn, onDone) {
+  if (brainState._trialBusy) return
+  brainState._trialBusy = true
+  onDone()
+  brainState._trialBusy = false
+  if (!brainState.exercise) return
+  const s = brainState[brainState.exercise]
+  if (s?.finished) { render(true); return }
+  if (patchFn && patchFn()) syncBrainLabChrome()
+  else render(true)
 }
 
 function renderSequenceGame() {
@@ -877,34 +1957,232 @@ function renderSequenceGame() {
   if (s.finished) return brainWrapper(`<div class="text-center">
     <p class="text-2xl mb-2">📐</p><p class="font-semibold mb-6">${s.score}/${s.total} correctos</p>
     ${brainFinishBtn(s.score, s.total, 'sequence', `Terminar (+${Math.floor(DIFFICULTIES[s.difficulty].xp * (s.score / s.total))} XP)`)}</div>`)
-  return brainWrapper(`<div class="text-center">
-    <p class="text-sm text-muted mb-4">Ronda ${s.round + 1}/${s.total}</p>
-    <p class="font-display text-2xl font-bold text-main mb-2">${s.current.seq.join(', ')}, ?</p>
-    <p class="text-muted text-sm mb-6">¿Cuál es el siguiente número?</p>
-    <div class="grid grid-cols-2 gap-3">
-      ${s.current.opts.map(n => `<button onclick="seqAnswer(${n})" class="p-4 rounded-xl font-bold text-lg text-main" style="background:var(--secondary-bg)">${n}</button>`).join('')}
-    </div></div>`)
+  if (!s.current) s.current = pickSequence(s.difficulty)
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(s.round + 1, s.total, 'Patrones')}
+    <p class="brain-sequence-line">${s.current.seq.join(' · ')} <span class="brain-sequence-q">?</span></p>
+    <p class="brain-hint">Detecta la regla</p>
+    <div class="brain-choice-grid">
+      ${s.current.opts.map(n => `<button type="button" onclick="seqAnswer(${n})" class="brain-choice-btn">${n}</button>`).join('')}
+    </div></div>`, { arena: true })
 }
 
 window.seqAnswer = function(n) {
+  clearTrialDeadline()
   const s = brainState.sequence
-  if (n === s.current.ans) { s.score++; playTone(523) } else playTone(200)
+  const ok = n === s.current.ans
+  if (ok) { s.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
   s.round++
   if (s.round >= s.total) s.finished = true
-  else s.current = genSequence(s.difficulty)
+  else {
+    s.current = pickSequence(s.difficulty)
+    queueArmTrial()
+  }
   render()
+}
+
+function reactionStartWait() {
+  const s = brainState.reaction
+  const diff = s.difficulty || brainState.difficulty
+  s.phase = 'wait'
+  s.delayMs = reactionDelayMs(diff)
+  render()
+  brainTimers.push(setTimeout(() => {
+    if (brainState.exercise !== 'reaction' || s.finished) return
+    s.phase = 'go'
+    s.trialStart = Date.now()
+    render()
+    brainTimers.push(setTimeout(() => {
+      if (s.phase !== 'go' || s.finished) return
+      s.phase = 'miss'
+      s.feedback = 'miss'
+      markTrial(false)
+      playTone(180)
+      render()
+      brainTimers.push(setTimeout(() => reactionNextTrial(), 900))
+    }, reactionGoWindowMs(diff)))
+  }, s.delayMs))
+}
+
+function reactionNextTrial() {
+  const s = brainState.reaction
+  s.feedback = null
+  s.index++
+  if (s.index >= s.total) { s.finished = true; render(); return }
+  reactionStartWait()
+}
+
+function renderReactionGame() {
+  const s = brainState.reaction
+  if (s.finished) {
+    const avg = s.rts.length ? Math.round(s.rts.reduce((a, b) => a + b, 0) / s.rts.length) : 0
+    const best = s.rts.length ? Math.min(...s.rts) : 0
+    return brainWrapper(`<div class="text-center brain-arena">
+      <p class="brain-stat-big">⚡</p>
+      <p class="font-semibold mb-2">Reflejos medidos</p>
+      <div class="brain-stats-row">
+        <div><span class="brain-stat-val">${s.score}</span><span class="brain-stat-lbl">puntos</span></div>
+        <div><span class="brain-stat-val">${avg || '—'}</span><span class="brain-stat-lbl">ms prom.</span></div>
+        <div><span class="brain-stat-val">${best || '—'}</span><span class="brain-stat-lbl">mejor</span></div>
+      </div>
+      <p class="text-xs text-muted mb-6">${s.falseStarts} falsas salidas</p>
+      ${renderProtocolDebrief('reaction', s.score, s.total, brainFinishBtn(s.score, s.total, 'reaction'))}</div>`, { arena: true })
+  }
+  if (s.phase === 'intro') {
+    return renderProtocolIntro('reaction', 'reactionBegin()')
+  }
+  const phaseClass = {
+    wait: 'is-wait', go: 'is-go', early: 'is-early', hit: 'is-hit', miss: 'is-miss',
+  }[s.phase] || 'is-wait'
+  const msg = {
+    wait: 'Espera…', go: '¡YA!', early: 'Muy pronto', hit: brainState.gameMeta.lastRt ? `${brainState.gameMeta.lastRt} ms` : '¡Bien!', miss: 'Tarde',
+  }[s.feedback || s.phase] || 'Espera…'
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(s.index + 1, s.total, 'Reflejos')}
+    <button type="button" onclick="reactionTap()" class="brain-reaction-pad ${phaseClass}">
+      <span class="brain-reaction-msg">${msg}</span>
+    </button>
+    <p class="brain-hint mt-4">Toca en cuanto veas verde</p>
+  </div>`, { arena: true })
+}
+
+window.reactionBegin = function() {
+  reactionStartWait()
+}
+
+window.reactionTap = function() {
+  const s = brainState.reaction
+  if (s.finished) return
+  if (s.phase === 'wait') {
+    s.falseStarts++
+    s.phase = 'early'
+    s.feedback = 'early'
+    markTrial(false)
+    playTone(150)
+    clearBrainTimers()
+    brainTimers.push(setTimeout(() => reactionNextTrial(), 900))
+    render()
+    return
+  }
+  if (s.phase === 'go') {
+    const rt = Date.now() - s.trialStart
+    s.rts.push(rt)
+    const pts = scoreReactionRt(rt, s.difficulty || brainState.difficulty)
+    s.score += pts
+    markTrial(pts > 0, rt)
+    s.phase = 'hit'
+    s.feedback = 'hit'
+    if (pts > 0) { playTone(523) } else { playTone(280) }
+    clearBrainTimers()
+    brainTimers.push(setTimeout(() => reactionNextTrial(), 750))
+    render()
+  }
+}
+
+function renderAnagramGame() {
+  const a = brainState.anagram
+  if (a.finished) {
+    return brainWrapper(`<div class="text-center">
+      <p class="brain-stat-big">🔤</p>
+      <p class="font-semibold mb-6">${a.score}/${a.total} anagramas · racha máx ${brainState.gameMeta.bestStreak}</p>
+      ${brainFinishBtn(a.score, a.total, 'anagram')}</div>`)
+  }
+  const p = a.puzzles[a.index]
+  const letters = p.scrambled.split('').map((ch, i) =>
+    `<span class="brain-letter" style="--d:${i * 40}ms">${ch}</span>`).join('')
+  return brainWrapper(`<div class="text-center brain-arena">
+    ${brainHud(a.index + 1, a.total, 'Anagramas')}
+    <div class="brain-scramble" aria-label="Letras mezcladas">${letters}</div>
+    ${a.hintUsed ? `<p class="brain-hint">💡 ${esc(p.hint)}</p>` : `<button type="button" class="btn-ghost text-sm mb-2" onclick="anagramHint()">Ver pista</button>`}
+    <div class="brain-choice-grid brain-choice-grid--2">
+      ${a.choices.map((w, i) => `<button type="button" onclick="anagramPick(${i})" class="brain-choice-btn brain-choice-btn--word">${esc(w)}</button>`).join('')}
+    </div>
+    ${a.feedback ? `<p class="brain-feedback brain-feedback--${a.feedback}">${a.feedback === 'ok' ? '✓' : '✗'}</p>` : ''}
+  </div>`, { arena: true })
+}
+
+window.anagramHint = function() {
+  brainState.anagram.hintUsed = true
+  render()
+}
+
+window.anagramPick = function(choiceIdx) {
+  clearTrialDeadline()
+  const a = brainState.anagram
+  if (a.feedback) return
+  const p = a.puzzles[a.index]
+  const word = choiceIdx >= 0 ? a.choices[choiceIdx] : ''
+  const ok = word === p.answer
+  a.feedback = ok ? 'ok' : 'bad'
+  if (ok) { a.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
+  render()
+  brainTimers.push(setTimeout(() => {
+    a.feedback = null
+    a.hintUsed = false
+    a.index++
+    if (a.index >= a.total) { a.finished = true }
+    else {
+      const next = a.puzzles[a.index]
+      a.choices = buildAnagramChoices(next, a.puzzles)
+      queueArmTrial()
+    }
+    render()
+  }, ok ? 450 : 700))
+}
+
+function renderOddOutGame() {
+  const o = brainState.oddout
+  if (o.finished) {
+    return brainWrapper(`<div class="text-center">
+      <p class="brain-stat-big">🕵️</p>
+      <p class="font-semibold mb-6">${o.score}/${o.total} intrusos detectados</p>
+      ${brainFinishBtn(o.score, o.total, 'oddout')}</div>`)
+  }
+  const t = o.trials[o.index]
+  return brainWrapper(`<div class="brain-arena">
+    ${brainHud(o.index + 1, o.total, 'Intruso semántico')}
+    <p class="brain-hint text-center mb-4">¿Cuál no pertenece al grupo?</p>
+    <div class="brain-word-grid">
+      ${t.words.map((w, i) => `<button type="button" onclick="oddoutPick(${i})" class="brain-word-card ${o.feedback && w === t.odd ? 'is-reveal' : ''} ${o.feedback && w !== t.odd && o.lastPick === i ? 'is-wrong' : ''}">${esc(w)}</button>`).join('')}
+    </div>
+    ${o.feedback ? `<p class="brain-feedback brain-feedback--${o.feedback} text-center mt-4">${o.feedback === 'ok' ? '✓ Categoría limpia' : '✗ Ese sí encajaba'}</p>` : ''}
+  </div>`, { arena: true })
+}
+
+window.oddoutPick = function(wordIdx) {
+  clearTrialDeadline()
+  const o = brainState.oddout
+  if (o.feedback) return
+  const t = o.trials[o.index]
+  o.lastPick = wordIdx
+  const word = wordIdx >= 0 ? t.words[wordIdx] : ''
+  const ok = word === t.odd
+  o.feedback = ok ? 'ok' : 'bad'
+  if (ok) { o.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
+  render()
+  brainTimers.push(setTimeout(() => {
+    o.feedback = null
+    o.lastPick = null
+    o.index++
+    if (o.index >= o.total) o.finished = true
+    else queueArmTrial()
+    render()
+  }, ok ? 500 : 850))
 }
 
 function renderLogicGame() {
   const l = brainState.logic
   if (l.finished) return brainWrapper(`<div class="text-center">
-    <p class="text-2xl mb-2">🧩</p><p class="font-semibold mb-2">${l.score}/${l.puzzles.length} acertijos</p>
-    <p class="text-sm text-muted mb-6">Razonamiento con explicación — no adivinanza a ciegas.</p>
-    ${brainFinishBtn(l.score, l.puzzles.length, 'logic', 'Terminar')}</div>`)
+    <p class="text-2xl mb-2">🧩</p>
+    ${renderProtocolDebrief('logic', l.score, l.puzzles.length, brainFinishBtn(l.score, l.puzzles.length, 'logic', 'Terminar'))}</div>`)
   const p = l.puzzles[l.index]
   const answered = l.selected !== null
   const correct = answered && l.selected === p.answer
-  return brainWrapper(`<div>
+  return brainWrapper(`<div class="brain-arena">
+    ${brainHud(l.index + 1, l.puzzles.length, 'Acertijos')}
     <p class="text-sm text-muted mb-4">Acertijo ${l.index + 1}/${l.puzzles.length} · ${l.score} aciertos</p>
     <p class="font-medium text-main mb-6 leading-relaxed">${p.q}</p>
     <div class="space-y-2">
@@ -924,11 +2202,14 @@ function renderLogicGame() {
 }
 
 window.logicAnswer = function(i) {
+  clearTrialDeadline()
   const l = brainState.logic
   if (l.selected !== null) return
   l.selected = i
   const p = l.puzzles[l.index]
-  if (i === p.answer) { l.score++; playTone(523) } else playTone(200)
+  const ok = i === p.answer
+  if (ok) { l.score++; playTone(523) } else playTone(200)
+  markTrial(ok)
   render()
 }
 
@@ -937,6 +2218,7 @@ window.logicNext = function() {
   l.selected = null
   l.index++
   if (l.index >= l.puzzles.length) l.finished = true
+  else queueArmTrial()
   render()
 }
 
@@ -1170,11 +2452,18 @@ window.memoryStart = function() {
   let i = 0
   function showNext() {
     if (i < m.sequence.length) {
-      m.highlight = m.sequence[i]; render(); playTone(300 + m.sequence[i] * 80, 0.12)
-      setTimeout(() => { m.highlight = -1; render(); i++; setTimeout(showNext, cfg.speed / 2) }, cfg.speed)
+      m.highlight = m.sequence[i]
+      if (!patchMemoryUI()) render()
+      playTone(300 + m.sequence[i] * 80, 0.12)
+      brainDelay(() => {
+        m.highlight = -1
+        if (!patchMemoryUI()) render()
+        i++
+        brainDelay(showNext, cfg.speed / 2)
+      }, cfg.speed)
     } else { m.phase = 'input'; render() }
   }
-  setTimeout(showNext, 500)
+  brainDelay(showNext, 500)
 }
 
 window.memoryClick = function(index) {
@@ -1184,7 +2473,7 @@ window.memoryClick = function(index) {
   if (index !== m.sequence[m.userInput.length - 1]) { m.phase = 'failed'; render(); return }
   if (m.userInput.length === m.sequence.length) {
     m.score += m.level * 10; m.level++; m.phase = 'success'; render()
-    setTimeout(() => window.memoryStart(), 1000)
+    brainDelay(() => window.memoryStart(), 1000)
   }
   render()
 }
@@ -1215,11 +2504,18 @@ window.simonStart = function() {
   const speed = s.config.speed
   function showNext() {
     if (i < s.sequence.length) {
-      s.showing = i; render(); playTone(200 + s.sequence[i] * 50, 0.15)
-      setTimeout(() => { s.showing = -1; render(); i++; setTimeout(showNext, speed / 2) }, speed)
+      s.showing = i
+      if (!patchSimonUI()) render()
+      playTone(200 + s.sequence[i] * 50, 0.15)
+      brainDelay(() => {
+        s.showing = -1
+        if (!patchSimonUI()) render()
+        i++
+        brainDelay(showNext, speed / 2)
+      }, speed)
     } else { s.phase = 'input'; render() }
   }
-  setTimeout(showNext, 500)
+  brainDelay(showNext, 500)
 }
 
 window.simonClick = function(n) {
@@ -1229,7 +2525,7 @@ window.simonClick = function(n) {
   if (n !== s.sequence[s.userInput.length - 1]) { s.phase = 'failed'; render(); return }
   if (s.userInput.length === s.sequence.length) {
     s.score += s.level * 15; s.level++; s.phase = 'success'; render()
-    setTimeout(() => window.simonStart(), 1000)
+    brainDelay(() => window.simonStart(), 1000)
   }
   render()
 }
@@ -1261,7 +2557,7 @@ window.mathStart = function() {
   mathTimer = setInterval(() => {
     brainState.math.timeLeft--
     if (brainState.math.timeLeft <= 0) { clearInterval(mathTimer); mathTimer = null; render() }
-    else if (!patchLiveUI('/gimnasia')) render()
+    else patchMathTimerDOM()
   }, 1000)
   render()
 }
@@ -1274,7 +2570,7 @@ window.mathSubmit = function(e) {
   else { m.feedback = 'wrong'; playTone(200) }
   m.answer = ''; m.problem = genMathProblem(m.difficulty)
   render()
-  setTimeout(() => { m.feedback = null; render() }, 400)
+  brainDelay(() => { m.feedback = null; render() }, 400)
 }
 
 export function syncGimnasiaRoute(sub = []) {
@@ -1292,7 +2588,7 @@ export function syncGimnasiaRoute(sub = []) {
     if (sub[0] === 'catalogo') brainState.schoolSection = 'explore'
   } else if (sub[0] === 'entrenar' || sub[0] === 'programa' || sub[0] === 'laboratorio') {
     brainState.brainView = 'train'
-    brainState.trainSection = sub[0] === 'laboratorio' ? 'lab' : 'program'
+    brainState.trainSection = (sub[0] === 'laboratorio' || sub[1] === 'laboratorio') ? 'lab' : 'program'
   } else if (sub[0] === 'cuerpo' || sub[0] === 'alimentacion' || sub[0] === 'ayuno') {
     brainState.brainView = 'body'
     brainState.bodySection = sub[0] === 'ayuno' ? 'fasting' : 'nutrition'
@@ -1302,7 +2598,12 @@ export function syncGimnasiaRoute(sub = []) {
 
 export function clearEphemeralBrainState() {
   clearBrainTimers()
+  if (exerciseRenderRAF) cancelAnimationFrame(exerciseRenderRAF)
+  exerciseRenderRAF = null
+  exerciseRenderLock = false
+  brainState._trialBusy = false
   brainState.mode = 'hub'
+  brainState.protocolBrief = null
   brainState.session = null
   brainState.activeLesson = null
   brainState.lessonFlow = null
@@ -1321,6 +2622,11 @@ export function bindBrainGymGlobals() {
   window.finishBrain = finishBrain
   window.endExerciseBlock = endExerciseBlock
   bindBrainNavGlobals()
+  window.exitExercise = function() {
+    clearBrainTimers()
+    brainState.exercise = null
+    goTrain(brainState.trainSection === 'lab' ? 'lab' : 'program')
+  }
 }
 
 export { brainState, renderBrainGym, patchBrainExerciseUI, startBrain, finishBrain, endExerciseBlock }

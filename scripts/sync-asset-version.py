@@ -84,7 +84,7 @@ def normalize_js_imports():
 
 
 def patch_other_files():
-    exts = {'.html', '.css', '.py'}
+    exts = {'.html', '.css', '.py', '.js'}
     touched = 0
     for path in ROOT.rglob('*'):
         if not path.is_file() or path.suffix not in exts:
@@ -92,6 +92,8 @@ def patch_other_files():
         if 'node_modules' in path.parts or '.git' in path.parts:
             continue
         if path.name in ('sync-asset-version.py', 'import-map.json'):
+            continue
+        if path.suffix == '.js' and path.parent.name == 'js':
             continue
         text = path.read_text()
         next_text = re.sub(r'\?v=\d+', f'?v={V}', text)

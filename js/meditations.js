@@ -39,6 +39,13 @@ export const MEDITATIONS = [
   { id: 'social-reset', name: 'Después de hablar', icon: '◫', category: 'stress', desc: 'Volver a tu centro.', hook: 'No reescenas la conversación. Solo vuelves a ti.', type: 'steps', stepsKey: 'socialReset', neuro: 'Regula rumiación social.' },
   { id: 'digital-detox', name: 'Post-pantalla', icon: '⊘', category: 'restore', desc: 'Bajar estimulación.', hook: 'Tus ojos y tu sistema nervioso necesitan un margen antes del siguiente scroll.', type: 'steps', stepsKey: 'digitalDetox', neuro: 'Transición dopaminérgica.' },
   { id: 'panic-anchor', name: 'Ancla de emergencia', icon: '⚓', category: 'stress', desc: 'Cuando el cuerpo dispara.', hook: 'Esto es intenso, pero estás a salvo en este momento. Vamos paso a paso.', type: 'steps', stepsKey: 'panicAnchor', neuro: 'Vago + grounding físico.' },
+  { id: 'anger-cool', name: 'Enfriar la ira', icon: '❄', category: 'stress', desc: 'Antes de responder.', hook: 'La rabia es información, no una orden. Respira antes del mensaje.', type: 'steps', stepsKey: 'angerCool', neuro: 'Amígdala → PFC vía pausa.' },
+  { id: 'exam-prep', name: 'Antes del examen', icon: '◈', category: 'focus', desc: 'Nervios útiles, no parálisis.', hook: 'Un poco de adrenalina ayuda. Demasiada nubla. Equilibra aquí.', type: 'steps', stepsKey: 'examPrep', neuro: 'Cortisol modulado por respiración.' },
+  { id: 'commute-calm', name: 'En el camino', icon: '⇢', category: 'body', desc: 'Tráfico, metro, espera.', hook: 'No puedes controlar el retraso. Sí cómo llegas por dentro.', type: 'steps', stepsKey: 'commuteCalm', neuro: 'Regulación autonómica en movimiento.' },
+  { id: 'creativity-open', name: 'Abrir creatividad', icon: '✦', category: 'focus', desc: 'Espacio para ideas nuevas.', hook: 'No fuerces la chispa. Crea el clima donde puede aparecer.', type: 'steps', stepsKey: 'creativityOpen', neuro: 'Red default mode + PFC relajada.' },
+  { id: 'grief-space', name: 'Espacio para el duelo', icon: '◌', category: 'restore', desc: 'Sin apurar el proceso.', hook: 'El dolor no es un bug. Es amor con lugar incierto.', type: 'steps', stepsKey: 'griefSpace', neuro: 'Validación emocional + vagal.' },
+  { id: 'breath-478', name: 'Respiración 4-7-8', icon: '◎', category: 'breath', desc: 'Sueño y ansiedad leve.', hook: 'Inhala 4, sostén 7, exhala 8. El cuerpo entiende la señal.', type: 'breathing', neuro: 'Activación parasimpática rápida.' },
+  { id: 'midday-reset', name: 'Reset de mediodía', icon: '☀', category: 'focus', desc: 'Evita el bajón de las 3 pm.', hook: 'La tarde no tiene que ser un desastre. Tres minutos cambian el tono.', type: 'steps', stepsKey: 'middayReset', neuro: 'Reactivación atencional.' },
 ]
 
 export const MEDITATION_INTROS = {
@@ -66,6 +73,13 @@ export const MEDITATION_INTROS = {
   'social-reset': 'La conversación ya pasó. No la reescribes. Vuelves a ti con tres respiraciones.',
   'digital-detox': 'Tus ojos y tu sistema nervioso necesitan un margen antes del siguiente scroll.',
   'panic-anchor': 'Esto se siente muy fuerte. Estás a salvo en este momento. Vamos paso a paso, juntos.',
+  'anger-cool': 'No tienes que responder ahora. Primero baja el volumen interno. Luego decides.',
+  'exam-prep': 'Has preparado lo que pudiste. Ahora el cuerpo necesita creer que puede rendir sin pánico.',
+  'commute-calm': 'El trayecto también es tuyo. Suelta mandíbula y hombros aunque el mundo apure.',
+  'creativity-open': 'Las ideas llegan cuando dejas de perseguirlas. Observa sin juzgar.',
+  'grief-space': 'No tienes que estar bien. Solo quédate un momento con lo que sientes.',
+  'breath-478': 'Cuatro entradas, siete de pausa, ocho de salida. Deja que el ritmo te guíe.',
+  'midday-reset': 'La mañana ya pasó. Respira y elige una sola prioridad para lo que queda del día.',
 }
 
 export function getMeditationIntro(id) {
@@ -98,6 +112,13 @@ export const SESSION_AMBIENT = {
   'social-reset': 'lago',
   'digital-detox': 'wind',
   'panic-anchor': 'om',
+  'anger-cool': 'tormenta',
+  'exam-prep': 'cafe',
+  'commute-calm': 'wind',
+  'creativity-open': 'jardin',
+  'grief-space': 'lago',
+  'breath-478': 'night',
+  'midday-reset': 'amanecer',
 }
 
 export const MEDITATION_PROGRAMS = PROGRAM_DEFINITIONS.map(p => ({

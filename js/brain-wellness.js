@@ -160,6 +160,7 @@ export function renderBodyHub(bodySection = 'nutrition') {
     [{ id: 'nutrition', label: 'Nutrición', icon: '🥗' }, { id: 'fasting', label: 'Ayuno', icon: '⏳' }],
     section,
     'brainState.bodySection',
+    `navigate('/gimnasia/'+(brainState.bodySection==='fasting'?'ayuno':'alimentacion'));`,
   )
   const hero = section === 'fasting'
     ? renderNeuralHero({

@@ -48,11 +48,17 @@ export function goLearn(section = 'curriculum', opts = {}) {
 }
 
 export function goTrain(section = 'program', opts = {}) {
-  goBrainTab('train', { trainSection: section, resetLesson: true, ...opts })
+  goBrainTab('train', { trainSection: section, resetLesson: true, skipRender: true, ...opts })
+  const path = section === 'lab' ? '/gimnasia/laboratorio' : '/gimnasia/programa'
+  if (typeof window.navigate === 'function') window.navigate(path)
+  else renderNow(true)
 }
 
 export function goBody(section = 'nutrition', opts = {}) {
-  goBrainTab('body', { bodySection: section, ...opts })
+  goBrainTab('body', { bodySection: section, skipRender: true, ...opts })
+  const path = section === 'fasting' ? '/gimnasia/ayuno' : '/gimnasia/alimentacion'
+  if (typeof window.navigate === 'function') window.navigate(path)
+  else renderNow(true)
 }
 
 export function goHome() {

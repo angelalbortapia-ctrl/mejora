@@ -267,7 +267,7 @@ body.lesson-reader-mode .app-content {
 
 .academy-lesson-full-hook,
 .lesson-hero-hook {
-  font-size: clamp(1.1rem, 2.4vw, 1.45rem) !important;
+  font-size: clamp(1.25rem, 2.8vw, 1.65rem) !important;
   line-height: 1.45 !important;
   color: var(--m-accent) !important;
   margin: 0 0 1rem !important;
@@ -293,9 +293,9 @@ body.lesson-reader-mode .app-content {
 }
 
 .lesson-hero-lead {
-  font-size: clamp(1.05rem, 1.8vw, 1.2rem);
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.82);
   margin: 0;
   max-width: 52rem;
   padding: 1.25rem 0 0 1.25rem;
@@ -451,18 +451,18 @@ body.lesson-reader-mode .app-content {
 
 .academy-section-title {
   font-family: var(--m-display) !important;
-  font-size: clamp(1.25rem, 2.5vw, 1.65rem) !important;
+  font-size: clamp(1.5rem, 3.2vw, 2rem) !important;
   font-weight: 600 !important;
   color: var(--m-text) !important;
   margin: 0 !important;
-  line-height: 1.25 !important;
+  line-height: 1.28 !important;
   letter-spacing: 0.01em;
 }
 
 .academy-section-text {
-  font-size: clamp(0.975rem, 1.5vw, 1.08rem) !important;
-  line-height: 1.85 !important;
-  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: clamp(1.125rem, 2.1vw, 1.35rem) !important;
+  line-height: 1.8 !important;
+  color: rgba(255, 255, 255, 0.78) !important;
   margin: 0 !important;
 }
 
@@ -470,8 +470,8 @@ body.lesson-reader-mode .app-content {
   margin: 1rem 0 0;
   padding: 0;
   list-style: none;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.925rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(1.05rem, 1.8vw, 1.2rem);
   line-height: 1.65;
 }
 
@@ -567,8 +567,8 @@ body.lesson-reader-mode .app-content {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.1rem;
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
+  line-height: 1.5;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -598,21 +598,21 @@ body.lesson-reader-mode .app-content {
 .academy-myth-text,
 .academy-deep-text,
 .academy-takeaway-text {
-  font-size: 0.875rem !important;
-  line-height: 1.65 !important;
+  font-size: clamp(1rem, 1.8vw, 1.15rem) !important;
+  line-height: 1.7 !important;
   color: var(--m-text) !important;
   margin: 0 !important;
 }
 
 .academy-takeaway-text {
   font-weight: 600 !important;
-  font-size: 0.95rem !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: clamp(1.1rem, 2vw, 1.25rem) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 .academy-apply-text {
-  font-size: 0.875rem !important;
-  line-height: 1.65 !important;
+  font-size: clamp(1rem, 1.8vw, 1.15rem) !important;
+  line-height: 1.7 !important;
   color: var(--m-muted) !important;
   margin: 0 !important;
 }
@@ -658,11 +658,11 @@ body.lesson-reader-mode .app-content {
 }
 
 .academy-reflect-prompt {
-  font-size: 1.05rem !important;
+  font-size: clamp(1.15rem, 2.2vw, 1.35rem) !important;
   color: var(--m-text) !important;
   font-style: italic;
   margin: 0 0 1rem !important;
-  line-height: 1.6 !important;
+  line-height: 1.65 !important;
 }
 
 .lesson-reader-actions {

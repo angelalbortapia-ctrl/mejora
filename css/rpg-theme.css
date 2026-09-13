@@ -45,7 +45,9 @@ body.theme-rpg .app-content :is(
   .enfoque-timer-card, .enfoque-stats, .settings-section, .goal-card, .journey-card,
   .calma-glass-panel, .calma-featured-card, .calma-program-card,
   .calma-program-catalog-card, .calma-protocol-card, .calma-step-card,
-  .calma-complete-card, .lesson-section-card, .plan-progress, .solo-focus, .solo-habits
+  .calma-complete-card, .lesson-section-card, .plan-progress, .solo-focus, .solo-habits,
+  .page-brain-lab-runtime, .brain-lab-header, .brain-lab-stage, .brain-lab-body,
+  .brain-protocol-brief, .brain-protocol-debrief, .brain-lab-metrics
 ) {
   --text: var(--on-surface-text);
   --text-muted: var(--on-surface-muted);
@@ -75,6 +77,12 @@ body.theme-rpg .m-habits-panel.m-section {
 body.theme-rpg .m-habits-panel .habit-card {
   color: var(--on-surface-text);
   border-top-color: var(--rpg-jade);
+}
+
+body.theme-rpg .page-brain-lab-runtime :is(
+  .btn-secondary, .brain-color-btn, .brain-lab-header__exit
+) {
+  color: var(--on-surface-text);
 }
 
 body.theme-rpg .app-content :is(.card, .school-panel, .habit-card, .ds-panel, .calma-glass-panel) :is(

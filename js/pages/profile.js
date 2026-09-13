@@ -79,7 +79,7 @@ export function renderProfile() {
       <h2 class="ds-section-title span-full">Récords</h2>
       <div class="card span-full">
         ${Object.keys(p.records).length === 0 ? '<p class="text-muted text-sm">Entrena en el laboratorio para establecer récords.</p>' :
-          Object.entries(p.records).map(([k, r]) => `<div class="flex justify-between py-2 border-b border-[var(--border)] last:border-0">
+          Object.entries(p.records).map(([k, r]) => `<div class="flex justify-between py-2 border-b border-muted last:border-0">
             <span class="text-sm text-main">${k.replace('_', ' · ')}</span>
             <span class="text-sm font-medium text-muted">${r.best} pts · ${r.plays} partidas</span>
           </div>`).join('')}

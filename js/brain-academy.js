@@ -914,6 +914,10 @@ function intensityBadge(intensity) {
 }
 
 export const EXERCISE_REAL_WORLD = {
+  dualnback: 'Doble canal WM: seguir conversación mientras actualizas datos en pantalla — el estándar Jaeggi.',
+  revspan: 'Manipular información en orden inverso: instrucciones al revés, debugging mental, números al revés.',
+  cpt: 'Vigilancia sostenida: detectar el evento raro en monitoreo, emails, control de calidad.',
+  pasat: 'Suma bajo ritmo: presupuestos en cadena, estimaciones rápidas encadenadas sin calculadora.',
   nback: 'CPFDL actualizando información: reuniones con specs, cocinar con receta, código con requisitos en mente.',
   corsi: 'Hipocampo espacial: recordar dónde dejaste cosas, rutas, layouts de interfaz, mapas mentales.',
   stroop: 'Cíngulo anterior en conflicto: inhibir respuesta automática en chats, emails, compras impulsivas.',
@@ -926,16 +930,37 @@ export const EXERCISE_REAL_WORLD = {
   memory: 'Hipocampo + PFC: retener secuencias visuales — listas, pasos, instrucciones en orden.',
   simon: 'Bucle fronto-parietal: span de dígitos — números de teléfono, códigos, datos en cadena.',
   sequence: 'Corteza prefrontal: detectar patrones — tendencias, errores recurrentes, reglas ocultas.',
+  reaction: 'Velocidad motora: tiempo de reacción en deporte, conducción, decisiones bajo presión.',
+  anagram: 'Flexibilidad léxica: encontrar la palabra correcta cuando el contexto está mezclado.',
+  oddout: 'Categorización rápida: detectar el dato que no encaja en un reporte o lista.',
 }
 
 export const LAB_EXERCISE_IDS = [
-  'nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic',
-  'math', 'memory', 'simon', 'sequence',
+  'dualnback', 'nback', 'visnback', 'corsi', 'revspan', 'stroop', 'gonogo', 'flanker', 'switching',
+  'cpt', 'pasat', 'ant', 'trail', 'wisconsin', 'symbols', 'reaction', 'logic',
 ]
 
 export const LAB_EXERCISE_GROUPS = [
-  { id: 'protocols', label: 'Protocolos de laboratorio', ids: ['nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic'] },
-  { id: 'training', label: 'Entrenamiento cognitivo', ids: ['math', 'memory', 'simon', 'sequence'] },
+  {
+    id: 'wm',
+    label: 'Memoria de trabajo',
+    ids: ['dualnback', 'nback', 'visnback', 'corsi', 'revspan'],
+  },
+  {
+    id: 'executive',
+    label: 'Control ejecutivo',
+    ids: ['stroop', 'gonogo', 'flanker', 'switching', 'wisconsin', 'trail'],
+  },
+  {
+    id: 'attention',
+    label: 'Atención sostenida',
+    ids: ['cpt', 'pasat', 'ant'],
+  },
+  {
+    id: 'speed',
+    label: 'Velocidad y razonamiento',
+    ids: ['symbols', 'reaction', 'logic'],
+  },
 ]
 
 export function getLessonExercise(lessonId) {

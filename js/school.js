@@ -366,7 +366,7 @@ function renderApplyContent(stats) {
   const done = APPLY_LESSONS.filter(l => getCompletedLessons().includes(l.id)).length
   return `<div class="school-layout">
     <section class="school-zone school-zone--panel span-full">
-      ${renderZoneHead('Aplicación diaria', '10 micro-lecciones para llevar la neurociencia a tu rutina.', `${done}/10`)}
+      ${renderZoneHead('Aplicación diaria', `${APPLY_LESSONS.length} micro-lecciones para llevar la neurociencia a tu rutina.`, `${done}/${APPLY_LESSONS.length}`)}
       <p class="ds-lead">Sin fecha de desbloqueo — disponibles desde el día 1. Ideal después del plan o antes de dormir.</p>
       <div class="academy-lesson-grid school-apply-grid">
         ${APPLY_LESSONS.map(l => renderLessonCard({ ...l, unlocked: true })).join('')}

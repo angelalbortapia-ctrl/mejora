@@ -67,14 +67,58 @@ export const COGNITIVE_DOMAINS = {
 export const EXERCISES = {
   nback: {
     id: 'nback',
-    name: 'N-Back',
-    icon: '🔁',
+    name: 'N-Back simple',
+    icon: '◉',
     domain: 'working_memory',
-    paradigm: 'N-back auditivo-visual',
-    duration: '3 min',
-    desc: 'Identifica cuando el estímulo coincide con el de hace N posiciones.',
-    brainScan: 'CPFDL + cíngulo anterior + parietal posterior se activan con carga N.',
+    paradigm: 'N-back letra (WM updating)',
+    duration: '4 min',
+    desc: 'Paradigma clásico: ¿esta letra es igual a la de hace N pasos? Carga en CPFDL.',
+    brainScan: 'CPFDL + cíngulo anterior + parietal posterior — estándar en neuroimagen.',
     adaptive: true,
+  },
+  dualnback: {
+    id: 'dualnback',
+    name: 'Dual N-Back',
+    icon: '◎',
+    domain: 'working_memory',
+    paradigm: 'Jaeggi dual n-back',
+    duration: '8 min',
+    desc: 'Dos canales: posición en cuadrícula Y letra. Marca cada coincidencia N-back por separado.',
+    brainScan: 'Protocolo Jaeggi — mejora WM fluida en estudios controlados (g≈0.3–0.5).',
+    adaptive: true,
+  },
+  revspan: {
+    id: 'revspan',
+    name: 'Span inverso',
+    icon: '↺',
+    domain: 'working_memory',
+    paradigm: 'Digit span backwards (WAIS)',
+    duration: '5 min',
+    desc: 'Escucha la secuencia y repítela al revés. Escala adaptativa 3–9 dígitos.',
+    brainScan: 'Bucle fronto-parietal + manipulación WM — usado en evaluación neuropsicológica.',
+    adaptive: true,
+  },
+  cpt: {
+    id: 'cpt',
+    name: 'CPT-X',
+    icon: '◈',
+    domain: 'attention',
+    paradigm: 'Continuous Performance Test',
+    duration: '6 min',
+    desc: 'Flujo continuo de letras. Responde solo a X. Mide omisiones y falsas alarmas.',
+    brainScan: 'Red de alerta + cíngulo — déficit típico en TDAH y fatiga cognitiva.',
+    adaptive: false,
+  },
+  pasat: {
+    id: 'pasat',
+    name: 'PASAT',
+    icon: '∑',
+    domain: 'processing_speed',
+    paradigm: 'Paced Auditory Serial Addition',
+    duration: '5 min',
+    desc: 'Cada dígito nuevo: suma mental con el anterior. Ritmo fijo, sin pausa.',
+    brainScan: 'Usado en esclerosis múltiple y fatiga — carga en velocidad + WM.',
+    adaptive: false,
   },
   corsi: {
     id: 'corsi',
@@ -193,16 +237,93 @@ export const EXERCISES = {
     desc: 'Detecta reglas en series numéricas.',
     adaptive: false,
   },
+  reaction: {
+    id: 'reaction',
+    name: 'Reflejos',
+    icon: '⚡',
+    domain: 'processing_speed',
+    paradigm: 'Simple RT / choice RT',
+    duration: '2 min',
+    desc: 'Espera el verde y reacciona — mide latencia real en milisegundos.',
+    brainScan: 'Corteza motora + tálamo — velocidad de transducción sensoriomotora.',
+    adaptive: false,
+  },
+  anagram: {
+    id: 'anagram',
+    name: 'Anagramas',
+    icon: '🔤',
+    domain: 'reasoning',
+    paradigm: 'Lexical retrieval',
+    duration: '3 min',
+    desc: 'Reordena letras bajo presión — acceso léxico y flexibilidad.',
+    brainScan: 'Área de Broca + temporal inferior — desempaquetar fonología almacenada.',
+    adaptive: false,
+  },
+  oddout: {
+    id: 'oddout',
+    name: 'Intruso semántico',
+    icon: '🕵️',
+    domain: 'reasoning',
+    paradigm: 'Semantic categorization',
+    duration: '2 min',
+    desc: 'Encuentra la palabra que no pertenece al grupo.',
+    brainScan: 'Temporal anterior + PFC — categorías y excepciones.',
+    adaptive: false,
+  },
+  visnback: {
+    id: 'visnback',
+    name: '2-Back visual',
+    icon: '◇',
+    domain: 'working_memory',
+    paradigm: 'Visual n-back',
+    duration: '4 min',
+    desc: 'Formas y colores en secuencia — marca coincidencias N-back sin letras.',
+    brainScan: 'Parietal posterior + CPFDL — WM visoespacial.',
+    adaptive: true,
+  },
+  trail: {
+    id: 'trail',
+    name: 'Trail Making',
+    icon: '🔗',
+    domain: 'flexibility',
+    paradigm: 'TMT-A / TMT-B',
+    duration: '3 min',
+    desc: 'Une números (A) o alterna número-letra (B) lo más rápido posible.',
+    brainScan: 'PFC + cíngulo — velocidad y flexibilidad ejecutiva.',
+    adaptive: false,
+  },
+  wisconsin: {
+    id: 'wisconsin',
+    name: 'Wisconsin',
+    icon: '🃏',
+    domain: 'flexibility',
+    paradigm: 'WCST simplificado',
+    duration: '5 min',
+    desc: 'Descubre la regla de clasificación (color, forma, número) y adáptate al cambio.',
+    brainScan: 'PFC dorsolateral — flexibilidad y perseveración.',
+    adaptive: false,
+  },
+  ant: {
+    id: 'ant',
+    name: 'ANT',
+    icon: '◎',
+    domain: 'attention',
+    paradigm: 'Attention Network Test',
+    duration: '4 min',
+    desc: 'Cue atencional + flanker: mide alerta, orientación y control ejecutivo.',
+    brainScan: 'Red atencional: alerta, orientación y control.',
+    adaptive: false,
+  },
 }
 
 const WEEKLY_CURRICULUM = [
-  ['nback', 'stroop', 'corsi', 'switching', 'flanker', 'symbols'],
-  ['corsi', 'gonogo', 'nback', 'flanker', 'stroop', 'switching'],
-  ['nback', 'flanker', 'corsi', 'switching', 'gonogo', 'symbols'],
-  ['symbols', 'nback', 'corsi', 'stroop', 'flanker', 'switching'],
-  ['switching', 'gonogo', 'nback', 'corsi', 'stroop', 'flanker'],
-  ['flanker', 'gonogo', 'switching', 'nback', 'symbols', 'stroop'],
-  ['nback', 'corsi', 'stroop', 'flanker', 'switching', 'gonogo'],
+  ['dualnback', 'stroop', 'corsi', 'cpt', 'flanker', 'pasat'],
+  ['corsi', 'gonogo', 'dualnback', 'revspan', 'flanker', 'switching'],
+  ['dualnback', 'flanker', 'corsi', 'cpt', 'gonogo', 'pasat'],
+  ['revspan', 'dualnback', 'corsi', 'stroop', 'flanker', 'switching'],
+  ['switching', 'gonogo', 'dualnback', 'corsi', 'cpt', 'flanker'],
+  ['flanker', 'gonogo', 'switching', 'dualnback', 'revspan', 'stroop'],
+  ['dualnback', 'corsi', 'stroop', 'cpt', 'flanker', 'pasat'],
 ]
 
 export function getBrainProgram() {
@@ -228,8 +349,8 @@ export function getExerciseLevel(exerciseId) {
 export function updateExerciseLevel(exerciseId, accuracy) {
   const p = getBrainProgram()
   const cur = p.exerciseLevels[exerciseId] || 1
-  if (accuracy >= 0.85 && cur < 5) p.exerciseLevels[exerciseId] = cur + 1
-  else if (accuracy < 0.5 && cur > 1) p.exerciseLevels[exerciseId] = cur - 1
+  if (accuracy >= 0.88 && cur < 7) p.exerciseLevels[exerciseId] = cur + 1
+  else if (accuracy < 0.55 && cur > 1) p.exerciseLevels[exerciseId] = cur - 1
   const domain = EXERCISES[exerciseId]?.domain
   if (domain) {
     p.domainXp[domain] = (p.domainXp[domain] || 0) + Math.round(accuracy * 20)
@@ -240,7 +361,8 @@ export function updateExerciseLevel(exerciseId, accuracy) {
 
 export function getTodaysSession() {
   const day = new Date().getDay()
-  const ids = WEEKLY_CURRICULUM[day] || WEEKLY_CURRICULUM[0]
+  const idx = day === 0 ? 6 : day - 1
+  const ids = WEEKLY_CURRICULUM[idx] || WEEKLY_CURRICULUM[0]
   return ids.map(id => ({
     ...EXERCISES[id],
     domainInfo: COGNITIVE_DOMAINS[EXERCISES[id].domain],
@@ -297,4 +419,221 @@ export function getProgramStats() {
 }
 
 export const PROGRAM_DISCLAIMER =
-  'Programa basado en paradigmas de entrenamiento cognitivo (N-back, Stroop, Flanker, Corsi). La evidencia muestra mejoras en tareas entrenadas y función ejecutiva; el transferencia lejana a IQ es limitada (Sala & Gobet, 2017). Consistencia 3×/semana · 20 min recomendada.'
+  'Programa basado en paradigmas de entrenamiento cognitivo (N-back, Stroop, Flanker, Corsi). La evidencia muestra mejoras en tareas entrenadas y función ejecutiva; la transferencia lejana a IQ es limitada (Sala & Gobet, 2017). Consistencia 3×/semana · 20 min recomendada.'
+
+/** Guía clínica por protocolo: propósito, instrucciones, métricas y feedback */
+export const EXERCISE_GUIDES = {
+  dualnback: {
+    purpose: 'Entrena memoria de trabajo en dos canales a la vez (posición + letra). Es el protocolo Jaeggi usado en estudios que mostraron mejoras en WM fluida.',
+    howTo: [
+      'Observa la letra y la posición del cuadrado en la cuadrícula 3×3.',
+      'Marca «Letra» si coincide con la de hace N pasos.',
+      'Marca «Posición» si el cuadrado está donde estaba hace N pasos.',
+      'Puedes marcar ambas en el mismo estímulo. Si no hay coincidencia, no pulses nada.',
+    ],
+    measures: 'Precisión por canal, omisiones y falsas alarmas',
+    brain: 'CPFDL + parietal posterior + cíngulo anterior',
+    life: 'Mantener contexto mientras actualizas información: reuniones, código, instrucciones encadenadas.',
+    debrief: (pct) => pct >= 75
+      ? 'Buen control dual. Tu WM está sosteniendo dos flujos — sigue subiendo N cuando aciertes >85%.'
+      : pct >= 50
+        ? 'Normal al empezar. Concéntrate en un canal primero; luego integra el segundo.'
+        : 'Demasiado rápido o demasiado N. Baja dificultad y prioriza no marcar cuando no hay match.',
+  },
+  nback: {
+    purpose: 'Paradigma estándar en neurociencia para medir y entrenar actualización de memoria de trabajo (mantener una ventana deslizante mental).',
+    howTo: [
+      'Aparece una letra cada pocos segundos.',
+      'Pulsa «Coincide» solo si es igual a la de hace N posiciones.',
+      'Si no coincide, pulsa «Pasar» o deja que avance el tiempo.',
+    ],
+    measures: 'Aciertos, omisiones (no marcar match) y falsas alarmas',
+    brain: 'CPFDL + cíngulo anterior',
+    life: 'Seguir una conversación técnica mientras recuerdas datos de hace unos minutos.',
+    debrief: (pct) => pct >= 80 ? 'WM actualizada con precisión. El estándar clínico es >80% en tu nivel N.' : 'Revisa si confundes N posiciones atrás. Externalizar 1 dato en papel libera carga.',
+  },
+  revspan: {
+    purpose: 'Span inverso del WAIS: mide manipulación de WM (no solo repetir, sino invertir). Usado en evaluación neuropsicológica.',
+    howTo: [
+      'Verás dígitos uno a uno — memorízalos en silencio.',
+      'Al terminar la secuencia, escríbelos al revés.',
+      'Si aciertas, la longitud sube. Un error termina el bloque.',
+    ],
+    measures: 'Longitud máxima alcanzada y secuencias correctas',
+    brain: 'Bucle fronto-parietal',
+    life: 'Invertir instrucciones, números o pasos mentales sin escribir.',
+    debrief: (pct) => 'Tu techo hoy indica capacidad de manipulación. Repite 3×/semana para subir 1 dígito en ~4 semanas.',
+  },
+  corsi: {
+    purpose: 'Bloques Corsi: span espacial. Mide memoria visoespacial en cuadrícula — equivalente clínico al digit span pero en espacio.',
+    howTo: [
+      'Observa qué bloques se iluminan y en qué orden.',
+      'Cuando termine la secuencia, repítela tocando los mismos bloques.',
+      'Cada ronda correcta aumenta la longitud.',
+    ],
+    measures: 'Span espacial máximo (bloques en secuencia)',
+    brain: 'Hipocampo + parietal derecha',
+    life: 'Recordar rutas, dónde dejaste objetos, layouts de pantalla.',
+    debrief: (pct) => pct >= 60 ? 'Mapa espacial sólido. Visualiza la secuencia como un camino.' : 'Repite en voz baja «arriba-izq, centro…» mientras observas.',
+  },
+  stroop: {
+    purpose: 'Mide conflicto cognitivo: tu cerebro quiere leer la palabra, pero debes responder al color de la tinta. Entrena inhibición de respuesta prepotente.',
+    howTo: [
+      'Ignora el significado de la palabra.',
+      'Pulsa el botón del COLOR de la tinta, no del texto.',
+      'En «conflicto» la palabra y el color no coinciden — ahí entrena tu cíngulo anterior.',
+    ],
+    measures: 'Precisión y tiempo en ítems congruentes vs incongruentes',
+    brain: 'Cíngulo anterior + PFC ventrolateral',
+    life: 'Frenar impulsos automáticos: responder correos sin leer, compras por hábito, reaccionar en chat.',
+    debrief: (pct) => pct >= 85 ? 'Buena inhibición. El coste Stroop baja con práctica consistente.' : 'Ve más lento en conflictos. Nombra el color en voz baja antes de pulsar.',
+  },
+  gonogo: {
+    purpose: 'Entrena frenado motor: responder rápido a Go e inhibir completamente en No-Go. Déficit típico en impulsividad y TDAH.',
+    howTo: [
+      'En señal GO (verde): toca lo antes posible.',
+      'En NO-GO (rojo): no toques nada. Aguanta.',
+      'Los No-Go son menos frecuentes — ahí está el entrenamiento real.',
+    ],
+    measures: 'Aciertos Go, comisiones en No-Go (tocar cuando no debías)',
+    brain: 'Ganglios basales + PFC ventrolateral + SMA',
+    life: 'No abrir notificaciones, no responder de golpe, no picar por ansiedad.',
+    debrief: (pct) => pct >= 80 ? 'Control motor bajo presión. Mantén ritmo sin anticiparte.' : 'Si fallas en No-Go, exhala antes de cada trial — la anticipación es el error.',
+  },
+  flanker: {
+    purpose: 'Atención selectiva con distractores: la flecha central manda; las laterales interfieren si apuntan al lado opuesto.',
+    howTo: [
+      'Mira solo la flecha del centro.',
+      'Indica si apunta izquierda o derecha.',
+      'En trials de interferencia, ignora las flechas laterales.',
+    ],
+    measures: 'Precisión y efecto de interferencia (congruentes vs incongruentes)',
+    brain: 'Precuneus + LIFG + red atencional dorsal',
+    life: 'Filtrar ruido en oficina abierta, conversaciones paralelas, notificaciones.',
+    debrief: (pct) => pct >= 80 ? 'Filtro atencional fuerte.' : 'Fija la mirada en el centro antes de decidir. No leas las flechas laterales.',
+  },
+  switching: {
+    purpose: 'Task switching: alternar entre reglas activas. Mide coste de cambio (switch cost) — flexibilidad cognitiva ejecutiva.',
+    howTo: [
+      'Lee la regla de cada trial: par/impar O mayor/menor que 5.',
+      'La regla puede cambiar sin aviso — relee antes de responder.',
+      'En dificultad alta los cambios son más frecuentes.',
+    ],
+    measures: 'Precisión tras cambio de regla vs repetición',
+    brain: 'PFC rostrolateral',
+    life: 'Alternar modos: escuchar ↔ presentar, creativo ↔ analítico, multitarea real.',
+    debrief: (pct) => pct >= 75 ? 'Reconfiguración rápida entre reglas.' : 'Tras cada cambio, di la regla en voz baja antes de responder.',
+  },
+  cpt: {
+    purpose: 'CPT-X: vigilancia sostenida. Flujo continuo de estímulos; solo respondes al objetivo raro (X). Mide omisiones y falsas alarmas.',
+    howTo: [
+      'Las letras pasan en ritmo fijo — no te distraigas.',
+      'Pulsa «Responder» solo cuando veas X.',
+      'Ignora todas las demás letras. Responder a no-X es falsa alarma.',
+    ],
+    measures: 'Hits, omisiones (X sin responder), falsas alarmas',
+    brain: 'Red de alerta + cíngulo anterior',
+    life: 'Monitoreo, control de calidad, detectar el email importante entre cientos.',
+    debrief: (pct) => pct >= 85 ? 'Vigilancia sostenida sólida.' : pct >= 60 ? 'Omisiones = distracción. Falsas alarmas = impulsividad. Ajusta según tu error.' : 'Baja a fácil y mantén ritmo respiratorio. La fatiga sube omisiones.',
+  },
+  pasat: {
+    purpose: 'PASAT: suma serial bajo ritmo impuesto. Usado clínicamente en esclerosis múltiple y fatiga cognitiva. Carga WM + velocidad.',
+    howTo: [
+      'Cada pocos segundos aparece un dígito nuevo.',
+      'Suma el dígito actual + el anterior y escribe el resultado.',
+      'El ritmo no espera — si te atrasas, sigue con la siguiente suma.',
+    ],
+    measures: 'Sumas correctas bajo ritmo fijo',
+    brain: 'Parietal + CPFDL + velocidad de procesamiento',
+    life: 'Cálculos encadenados bajo presión: presupuestos, estimaciones rápidas.',
+    debrief: (pct) => pct >= 70 ? 'Buen ritmo aritmético.' : 'Practica primero sin ritmo, luego sube velocidad. No intentes recuperar sumas pasadas.',
+  },
+  symbols: {
+    purpose: 'Símbolos-Dígitos (WAIS-IV adaptado): velocidad de asociación símbolo-número. Mide procesamiento automatizado.',
+    howTo: [
+      'Memoriza la tabla símbolo→dígito arriba.',
+      'Pulsa el dígito que corresponde al símbolo grande.',
+      'Velocidad con precisión — tienes tiempo limitado.',
+    ],
+    measures: 'Aciertos por minuto (throughput)',
+    brain: 'Parietal + premotor',
+    life: 'Leer tablas, códigos de color, leyendas técnicas con fluidez.',
+    debrief: (pct) => 'El throughput sube cuando la tabla queda memorizada — no mires cada símbolo como si fuera nuevo.',
+  },
+  reaction: {
+    purpose: 'Tiempo de reacción simple: mide latencia sensoriomotora real en milisegundos. No es un juego — es psicofísica básica.',
+    howTo: [
+      'Pantalla roja = espera. No anticipes.',
+      'Verde = toca inmediatamente.',
+      'Tocar antes del verde cuenta como falsa salida.',
+    ],
+    measures: 'RT en ms, falsas salidas, variabilidad',
+    brain: 'Tálamo + corteza motora + vía sensoriomotora',
+    life: 'Deporte, conducción, decisiones bajo presión temporal.',
+    debrief: (pct) => 'RT <350 ms es rápido; >500 ms puede indicar fatiga o anticipación. La variabilidad importa más que un solo trial.',
+  },
+  logic: {
+    purpose: 'Razonamiento deductivo con feedback explicativo. Entrena inferencia lógica, no adivinanza.',
+    howTo: [
+      'Lee el enunciado completo antes de elegir.',
+      'Tras responder verás la explicación — úsala para calibrar.',
+      'No hay tiempo límite agresivo; la precisión importa.',
+    ],
+    measures: 'Aciertos en inferencia lógica/verbal',
+    brain: 'PFC rostrolateral + parietal posterior',
+    life: 'Debugging, decisiones con información incompleta, detectar falacias.',
+    debrief: (pct) => pct >= 80 ? 'Razonamiento sólido.' : 'Relee la explicación de cada error — el patrón se repite.',
+  },
+  visnback: {
+    purpose: 'N-back visual sin letras: entrena WM visoespacial con formas y colores — útil si el canal verbal está saturado.',
+    howTo: [
+      'Observa la forma y su color en cada estímulo.',
+      'Marca «Coincide» si es igual a la de hace N pasos (forma y color).',
+      'Si no coincide, pulsa «Pasar».',
+    ],
+    measures: 'Precisión, omisiones y falsas alarmas',
+    brain: 'Parietal posterior + CPFDL',
+    life: 'Recordar iconos, layouts, estados de UI que se repiten.',
+    debrief: (pct) => pct >= 75 ? 'WM visual sólida.' : 'Visualiza la forma anterior antes de decidir.',
+  },
+  trail: {
+    purpose: 'Trail Making Test: velocidad + flexibilidad. TMT-A mide atención; TMT-B añade cambio de set (número→letra).',
+    howTo: [
+      'Toca cada nodo en orden ascendente lo más rápido posible.',
+      'En TMT-B alterna número y letra: 1-A-2-B…',
+      'Cada error suma penalización de tiempo.',
+    ],
+    measures: 'Tiempo total y errores de secuencia',
+    brain: 'PFC + cíngulo anterior',
+    life: 'Alternar entre tareas numéricas y verbales bajo presión.',
+    debrief: (pct) => pct >= 80 ? 'Secuenciación fluida.' : 'Ve más despacio al cambiar de número a letra.',
+  },
+  wisconsin: {
+    purpose: 'WCST: descubrir reglas de clasificación y adaptarte cuando cambian — déficit clásico en lesión frontal.',
+    howTo: [
+      'Clasifica la carta inferior eligiendo una de las 4 de arriba.',
+      'La regla (color, forma o número) cambia sin aviso tras varios aciertos.',
+      'Si fallas, prueba otra dimensión — no repitas la misma regla obsoleta.',
+    ],
+    measures: 'Categorías completadas y errores de perseveración',
+    brain: 'PFC dorsolateral',
+    life: 'Cuando un método deja de funcionar, cambiar de estrategia sin insistir.',
+    debrief: (pct) => pct >= 70 ? 'Flexibilidad cognitiva adecuada.' : 'Tras un error, cambia de dimensión activamente.',
+  },
+  ant: {
+    purpose: 'Attention Network Test: cue (ninguna, centro, espacial) + flanker. Mide tres redes atencionales.',
+    howTo: [
+      'Tras el cue, indica la dirección de la flecha central.',
+      'Ignora las flechas laterales en trials de conflicto.',
+      'Responde lo antes posible tras aparecer el estímulo.',
+    ],
+    measures: 'Precisión y efectos de alerta/orientación/interferencia',
+    brain: 'Red atencional (alerta, orientación, control)',
+    life: 'Filtrar distracciones cuando ya sabes dónde mirar.',
+    debrief: (pct) => pct >= 80 ? 'Redes atencionales coordinadas.' : 'Fija la mirada en el centro durante el cue.',
+  },
+}
+
+export function getExerciseGuide(id) {
+  return EXERCISE_GUIDES[id] || null
+}

@@ -1,4 +1,4 @@
-/** Escuela — módulo Aplicación diaria (10 micro-lecciones) */
+/** Escuela — módulo Aplicación diaria (14 micro-lecciones) */
 
 export const APPLY_LESSONS = [
   {
@@ -160,5 +160,69 @@ export const APPLY_LESSONS = [
     takeaway: 'El domingo (o viernes) es mantenimiento del sistema.',
     apply: 'Ve a Mi viaje → Repaso semanal y completa las 4 preguntas.',
     reflect: '¿Qué patrón se repitió toda la semana sin que lo nombraras?',
+  },
+  {
+    id: 'apply-morning-light',
+    category: 'apply',
+    title: 'Luz matutina y ritmo circadiano',
+    readMin: 4,
+    region: 'Supraquiasmático · melatonina · cortisol',
+    relatedExercise: 'morning',
+    hook: 'Diez minutos de luz natural antes de las 10 am resetean tu reloj interno.',
+    sections: [
+      { h: 'Señal de despertar', p: 'La luz azul matutina suprime melatonina y alinea cortisol. Sin ella, el cuerpo vive en jet lag social.' },
+      { h: 'Práctica mínima', p: 'Ventana, balcón o paseo corto sin gafas de sol los primeros 30 min tras despertar (si puedes).' },
+    ],
+    takeaway: 'El despertador del cerebro es la luz, no solo la alarma.',
+    apply: 'Mañana: 10 min de luz natural antes del primer café.',
+    reflect: '¿A qué hora recibes tu primera luz fuerte del día?',
+  },
+  {
+    id: 'apply-walk-thinking',
+    category: 'apply',
+    title: 'Caminar para pensar',
+    readMin: 4,
+    region: 'Hipocampo · BDNF · creatividad',
+    relatedExercise: 'walk',
+    hook: 'Darwin, Beethoven y Jobs caminaban para resolver problemas — no es folklore.',
+    sections: [
+      { h: 'Evidencia', p: 'Caminar mejora fluidez creativa y consolida memoria. Ritmo bilateral puede facilitar procesamiento emocional.' },
+      { h: 'Sin podcast', p: 'Una caminata de 15 min sin audio deja espacio para default mode network — donde conectas ideas.' },
+    ],
+    takeaway: 'Mover el cuerpo mueve la mente.',
+    apply: 'Antes de una decisión difícil: camina 10 min sin teléfono.',
+    reflect: '¿Qué problema resolverías mejor caminando?',
+  },
+  {
+    id: 'apply-evening-winddown',
+    category: 'apply',
+    title: 'Ritual de cierre nocturno',
+    readMin: 5,
+    region: 'Melatonina · PFC · consolidación',
+    relatedExercise: 'presleep',
+    hook: 'Sin transición, el cerebro lleva el trabajo a la cama.',
+    sections: [
+      { h: 'Apagado gradual', p: 'Luz tenue, sin notificaciones, lista de mañana en papel. La PFC necesita señal de que el día terminó.' },
+      { h: 'Calma guiada', p: '5 min de respiración o sesión “Bajar revoluciones” en Calma — parasimpático antes del sueño.' },
+    ],
+    takeaway: 'Dormir bien empieza una hora antes de acostarte.',
+    apply: 'Esta noche: misma hora ±15 min + 5 min Calma antes de dormir.',
+    reflect: '¿Qué te mantiene despierto aunque estés cansado?',
+  },
+  {
+    id: 'apply-habit-stacking',
+    category: 'apply',
+    title: 'Apilar hábitos (habit stacking)',
+    readMin: 4,
+    region: 'Ganglios basales · contexto · señal',
+    relatedExercise: 'sequence',
+    hook: 'Después de X, haré Y — el contexto hace el trabajo.',
+    sections: [
+      { h: 'Fórmula', p: '“Después de [hábito ancla], haré [hábito nuevo]”. Ej: después del café, tres gratitudes.' },
+      { h: 'Por qué funciona', p: 'Los ganglios basales aprenden contexto → acción. No necesitas motivación si la señal ya existe.' },
+    ],
+    takeaway: 'No añadas hábitos al vacío — pégalos a uno firme.',
+    apply: 'Elige un hábito actual y añade uno de 2 min justo después.',
+    reflect: '¿Qué rutina matutina ya haces sin fallar?',
   },
 ]
