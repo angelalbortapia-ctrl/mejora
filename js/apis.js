@@ -1,9 +1,7 @@
 import { getItem, setItem, getToday, getSettings, saveSettings, esc } from './core.js'
-import { skeletonCard } from './ui.js'
 
 const CACHE_KEY = 'dailyApis'
 const BUNDLE_VERSION = 5
-const TRIVIA_CACHE = 'triviaCache'
 
 const CURATED_QUOTES = [
   { content: 'No cuentes los días; haz que los días cuenten.', author: 'Muhammad Ali' },
@@ -173,14 +171,6 @@ async function fetchJson(url, timeout = 8000) {
   }
 }
 
-function decodeB64(str) {
-  try {
-    return decodeURIComponent(escape(atob(str)))
-  } catch {
-    return atob(str)
-  }
-}
-
 function shuffle(arr) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -188,17 +178,6 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
-}
-
-function scrambleWord(word) {
-  const letters = word.split('')
-  for (let i = 0; i < 8; i++) {
-    const a = Math.floor(Math.random() * letters.length)
-    const b = Math.floor(Math.random() * letters.length)
-    ;[letters[a], letters[b]] = [letters[b], letters[a]]
-  }
-  const scrambled = letters.join('')
-  return scrambled === word && word.length > 1 ? scrambleWord(word) : scrambled
 }
 
 function curatedIndex(seed, len) {
@@ -543,81 +522,6 @@ export async function ensureDailyBundle(country = 'MX') {
   }
 }
 
-export async function fetchTriviaQuestions(amount = 5, difficulty = 'medium') {
-  const diffMap = { facil: 'easy', medio: 'medium', dificil: 'hard', experto: 'hard' }
-  const diff = diffMap[difficulty] || 'medium'
-  const cacheKey = `${getToday()}_${diff}_${amount}`
-  const cached = getItem(TRIVIA_CACHE, {})
-  if (cached[cacheKey]) return cached[cacheKey]
-
-  try {
-    const data = await fetchJson(
-      `https://opentdb.com/api.php?amount=${amount}&type=multiple&difficulty=${diff}&encode=base64`,
-    )
-    if (data.response_code !== 0) throw new Error('Trivia API error')
-    const questions = data.results.map((q, i) => ({
-      id: i,
-      category: decodeB64(q.category),
-      question: decodeB64(q.question),
-      correct: decodeB64(q.correct_answer),
-      options: shuffle([decodeB64(q.correct_answer), ...q.incorrect_answers.map(decodeB64)]),
-      difficulty: q.difficulty,
-    }))
-    cached[cacheKey] = questions
-    setItem(TRIVIA_CACHE, cached)
-    return questions
-  } catch {
-    return getLocalTrivia(amount)
-  }
-}
-
-function getLocalTrivia(amount) {
-  const pool = [
-    { category: 'Ciencia', question: '¿Cuál es el órgano más grande del cuerpo humano?', correct: 'La piel', options: ['El hígado', 'La piel', 'El cerebro', 'El corazón'] },
-    { category: 'Historia', question: '¿En qué año llegó el hombre a la Luna?', correct: '1969', options: ['1965', '1969', '1972', '1980'] },
-    { category: 'Geografía', question: '¿Cuál es la capital de Japón?', correct: 'Tokio', options: ['Seúl', 'Pekín', 'Tokio', 'Bangkok'] },
-    { category: 'Matemáticas', question: '¿Cuántos lados tiene un hexágono?', correct: '6', options: ['5', '6', '7', '8'] },
-    { category: 'Biología', question: '¿Qué gas absorben las plantas durante la fotosíntesis?', correct: 'Dióxido de carbono', options: ['Oxígeno', 'Nitrógeno', 'Dióxido de carbono', 'Hidrógeno'] },
-    { category: 'Cultura', question: '¿Quién pintó la Mona Lisa?', correct: 'Leonardo da Vinci', options: ['Picasso', 'Van Gogh', 'Leonardo da Vinci', 'Miguel Ángel'] },
-    { category: 'Astronomía', question: '¿Qué planeta es conocido como el planeta rojo?', correct: 'Marte', options: ['Venus', 'Júpiter', 'Marte', 'Saturno'] },
-    { category: 'Salud', question: '¿Cuántas horas de sueño recomienda la OMS para adultos?', correct: '7-9 horas', options: ['4-5 horas', '5-6 horas', '7-9 horas', '10-12 horas'] },
-    { category: 'Neurociencia', question: '¿Qué neurotransmisor se asocia con la motivación y la recompensa?', correct: 'Dopamina', options: ['Serotonina', 'Dopamina', 'Adrenalina', 'Melatonina'] },
-    { category: 'Hábitos', question: 'Según estudios, ¿cuántos días tarda en formarse un hábito en promedio?', correct: '66 días', options: ['21 días', '30 días', '66 días', '90 días'] },
-    { category: 'Psicología', question: '¿Qué técnica ayuda a reducir la ansiedad centrándose en el presente?', correct: 'Mindfulness', options: ['Multitarea', 'Mindfulness', 'Procrastinación', 'Rumiación'] },
-    { category: 'Literatura', question: '¿Quién escribió "Cien años de soledad"?', correct: 'Gabriel García Márquez', options: ['Borges', 'Gabriel García Márquez', 'Vargas Llosa', 'Neruda'] },
-    { category: 'Matemáticas', question: '¿Cuánto es 15% de 200?', correct: '30', options: ['20', '25', '30', '35'] },
-    { category: 'Biología', question: '¿Cuál es la unidad básica de la vida?', correct: 'La célula', options: ['El átomo', 'La célula', 'El tejido', 'El órgano'] },
-    { category: 'Geografía', question: '¿Cuál es el río más largo del mundo?', correct: 'Nilo', options: ['Amazonas', 'Nilo', 'Misisipi', 'Yangtsé'] },
-    { category: 'Cultura', question: '¿En qué país nació el tango?', correct: 'Argentina', options: ['Brasil', 'Argentina', 'Cuba', 'España'] },
-    { category: 'Salud', question: '¿Qué vitamina se produce con exposición al sol?', correct: 'Vitamina D', options: ['Vitamina C', 'Vitamina D', 'Vitamina B12', 'Vitamina A'] },
-  ]
-  return shuffle(pool).slice(0, amount).map((q, i) => ({
-    ...q,
-    id: i,
-    options: shuffle(q.options),
-    difficulty: 'medium',
-  }))
-}
-
-const SPANISH_WORDS = [
-  'mente', 'calma', 'habito', 'fuerza', 'logro', 'rumbo', 'pulso', 'brillo',
-  'ritmo', 'enfoque', 'meta', 'ruta', 'saber', 'valor', 'clima', 'energia',
-  'sueno', 'avance', 'racha', 'nivel', 'pausa', 'flujo', 'orden', 'claridad',
-  'impulso', 'constancia', 'presencia', 'equilibrio', 'gracia', 'bondad',
-  'paz', 'luz', 'vida', 'alma', 'coraje', 'fe', 'arte', 'musica', 'danza',
-  'fuego', 'agua', 'tierra', 'aire', 'nube', 'lluvia', 'sol', 'luna', 'mar',
-  'cielo', 'bosque', 'flor', 'raiz', 'semilla', 'camino', 'puente', 'puerta',
-]
-
-export async function fetchAnagramWords(count = 6) {
-  const words = shuffle(SPANISH_WORDS).slice(0, count)
-  return words.map((word) => ({
-    scrambled: scrambleWord(word.toUpperCase()),
-    answer: word.toUpperCase(),
-    hint: `${word.length} letras · español`,
-  }))
-}
-
 const TIME_TIPS = {
   morning: [
     { icon: '🌅', label: 'Mañana', text: 'Antes del correo: nombra la única tarea que haría valer la pena el día si solo pudieras hacer una.' },
@@ -722,79 +626,4 @@ export function homeInsightHTML(bundle, loading = false) {
     </section>`
   }
   return ''
-}
-
-export function homePulseHTML(bundle, loading = false) {
-  if (loading && !bundle) {
-    return `<div class="pulse-grid pulse-grid--wide">${skeletonCard(3)}${skeletonCard(3)}${skeletonCard(3)}${skeletonCard(3)}</div>`
-  }
-  if (!bundle) return ''
-
-  const { quote, wiki, holiday, advice, sun, reading, weather } = bundle
-  const timeTip = getTimeTip()
-  const sunsetTip = getSunsetTip(sun)
-  const w = formatWeather(weather)
-  const holidayChip = holiday?.isHoliday
-    ? `<span class="pulse-chip pulse-chip--fest">🎉 ${esc(holiday.name)}</span>`
-    : w
-      ? `<span class="pulse-chip pulse-chip--weather">${w.text}</span>`
-      : `<span class="pulse-chip">${timeTip.icon} ${timeTip.label}</span>`
-
-  const nowCard = sunsetTip
-    ? `<div class="pulse-card pulse-card--sunset pulse-card--elite card-static">
-        <div class="pulse-card-corner" aria-hidden="true"></div>
-        <div class="pulse-card-head"><span class="pulse-card-tag">${sunsetTip.title}</span><span>${sunsetTip.icon}</span></div>
-        <p class="pulse-now-text">${sunsetTip.text}</p>
-        <a href="#/meditacion" class="text-xs no-underline mt-2 inline-block" style="color:var(--neon)">Ir a meditación →</a>
-      </div>`
-    : `<div class="pulse-card pulse-card--now pulse-card--elite card-static">
-        <div class="pulse-card-corner" aria-hidden="true"></div>
-        <div class="pulse-card-head"><span class="pulse-card-tag">Ahora mismo</span></div>
-        <p class="pulse-now-text">${timeTip.text}</p>
-      </div>`
-
-  const statusBadge = bundleStatusHTML(bundle)
-
-  const wikiTry = WIKI_TRY[wiki?.slug] || WIKI_TRY.Neuroplasticidad
-
-  const wikiCard = wiki ? `<div class="pulse-card pulse-card--wiki pulse-card--elite card-static">
-    <div class="pulse-card-corner" aria-hidden="true"></div>
-    <div class="pulse-card-head">
-      <span class="pulse-card-tag">Ciencia · ${wiki.tag || 'Cerebro'}</span>
-      <span class="pulse-card-icon">${wiki.icon || '🧠'}</span>
-    </div>
-    <h4 class="pulse-tip-title">${esc(wiki.title || 'Neurociencia')}</h4>
-    <p class="pulse-tip-text">${esc(wiki.extract || '')}</p>
-    <p class="pulse-try-label">Prueba hoy (60 s)</p>
-    <p class="pulse-try-text">${esc(wikiTry)}</p>
-    ${wiki.url ? `<a href="${esc(wiki.url)}" target="_blank" rel="noopener" class="pulse-wiki-link">Profundizar →</a>` : ''}
-  </div>` : ''
-
-  const adviceCard = advice?.advice ? `<div class="pulse-card pulse-card--advice pulse-card--elite card-static">
-    <div class="pulse-card-corner" aria-hidden="true"></div>
-    <div class="pulse-card-head">
-      <span class="pulse-card-tag">Consejo accionable</span>
-      <span class="pulse-card-icon">💡</span>
-    </div>
-    <p class="pulse-quote pulse-quote--compact">"${esc(advice.advice)}"</p>
-  </div>` : ''
-
-  const quoteCard = quote ? `<div class="pulse-card pulse-card--quote pulse-card--elite card-static">
-    <div class="pulse-card-corner" aria-hidden="true"></div>
-    <div class="pulse-card-head">
-      <span class="pulse-card-tag">Cita</span>
-      ${holidayChip}
-    </div>
-    <p class="pulse-quote">"${esc(quote.content)}"</p>
-    <p class="pulse-author">— ${esc(quote.author)}</p>
-  </div>` : ''
-
-  return `<div class="pulse-grid pulse-grid--wide pulse-grid--elite">
-    ${statusBadge ? `<div class="pulse-status-row span-full">${statusBadge}</div>` : ''}
-    ${wikiCard}
-    ${adviceCard}
-    ${quoteCard}
-    ${nowCard}
-    ${readingCardHTML(reading)}
-  </div>`
 }

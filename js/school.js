@@ -5,12 +5,12 @@ import {
   LESSONS, LEGENDARY_HALL, getCompletedLessons, getAcademyWeekIndex,
   isLessonUnlocked, getLesson, renderLessonCard, getLessonQuiz,
   getDailyNeuroPunch,
-} from './brain-academy.js?v=82'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=82'
-import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=82'
-import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=82'
-import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=82'
-import { renderLibraryList } from './school-library.js?v=82'
+} from './brain-academy.js?v=141'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=141'
+import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=141'
+import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=141'
+import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=141'
+import { renderLibraryList } from './school-library.js?v=141'
 
 export { FACULTIES, CURRICULUM }
 

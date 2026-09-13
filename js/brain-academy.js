@@ -1,15 +1,15 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from './core.js'
-import { forgeSparkAt, haptic } from './fx.js?v=87'
+import { forgeSparkAt, haptic } from './fx.js?v=141'
 import {
   applyDynamicLesson, bindLessonInteractions, renderLessonBlocks,
   LESSON_BLOCK_PRE, LESSON_BLOCK_POST, initLessonEngagement,
   renderLessonEngagementHud, renderLessonMasteryRecap, renderLessonFxLayers, getLessonBonusXp,
-} from './lesson-dynamic.js?v=87'
-import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=82'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=82'
-import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=82'
+} from './lesson-dynamic.js?v=141'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=141'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=141'
+import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=141'
 
 const ACADEMY_START_KEY = 'academyStart'
 

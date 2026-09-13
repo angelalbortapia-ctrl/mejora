@@ -1,8 +1,8 @@
 /** Programas de Calma adaptativos — ajuste por consistencia */
 
 import { getToday } from './core.js'
-import { MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=120'
-import { getProgramProgress, getProgramSessionForToday, isProgramCompletedToday } from './meditation-service.js?v=120'
+import { MEDITATION_PROGRAMS, getMeditationById } from './meditations.js?v=141'
+import { getProgramProgress, getProgramSessionForToday, isProgramCompletedToday } from './meditation-service.js?v=141'
 
 const RECOVERY_SESSIONS = ['reset', 'breathing', 'release', 'transition-breath']
 

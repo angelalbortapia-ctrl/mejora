@@ -5,21 +5,22 @@ import {
   hasGeminiTts, speakGeminiMeditation, stopGeminiSpeech, previewGeminiVoice,
   getGeminiVoiceHint, getGeminiVoiceId, GEMINI_MEDITATION_VOICES, isGeminiSpeaking,
   prefetchGeminiTexts, speakGeminiSequence,
-} from './gemini-tts.js?v=124'
+} from './gemini-tts.js?v=141'
 import {
   hasAzureTts, hasAzureTtsQuota, isAzureQuotaBlocked, isAzureSpeaking,
   speakAzureMeditation, stopAzureSpeech, previewAzureVoice,
   getAzureVoiceHint, getAzureVoiceId, AZURE_MEDITATION_VOICES,
   prefetchAzureTexts, speakAzureSequence,
-} from './azure-tts.js?v=124'
+} from './azure-tts.js?v=141'
 import {
   hasFishTts, hasFishApiKey, speakFishMeditation, stopFishSpeech, previewFishVoice,
-  getFishVoiceHint, getFishVoiceLabel, isFishSpeaking,
+  getFishVoiceHint, getFishVoiceLabel, getLastFishError, isFishSpeaking,
   prefetchFishTexts, speakFishSequence,
-} from './fish-audio-tts.js?v=124'
+} from './fish-audio-tts.js?v=141'
 import { isAzureConfigFilePresent } from './azure-config.js'
 import { isFishConfigFilePresent } from './fish-config.js'
-import { duckAmbientForVoice, restoreAmbientAfterVoice, resumeAudioContext } from './ambient-audio.js?v=124'
+import { duckAmbientForVoice, restoreAmbientAfterVoice, resumeAudioContext } from './ambient-audio.js?v=141'
+import { unlockCalmaAudioOnGesture, primeVoiceAudioOnGesture } from './calma-audio-bus.js'
 
 let programVoiceOverride = null
 
@@ -297,6 +298,29 @@ function warmUpVoice() {
   window.speechSynthesis.cancel()
 }
 
+/** En el mismo tick del click — mantiene permiso de speechSynthesis y Web Audio. */
+export function unlockMeditationAudioOnGesture() {
+  unlockCalmaAudioOnGesture()
+  primeVoiceAudioOnGesture()
+  if (!window.speechSynthesis) return
+  window.speechSynthesis.getVoices()
+  if (!cachedVoice) cachedVoice = pickBestVoice() || pickRelaxedVoice()
+  warmUpVoice()
+}
+
+function pickRelaxedVoice() {
+  const voices = getVoices()
+  const spanish = voices.filter(v => (v.lang || '').toLowerCase().startsWith('es') && !isBlockedVoice(v))
+  return spanish[0] || voices.find(v => !isBlockedVoice(v)) || null
+}
+
+function resolveBrowserVoice() {
+  if (cachedVoice) return cachedVoice
+  window.speechSynthesis?.getVoices()
+  cachedVoice = pickBestVoice() || pickRelaxedVoice()
+  return cachedVoice
+}
+
 export function initMeditationVoice() {
   if (!window.speechSynthesis) return
   const refresh = () => {
@@ -351,7 +375,7 @@ export function getMeditationVoiceHint() {
       : 'Configura Fish Audio en Ajustes → Calma (fish.audio → API Keys).'
   }
   if ((getSettings().medVoiceEngine === 'azure' || isAzureConfigFilePresent()) && !hasAzureTts()) {
-    return 'Pega tu key de Azure en Ajustes → Calma (o recarga con ?v=103).'
+    return 'Pega tu key de Azure en Ajustes → Calma (o recarga con ?v=141).'
   }
   if (hasAzureTts() && getSettings().medVoiceEngine !== 'azure') {
     return 'Azure listo — en Ajustes elige motor Microsoft Azure Neural.'
@@ -528,52 +552,106 @@ function speakPhrases(phrases, { interrupt = true } = {}) {
   next()
 }
 
+function releaseVoicePlaybackIfIdle() {
+  if (!isMeditationVoiceSpeaking() && voiceDepth > 0) endVoicePlayback()
+}
+
+async function speakBrowserPhrases(text, { interrupt = true } = {}) {
+  if (!window.speechSynthesis) return false
+  if (!resolveBrowserVoice()) return false
+
+  return new Promise((resolve) => {
+    const phrases = splitPhrases(text)
+    if (!phrases.length) {
+      resolve(false)
+      return
+    }
+    if (speaking && !interrupt) {
+      speechQueue.push(text)
+      resolve(true)
+      return
+    }
+    if (speaking && interrupt) stopMeditationVoice()
+
+    let i = 0
+    if (voiceDepth === 0) beginVoicePlayback()
+    const finish = (ok) => {
+      speaking = false
+      releaseVoicePlaybackIfIdle()
+      resolve(ok)
+    }
+    const next = () => {
+      if (i >= phrases.length) {
+        if (speechQueue.length) {
+          const queued = speechQueue.shift()
+          speakBrowserPhrases(queued, { interrupt: false }).then(finish)
+          return
+        }
+        finish(true)
+        return
+      }
+      const phrase = phrases[i++]
+      const pauseMs = pauseAfterPhrase(phrase, i - 1, phrases.length)
+      utterPhrase(phrase, () => {
+        phraseTimer = setTimeout(next, pauseMs)
+      })
+    }
+    speaking = true
+    next()
+  })
+}
+
+async function speakApiMeditation(text, { interrupt = true, pauseMs } = {}) {
+  await resumeAudioContext()
+  if (voiceDepth === 0) beginVoicePlayback()
+  let ok = false
+  try {
+    if (useFishTts()) ok = await speakFishMeditation(text, { interrupt, pauseMs })
+    else if (useAzureTts()) {
+      await speakAzureMeditation(text, { interrupt, pauseMs })
+      ok = true
+    } else if (useGeminiTts()) {
+      await speakGeminiMeditation(text, { interrupt, pauseMs })
+      ok = true
+    }
+  } finally {
+    releaseVoicePlaybackIfIdle()
+  }
+  return ok
+}
+
+function reportVoiceFailure(context) {
+  const fishErr = getLastFishError()
+  const msg = fishErr
+    || (context === 'browser' ? 'Sin voz del navegador — prueba Chrome o activa voces en español.' : 'No se pudo reproducir la voz guiada.')
+  console.warn('[Calma]', msg)
+  let box = document.getElementById('calma-voice-error')
+  if (!box) {
+    box = document.createElement('div')
+    box.id = 'calma-voice-error'
+    box.setAttribute('role', 'alert')
+    box.style.cssText = 'position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);z-index:9999;max-width:min(24rem,calc(100vw - 2rem));padding:0.75rem 1rem;background:#2a1215;border:1px solid #c45c5c;color:#f0d0d0;border-radius:10px;font:500 0.9rem/1.4 system-ui,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.35)'
+    document.body.appendChild(box)
+  }
+  box.textContent = msg
+  box.hidden = false
+  clearTimeout(box._hideTimer)
+  box._hideTimer = setTimeout(() => { box.hidden = true }, 8000)
+}
+
 export async function speakMeditation(text, { interrupt = true, pauseMs } = {}) {
   if (!text) return
-  if (useFishTts() || useAzureTts() || useGeminiTts()) {
-    await resumeAudioContext()
-  }
-  if (useFishTts()) {
-    if (voiceDepth === 0) beginVoicePlayback()
-    try {
-      await speakFishMeditation(text, { interrupt, pauseMs })
-    } finally {
-      if (!isFishSpeaking() && voiceDepth > 0) endVoicePlayback()
+  await resumeAudioContext()
+  if (usesApiMedVoice()) {
+    const ok = await speakApiMeditation(text, { interrupt, pauseMs })
+    if (!ok) {
+      const browserOk = await speakBrowserPhrases(text, { interrupt })
+      if (!browserOk) reportVoiceFailure('api')
     }
     return
   }
-  if (useAzureTts()) {
-    if (voiceDepth === 0) beginVoicePlayback()
-    try {
-      await speakAzureMeditation(text, { interrupt, pauseMs })
-    } finally {
-      if (!isAzureSpeaking() && voiceDepth > 0) endVoicePlayback()
-    }
-    return
-  }
-  if (useGeminiTts()) {
-    if (voiceDepth === 0) beginVoicePlayback()
-    try {
-      await speakGeminiMeditation(text, { interrupt, pauseMs })
-    } finally {
-      if (!isGeminiSpeaking() && voiceDepth > 0) endVoicePlayback()
-    }
-    return
-  }
-  if (!window.speechSynthesis) return
-  if (!cachedVoice) cachedVoice = pickBestVoice()
-  if (!cachedVoice) return
-
-  const phrases = splitPhrases(text)
-  if (!phrases.length) return
-
-  if (speaking && !interrupt) {
-    speechQueue.push(text)
-    return
-  }
-  if (speaking && interrupt) stopMeditationVoice()
-
-  speakPhrases(phrases, { interrupt })
+  const browserOk = await speakBrowserPhrases(text, { interrupt })
+  if (!browserOk) reportVoiceFailure('browser')
 }
 
 export async function speakMeditationIntro(text) {
@@ -627,6 +705,7 @@ export function speakBreathCue(_phase) {
 }
 
 export async function previewMeditationVoice() {
+  unlockMeditationAudioOnGesture()
   if (useFishTts()) {
     await previewFishVoice()
     return
@@ -645,12 +724,12 @@ export async function previewMeditationVoice() {
   )
 }
 
-export { hasGeminiTts, listGeminiVoiceOptions } from './gemini-tts.js?v=124'
-export { hasAzureTts, listAzureVoiceOptions, setAzureVoiceId, setAzureSpeechKey, setAzureSpeechRegion } from './azure-tts.js?v=124'
+export { hasGeminiTts, listGeminiVoiceOptions } from './gemini-tts.js?v=141'
+export { hasAzureTts, listAzureVoiceOptions, setAzureVoiceId, setAzureSpeechKey, setAzureSpeechRegion } from './azure-tts.js?v=141'
 export {
   hasFishTts, hasFishApiKey, listFishVoiceOptions, refreshFishVoiceList,
   setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed, FISH_TTS_MODELS,
-} from './fish-audio-tts.js?v=124'
+} from './fish-audio-tts.js?v=141'
 
 export function resetBreathCues() {
   breathCueIndex = 0

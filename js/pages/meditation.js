@@ -6,7 +6,7 @@ import { isUnlocked } from '../unlocks.js'
 function guardDifficulty(d) {
   return d === 'experto' && !isUnlocked('diff_expert') ? 'medio' : d
 }
-import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '../meditations.js?v=120'
+import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '../meditations.js?v=141'
 import {
   medState, MED_DURATIONS, clearMedTimers, stopMeditationSession,
   startMeditation, startFreeTimer, finishFreeTimer, startProgramSession,
@@ -17,7 +17,7 @@ import {
   getSleepStats, getSleepLog, logSleep, getBreathCoherenceLog,
   medAmbientVol, syncMedVoiceFromSettings, setMedVoiceEnabled, getMedVoiceLabel,
   getBreathPhaseMs, toggleMeditationPause, pauseMeditationSession, resumeMeditationSession,
-} from '../meditation-service.js?v=120'
+} from '../meditation-service.js?v=141'
 import {
   initMeditationVoice, isMeditationVoiceSupported, getSelectedVoiceURI,
   setMeditationVoiceURI, getMedVoiceRate, setMedVoiceRate, previewMeditationVoice,
@@ -25,12 +25,13 @@ import {
   usesAzureMedVoice, usesGeminiMedVoice, usesFishMedVoice,
   listAzureVoiceOptions, listGeminiVoiceOptions,
   getStepInstructionText, getStepCueText,
-} from '../meditation-voice.js?v=127'
+  unlockMeditationAudioOnGesture,
+} from '../meditation-voice.js?v=141'
 import {
   listFishVoiceOptions, getFishVoiceId, getFishSpeed, setFishVoiceId, setFishSpeed,
-} from '../fish-audio-tts.js?v=124'
+} from '../fish-audio-tts.js?v=141'
 import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '../meditation-adaptive.js'
-import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '../ambient-audio.js?v=120'
+import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '../ambient-audio.js?v=141'
 import { sunsetBannerHTML } from '../apis.js'
 import { icon } from '../icons.js'
 
@@ -745,7 +746,10 @@ export function bindMeditationGlobals() {
   }
   window.setMedVoiceURI = (uri) => { setMeditationVoiceURI(uri); window.render?.() }
   window.setMedVoiceRate = setMedVoiceRate
-  window.previewMedVoice = previewMeditationVoice
+  window.previewMedVoice = async () => {
+    unlockMeditationAudioOnGesture()
+    return previewMeditationVoice()
+  }
   window.setFishVoice = (id) => {
     setFishVoiceId(id)
     const s = getSettings()
@@ -756,19 +760,23 @@ export function bindMeditationGlobals() {
     window.render?.()
   }
   window.setAzureVoice = async (id) => {
-    const { setAzureVoiceId } = await import('../azure-tts.js?v=124')
+    const { setAzureVoiceId } = await import('../azure-tts.js?v=141')
     setAzureVoiceId(id)
     window.render?.()
   }
   window.setGeminiVoice = async (id) => {
-    const { setGeminiVoiceId } = await import('../gemini-tts.js?v=124')
+    const { setGeminiVoiceId } = await import('../gemini-tts.js?v=141')
     setGeminiVoiceId(id)
     window.render?.()
   }
   window.toggleMedPause = toggleMeditationPause
   window.pauseMeditationSession = pauseMeditationSession
   window.resumeMeditationSession = resumeMeditationSession
-  window.startMedProgram = (id) => { startMeditationProgram(id); window.navigate?.(`/meditacion/programa/${id}`) }
+  window.startMedProgram = (id) => {
+    unlockMeditationAudioOnGesture()
+    startMeditationProgram(id)
+    window.navigate?.(`/meditacion/programa/${id}`)
+  }
   window.submitSleepLog = () => {
     const h = document.getElementById('sleep-hours')?.value
     const q = document.getElementById('sleep-quality')?.value
@@ -805,8 +813,12 @@ export function bindMeditationGlobals() {
   window.finishFreeTimerEarly = () => {
     if (!finishFreeTimer()) window.render?.()
   }
-  window.startMeditation = startMeditation
+  window.startMeditation = async (id, opts) => {
+    unlockMeditationAudioOnGesture()
+    return startMeditation(id, opts)
+  }
   window.startProgramSession = async (programId, sessionId) => {
+    unlockMeditationAudioOnGesture()
     if (hasGeminiProgramContent()) {
       medState.geminiPreparing = true
       window.render?.()
@@ -817,7 +829,10 @@ export function bindMeditationGlobals() {
       medState.geminiPreparing = false
     }
   }
-  window.startFreeTimer = startFreeTimer
+  window.startFreeTimer = async (minutes) => {
+    unlockMeditationAudioOnGesture()
+    return startFreeTimer(minutes)
+  }
   window.stopMeditationSession = stopMeditationSession
   window.clearMedTimers = clearMedTimers
   window.setMedAmbient = async function(type) {

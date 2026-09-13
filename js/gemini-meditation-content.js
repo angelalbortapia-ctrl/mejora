@@ -2,7 +2,7 @@
 
 import { getItem, setItem, getSettings } from './core.js'
 import { ensureGeminiConfig, GEMINI_API_KEY } from './gemini-config.js'
-import { getMeditationById, getProgramDayPlan, MEDITATION_PROGRAMS } from './meditations.js?v=120'
+import { getMeditationById, getProgramDayPlan, MEDITATION_PROGRAMS } from './meditations.js?v=141'
 
 const TEXT_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
 const CACHE_VERSION = 2

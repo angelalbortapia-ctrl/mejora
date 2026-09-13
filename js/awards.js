@@ -2,7 +2,7 @@
 
 import { SKILLS, addXp, getTotalLevel } from './core.js'
 import { checkNewUnlocks, markUnlockSeen } from './unlocks.js'
-import { celebrate, pulseElement, flashPlanBanner } from './fx.js?v=82'
+import { celebrate, pulseElement, flashPlanBanner } from './fx.js?v=141'
 import { playTone } from './sounds.js'
 
 function ensureToastContainer() {

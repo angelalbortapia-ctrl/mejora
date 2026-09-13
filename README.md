@@ -8,13 +8,18 @@ PWA de mejora continua en español: plan del día, hábitos, gimnasia cerebral, 
 
 ## Desarrollo local
 
+**Recomendado** — doble clic en `start-server.command` o **Mejora.app** (incluye proxy Fish Audio para la voz de Calma).
+
 ```bash
-python3 -m http.server 5173
+cd ~/Downloads/Mejora
+./start-server.command
+# o: python3 scripts/mejora-dev-server.py 5173
+# o: npm run serve
 ```
 
-Abre [http://localhost:5173](http://localhost:5173) y haz hard refresh (`Cmd+Shift+R`) si no ves cambios.
+Abre [http://127.0.0.1:5173](http://127.0.0.1:5173) y haz hard refresh (`Cmd+Shift+R`) si no ves cambios.
 
-También puedes hacer doble clic en **Mejora.app** (Escritorio) o `start-server.command`.
+No uses `python3 -m http.server` — la voz guiada de Calma no funcionará.
 
 ## Ciclo PDCA
 
@@ -54,6 +59,6 @@ Para GitHub Pages, añade los secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en el
 ## Tests
 
 ```bash
-python3 -m http.server 5173
-# Abre http://localhost:5173/tests/run.html
+python3 scripts/mejora-dev-server.py 5173
+# Abre http://127.0.0.1:5173/tests/run.html
 ```

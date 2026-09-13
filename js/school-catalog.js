@@ -1,8 +1,8 @@
 /** Catálogo — búsqueda y filtros de lecciones */
 
 import { esc } from './core.js'
-import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=82'
-import { FACULTIES } from './school-curriculum.js?v=82'
+import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=141'
+import { FACULTIES } from './school-curriculum.js?v=141'
 
 function getFacultyForLesson(lessonId) {
   const lesson = LESSONS.find(l => l.id === lessonId)
@@ -121,13 +121,21 @@ export function renderCatalogPage(filter, weekly) {
   const done = getCompletedLessons().length
   const unlocked = LESSONS.filter(l => isLessonUnlocked(l.id)).length
   return `<div class="catalog-campus animate-fade-in">
-    <header class="catalog-header">
-      <div>
-        <p class="school-header-kicker">Catálogo</p>
-        <h1 class="catalog-header-title">Todas las lecciones</h1>
-        <p class="catalog-header-lead">${LESSONS.length} lecciones · ${done} completadas · ${unlocked} desbloqueadas</p>
+    <header class="brain-neural-hero brain-neural-hero--compact span-full">
+      <div class="brain-neural-hero__glow" aria-hidden="true"></div>
+      <div class="brain-neural-hero__scan" aria-hidden="true"></div>
+      <div class="brain-neural-hero__head">
+        <div class="brain-neural-hero__copy">
+          <p class="brain-neural-hero__kicker">Catálogo</p>
+          <h1 class="brain-neural-hero__title font-display">Todas las lecciones</h1>
+          <p class="brain-neural-hero__sub">${LESSONS.length} lecciones · ${done} completadas · ${unlocked} desbloqueadas</p>
+        </div>
+        <div class="brain-neural-hero__stats">
+          <div class="brain-neural-stat"><span class="brain-neural-stat__val">${done}</span><span class="brain-neural-stat__lbl">hechas</span></div>
+          <div class="brain-neural-stat"><span class="brain-neural-stat__val">${unlocked}</span><span class="brain-neural-stat__lbl">abiertas</span></div>
+        </div>
       </div>
-      ${weekly?.lesson ? `<button type="button" onclick="openLesson('${weekly.lesson.id}')" class="catalog-featured-btn">
+      ${weekly?.lesson ? `<button type="button" onclick="openLesson('${weekly.lesson.id}')" class="catalog-featured-btn catalog-featured-btn--neural">
         <span class="catalog-featured-label">Destacada semana ${weekly.week}</span>
         <span class="catalog-featured-title">${esc(weekly.lesson.title)} →</span>
       </button>` : ''}

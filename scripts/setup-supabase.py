@@ -127,7 +127,7 @@ def main():
 
     write_config(url, anon)
     print(f'\nListo.\n  URL: {url}')
-    print('  Prueba: python3 -m http.server 5173 → Ajustes → Cuenta')
+    print('  Prueba: ./start-server.command → Ajustes → Cuenta')
     print('\nPara GitHub Pages, añade secrets SUPABASE_URL y SUPABASE_ANON_KEY en el repo.')
 
 

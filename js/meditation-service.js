@@ -7,19 +7,20 @@ import {
 import {
   MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById, getMeditationIntro,
   getSessionAmbient, getProgramCatalog, getProgramDayIntro, getProgramDayPlan,
-} from './meditations.js?v=120'
-import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=124'
-import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=127'
-import { enrichProgramSession } from './meditation-program-content.js?v=127'
+} from './meditations.js?v=141'
+import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=141'
+import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=141'
+import { enrichProgramSession } from './meditation-program-content.js?v=141'
+import { ensureFishConfig } from './fish-config.js'
 import { playTone } from './sounds.js'
-import { forgeSparkAt, pulseElement } from './fx.js?v=96'
+import { forgeSparkAt, pulseElement } from './fx.js?v=141'
 import {
-  initMeditationVoice, speakMeditation, speakMeditationIntro,
+  initMeditationVoice, unlockMeditationAudioOnGesture, speakMeditation, speakMeditationIntro,
   stopMeditationVoice, pauseMeditationVoice, resumeMeditationVoice, resetBreathCues,
   getMeditationVoiceName, isMeditationVoiceSupported, getStepSpeechText,
   usesApiMedVoice, usesFishMedVoice, warmMeditationVoiceCache,
   estimateSpeechDurationSec, isMeditationVoiceSpeaking, setProgramVoiceOverride,
-} from './meditation-voice.js?v=127'
+} from './meditation-voice.js?v=141'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -136,7 +137,7 @@ export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
   stopMeditationVoice()
-  import('./meditation-fx.js?v=130').then(m => m.stopCalmaFx?.()).catch(() => {})
+  import('./meditation-fx.js?v=141').then(m => m.stopCalmaFx?.()).catch(() => {})
   setProgramVoiceOverride(null)
   medState.ambientPreview = false
   medState.freeTimer = null
@@ -504,12 +505,12 @@ export function medAmbientVol(s) {
   return Math.max(0.12, Math.min(0.65, v))
 }
 
-function speakStep(step) {
+async function speakStep(step) {
   if (!medState.voiceEnabled || !step || medState.paused) return
   const text = getStepSpeechText(step)
   if (!text) return
   const pauseMs = usesFishMedVoice() ? 900 : usesApiMedVoice() ? 2000 : undefined
-  speakMeditation(text, { interrupt: true, pauseMs })
+  await speakMeditation(text, { interrupt: true, pauseMs })
 }
 
 function canAdvanceGuidedStep(step) {
@@ -561,7 +562,7 @@ function attachMeditationTimers(sessionId) {
             const warm = medState.steps.slice(medState.step + 1, medState.step + 4).map(getStepSpeechText)
             warmMeditationVoiceCache(warm)
           }
-          speakStep(next)
+          speakStep(next).catch(() => {})
         } else {
           finishMeditationTimer(sessionId)
           return
@@ -606,7 +607,11 @@ export async function prepareProgramSessionContent(programId, sessionId) {
 }
 
 export async function startMeditation(id, options = {}) {
+  unlockMeditationAudioOnGesture()
   stopMeditationSession()
+  const audioReady = resumeAudioContext()
+  const fishReady = ensureFishConfig()
+  await fishReady
   syncMedVoiceFromSettings()
   initMeditationVoice()
   resetBreathCues()
@@ -648,6 +653,10 @@ export async function startMeditation(id, options = {}) {
     }
   }
 
+  if (medState.voiceEnabled && intro && usesApiMedVoice()) {
+    void warmMeditationVoiceCache([intro])
+  }
+
   const plan = buildSessionPlan(id, diff, medState.voiceEnabled, stepsOverride)
   const meta = getMeditationById(id)
   medState.session = id
@@ -670,28 +679,31 @@ export async function startMeditation(id, options = {}) {
   if (typeof window.navigate === 'function') window.navigate(`/meditacion/sesion/${id}`)
   else if (typeof window.render === 'function') window.render(true)
 
-  await resumeAudioContext()
+  await audioReady
 
   const settings = getSettings()
-  if (settings.sound) await playSingingBowl('start')
-  await restoreSessionAmbient(id)
+  const ambientPromise = restoreSessionAmbient(id)
+  if (settings.sound) void playSingingBowl('start')
 
   if (medState.voiceEnabled) {
-    const warmTexts = [intro, ...medState.steps.map(getStepSpeechText)].filter(Boolean)
-    if (warmTexts.length) warmMeditationVoiceCache(warmTexts)
+    const stepTexts = medState.steps.map(getStepSpeechText).filter(Boolean)
+    const warmNext = stepTexts.slice(0, 2)
     if (id === 'breathing' || id === 'box-breath') {
       if (intro) await speakMeditationIntro(intro)
     } else if (intro) {
       const introPause = usesFishMedVoice() ? 700 : usesApiMedVoice() ? 2400 : 2000
       await speakMeditation(intro, { interrupt: true, pauseMs: introPause })
     }
+    if (usesApiMedVoice() && warmNext.length) void warmMeditationVoiceCache(warmNext)
   }
 
   attachMeditationTimers(id)
 
   if (medState.voiceEnabled && medState.steps[0] && id !== 'breathing' && id !== 'box-breath') {
-    speakStep(medState.steps[0])
+    await speakStep(medState.steps[0])
   }
+
+  void ambientPromise
 }
 
 export function hasGeminiProgramContent() {

@@ -19,9 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="css/design-system.css?v=131" />
-  <link rel="stylesheet" href="css/forge.css?v=131" />
-  <link rel="stylesheet" href="css/school.css?v=131" />
+  <link rel="stylesheet" href="css/design-system.css?v=141" />
+  <link rel="stylesheet" href="css/forge.css?v=141" />
+  <link rel="stylesheet" href="css/school.css?v=141" />
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -121,7 +121,7 @@
   <div id="tour-overlay" class="tour-overlay" aria-hidden="true"></div>
   <script>
     if (location.protocol === 'file:') {
-      document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Usa <strong>Mejora.app</strong> o en terminal:</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre><p style="color:#8a8480">Luego abre <a href="http://localhost:5173" style="color:#c4a484">http://localhost:5173</a></p></div>'
+      document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Doble clic en <strong>start-server.command</strong> o <strong>Mejora.app</strong>.</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">open ~/Downloads/Mejora/start-server.command</pre></div>'
     }
   </script>
   <script type="module">
@@ -131,11 +131,11 @@
       box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#eceff4;background:#12161c;border:1px solid #3d4a5c;border-radius:8px'
       const detail = (e.message || 'Error desconocido').replace(/</g, '&lt;')
       const file = (e.filename || '').split('/').pop() || 'módulo JS'
-      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 0.75rem;line-height:1.5;color:#c45c5c"><strong>' + file + ':</strong> ' + detail + '</p><p style="margin:0 0 1rem;line-height:1.5;color:#8a8480">Recarga con <strong>Cmd+Shift+R</strong>. Si persiste, reinicia el servidor en el puerto 5173.</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
+      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 0.75rem;line-height:1.5;color:#c45c5c"><strong>' + file + ':</strong> ' + detail + '</p><p style="margin:0 0 1rem;line-height:1.5;color:#8a8480">Recarga con <strong>Cmd+Shift+R</strong>. Abre con <strong>start-server.command</strong> (doble clic), no con python -m http.server.</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">open ~/Downloads/Mejora/start-server.command</pre>'
       document.body.innerHTML = ''
       document.body.appendChild(box)
     })
   </script>
-  <script type="module" src="js/app.js?v=131"></script>
+  <script type="module" src="js/app.js?v=141"></script>
 </body>
 </html>

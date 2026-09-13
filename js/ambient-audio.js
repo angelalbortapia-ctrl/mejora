@@ -1,5 +1,7 @@
 /** Sonido ambiente — Web Audio gapless loops (CC0), ver public/audio/CREDITS.md */
 
+import { getCalmaAudioContext, unlockCalmaAudioOnGesture as unlockBusOnGesture } from './calma-audio-bus.js'
+
 const TRACKS = {
   rain: 'public/audio/rain.mp3',
   ocean: 'public/audio/ocean.mp3',
@@ -42,7 +44,6 @@ function trackUrl(type) {
 }
 
 async function getAmbientContext() {
-  const { getCalmaAudioContext } = await import('./calma-audio-bus.js')
   ambientCtx = await getCalmaAudioContext()
   return ambientCtx
 }
@@ -194,6 +195,10 @@ export function restoreAmbientAfterVoice() {
 
 export function isAmbientDucked() {
   return ducking
+}
+
+export function unlockCalmaAudioOnGesture() {
+  unlockBusOnGesture()
 }
 
 export async function resumeAudioContext() {

@@ -1,7 +1,7 @@
 /** Sesiones Calma — protocolos con guion hablado */
 
-import { PROGRAM_DEFINITIONS } from './meditation-programs-data.js?v=120'
-import { MEDITATION_STEPS } from './meditation-steps-content.js?v=120'
+import { PROGRAM_DEFINITIONS } from './meditation-programs-data.js?v=141'
+import { MEDITATION_STEPS } from './meditation-steps-content.js?v=141'
 
 export { MEDITATION_STEPS }
 

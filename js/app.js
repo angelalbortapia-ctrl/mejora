@@ -10,92 +10,47 @@ import {
   needsOnboarding, migrateOnboardingFlag, MOODS, getMood, setMood, getMoodWeek, getMoodInsight,
   getStreakShieldStatus, resetAllData,
 } from './core.js'
-import {
-  HABIT_CATEGORIES, HABIT_TEMPLATES,
-  genMathProblem, getMemoryConfig, getSimonConfig,
-  getLogicPuzzles, getWordGroup, getAnagrams, COLORS, getReflectionPrompt, pickSequence,
-} from './content.js'
-import { medState, MED_DURATIONS, clearMedTimers, stopMeditationSession, syncMeditationFromRoute, getBreathPhaseMs } from './meditation-service.js?v=120'
-import { renderMeditationPage, bindMeditationGlobals } from './pages/meditation.js?v=120'
+import { medState, MED_DURATIONS, stopMeditationSession, syncMeditationFromRoute, getBreathPhaseMs } from './meditation-service.js?v=141'
+import { renderMeditationPage, bindMeditationGlobals } from './pages/meditation.js?v=141'
 import {
   UNLOCKS, THEMES, isUnlocked, getUnlocked, getNextUnlock,
   checkNewUnlocks, markUnlockSeen, applyTheme,
 } from './unlocks.js'
-import {
-  getDailyBundle, ensureDailyBundle, buildLocalBundle, homePulseHTML, formatWeather,
-  adviceCardHTML, sunsetBannerHTML, readingCardHTML, bundleStatusHTML,
-  fetchTriviaQuestions, fetchAnagramWords,
-} from './apis.js'
+import { getDailyBundle, ensureDailyBundle, buildLocalBundle, formatWeather } from './apis.js'
 import {
   canUseNotifications, getNotificationPermission, requestNotificationPermission,
   startReminderChecker,
 } from './notifications.js'
-import {
-  COGNITIVE_DOMAINS, EXERCISES, getTodaysSession, getDomainProgress, getProgramStats,
-  completeSession, isSessionDoneToday, PROGRAM_DISCLAIMER, getExerciseLevel, updateExerciseLevel,
-} from './brain-program.js'
-import {
-  initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
-  initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
-} from './brain-exercises.js'
-import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar } from './layout.js?v=120'
-import {
-  getActivityCalendar, getConsistencyScore, getJourneySummary, getJourneyInsight,
-  getHabitTrendWeeks, getMilestones, getNextBestAction, getWeeklySummary, getWeeklyActivityScores,
-} from './analytics.js'
-import {
-  emptyState, milestoneBar, sparklineSVG,
-  tabBar, subTabBar, segmentBar, settingGroup, settingRow, pageLead, zoneHeader, pageHero,
-} from './ui.js?v=120'
-import { celebrate, haptic, updateAppShell, forgeSparkAt, pulseElement, flashPlanBanner } from './fx.js?v=120'
-import { playTone, playClick, playHabitDone, playSuccess } from './sounds.js'
+import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar } from './layout.js?v=141'
+import { celebrate, updateAppShell } from './fx.js?v=141'
+import { playClick, playSuccess } from './sounds.js'
 import {
   bindRender, scheduleRender, navigate, parsePath,
   getLastRenderPath, setLastRenderPath,
 } from './router.js'
-import { onboarding, renderOnboardingOverlay, resetOnboardingCache, restartOnboarding, TOTAL_ONBOARD_STEPS } from './onboarding-ui.js?v=120'
-import { renderHome, bindHomeGlobals } from './pages/home.js?v=120'
-import { getMissionTone, getMissionChip } from './coaching.js'
-import {
-  getDailyLesson, getWeeklyLesson, getWeeklyLessonMeta, LESSONS, LAB_EXERCISE_IDS, LAB_EXERCISE_GROUPS, EXERCISE_REAL_WORLD,
-  renderLessonCard, renderLessonFull, renderNeuroPunchBanner, renderDebateBanner, renderLegendaryHall,
-  renderHomeNeuroCard, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
-  getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson, initLessonReaderScroll,
-} from './brain-academy.js?v=120'
-import {
-  renderSchoolHub, completeLessonReview, renderHomeReviewBanner,
-  renderReviewQuizFlow, getReviewQuiz, getSchoolStats,
-} from './school.js?v=120'
-import { renderCatalogPage } from './school-catalog.js?v=120'
-import { wrapSchoolPage } from './school-shell.js?v=120'
-import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from './school-library.js?v=120'
-import { downloadFacultyCertificate, checkAndIssueCertificates } from './school-certificates.js?v=120'
-import { startTour, shouldShowTour } from './tour.js?v=120'
-import { exportMonthlyReportText, maybeAutoBackup } from './backup.js'
-import {
-  initCloudSync, getCloudStatus, signIn, signUp, signOut,
-  pullFromCloud, pushToCloud, onCloudStatus,
-} from './cloud-sync.js'
-import {
-  playSingingBowl, startAmbientSound, stopAmbientSound, setAmbientVolume, resumeAudioContext,
-  isAmbientPlaying, AMBIENT_PRESETS,
-} from './ambient-audio.js?v=120'
+import { onboarding, renderOnboardingOverlay, resetOnboardingCache, TOTAL_ONBOARD_STEPS } from './onboarding-ui.js?v=141'
+import { renderHome, bindHomeGlobals } from './pages/home.js?v=141'
+import { initLessonReaderScroll } from './brain-academy.js?v=141'
+import { startTour, shouldShowTour } from './tour.js?v=141'
+import { maybeAutoBackup } from './backup.js'
+import { initCloudSync, onCloudStatus } from './cloud-sync.js'
+import { stopAmbientSound, isAmbientPlaying } from './ambient-audio.js?v=141'
 import { awardXp, processPlanAwards, showToast } from './awards.js'
 import { moodPickerHTML, heatmapHTML, skillBars, guardDifficulty } from './page-helpers.js'
 import { routineState, stopRoutineIfLeaving, patchRoutineUI } from './routine-service.js'
 import { pomodoro, patchPomodoroUI } from './focus-service.js'
-import { renderRoutine, bindRoutineGlobals } from './pages/routine.js?v=120'
-import { renderPlan, renderSoloHoy } from './pages/plan.js?v=120'
-import { renderMejora, bindMejoraGlobals, getEditingHabits, setEditingHabits } from './pages/mejora.js?v=120'
-import { renderEnfoque, bindEnfoqueGlobals } from './pages/enfoque.js?v=120'
-import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } from './pages/settings.js?v=120'
-import { maybeAutoSectionGuide, startSectionGuide } from './section-guides.js?v=120'
-import { renderViaje, getViajeTab, setViajeTab, bindJourneyGlobals } from './pages/journey.js?v=120'
-import { renderMetas, bindGoalsGlobals, getMetasTab, setMetasTab } from './pages/goals.js?v=120'
-import { renderProfile, getProfileTab, setProfileTab } from './pages/profile.js?v=120'
+import { renderRoutine, bindRoutineGlobals } from './pages/routine.js?v=141'
+import { renderPlan, renderSoloHoy } from './pages/plan.js?v=141'
+import { renderMejora, bindMejoraGlobals, getEditingHabits, setEditingHabits } from './pages/mejora.js?v=141'
+import { renderEnfoque, bindEnfoqueGlobals } from './pages/enfoque.js?v=141'
+import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } from './pages/settings.js?v=141'
+import { maybeAutoSectionGuide, startSectionGuide } from './section-guides.js?v=141'
+import { renderViaje, getViajeTab, setViajeTab, bindJourneyGlobals } from './pages/journey.js?v=141'
+import { renderMetas, bindGoalsGlobals, getMetasTab, setMetasTab } from './pages/goals.js?v=141'
+import { renderProfile, getProfileTab, setProfileTab } from './pages/profile.js?v=141'
 import {
-  renderBrainGym, bindBrainGymGlobals, clearEphemeralBrainState, syncGimnasiaRoute, patchBrainExerciseUI, patchGimnasiaHubUI, brainState,
-} from './pages/brain-gym.js?v=130'
+  renderBrainGym, bindBrainGymGlobals, clearEphemeralBrainState, syncGimnasiaRoute, patchBrainExerciseUI, patchGimnasiaHubUI, syncBrainSynapseFx, brainState,
+} from './pages/brain-gym.js?v=141'
 import { ensureGeminiConfig } from './gemini-config.js'
 import { ensureAzureConfig } from './azure-config.js'
 import { ensureFishConfig } from './fish-config.js'
@@ -255,13 +210,13 @@ function patchLiveUI(path) {
       progressEl.style.width = `${(medState.elapsed / total) * 100}%`
       const subFill = document.querySelector('.calma-step-subprogress-fill')
       if (subFill && step?.duration) subFill.style.width = `${Math.min(100, (medState.stepElapsed / step.duration) * 100)}%`
-      import('./meditation-voice.js?v=127').then(({ getStepInstructionText, getStepCueText }) => {
+      import('./meditation-voice.js?v=141').then(({ getStepInstructionText, getStepCueText }) => {
         const instruction = getStepInstructionText(step)
         const cue = getStepCueText(step)
         if (cueEl) cueEl.textContent = cue
         if (stepEl.textContent !== instruction) {
           stepEl.textContent = instruction
-          import('./meditation-fx.js?v=130').then(m => m.pulseCalmaStep?.(medState.step)).catch(() => {})
+          import('./meditation-fx.js?v=141').then(m => m.pulseCalmaStep?.(medState.step)).catch(() => {})
         }
       }).catch(() => {})
     }
@@ -371,8 +326,13 @@ function renderCore() {
   if (brainState.activeLesson && path === '/gimnasia') {
     requestAnimationFrame(() => initLessonReaderScroll?.())
   }
+  if (path === '/gimnasia') {
+    requestAnimationFrame(() => syncBrainSynapseFx())
+  } else if (prevPath === '/gimnasia') {
+    import('./brain-synapse-fx.js?v=141').then(m => m.unmountSynapseField?.()).catch(() => {})
+  }
   if (path === '/meditacion') {
-    import('./meditation-fx.js?v=130').then(m => {
+    import('./meditation-fx.js?v=141').then(m => {
       requestAnimationFrame(() => {
         if (medState.completed) m.initCalmaCompleteFX?.()
         else if (medState.session || medState.freeTimer?.active) m.initCalmaSessionFX?.()
@@ -383,7 +343,7 @@ function renderCore() {
       })
     }).catch(() => {})
   } else if (prevPath === '/meditacion') {
-    import('./meditation-fx.js?v=130').then(m => m.stopCalmaFx?.()).catch(() => {})
+    import('./meditation-fx.js?v=141').then(m => m.stopCalmaFx?.()).catch(() => {})
   }
 }
 
@@ -420,7 +380,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 })
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('./service-worker.js?v=120', { scope: './' }).then(reg => {
+  navigator.serviceWorker.register('./service-worker.js?v=141', { scope: './' }).then(reg => {
     reg.update().catch(() => {})
     reg.addEventListener('updatefound', () => {
       const worker = reg.installing
@@ -440,13 +400,31 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   })
 }
 
+function showWrongServerBanner() {
+  if (document.getElementById('mejora-server-banner')) return
+  const box = document.createElement('div')
+  box.id = 'mejora-server-banner'
+  box.setAttribute('role', 'alert')
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:0.85rem 1rem;background:#3a1518;border-bottom:1px solid #c45c5c;color:#f5d6d6;font:500 0.92rem/1.45 system-ui,sans-serif;text-align:center'
+  box.innerHTML = 'La voz de Calma no funciona con este servidor. Cierra la pestaña, abre <strong>Mejora.app</strong> de nuevo o ejecuta <strong>start-server.command</strong>.'
+  document.body.prepend(box)
+}
+
 // Init
 async function applyVoiceConfigDefaults() {
   await Promise.all([ensureGeminiConfig(), ensureAzureConfig(), ensureFishConfig()])
   const { FISH_VOICE_ID } = await import('./fish-config.js')
-  const { hasAzureTts } = await import('./azure-tts.js?v=124')
-  const { hasFishTts, hasFishApiKey } = await import('./fish-audio-tts.js?v=124')
+  const { hasAzureTts } = await import('./azure-tts.js?v=141')
+  const { hasFishTts, probeFishProxy } = await import('./fish-audio-tts.js?v=141')
+  const proxyOk = await probeFishProxy()
+  if (!proxyOk && (location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
+    showWrongServerBanner()
+  }
   const s = getSettings()
+  if (s.medVoiceEngine === 'fish' && !hasFishTts()) {
+    s.medVoiceEngine = 'browser'
+    saveSettings(s)
+  }
   if (FISH_VOICE_ID && !s.fishVoiceId) {
     s.fishVoiceId = FISH_VOICE_ID
     saveSettings(s)
@@ -520,6 +498,7 @@ bindRoutineGlobals()
 bindMejoraGlobals()
 bindEnfoqueGlobals()
 bindJourneyGlobals()
+bindGoalsGlobals()
 bindHomeGlobals({ startGuide: startSectionGuide })
 bindBrainGymGlobals()
 bindSettingsGlobals({
@@ -537,8 +516,8 @@ window.medState = medState
 ;[
   ['settingsTab', getSettingsTab, setSettingsTab],
   ['viajeTab', getViajeTab, setViajeTab],
-  ['metasTab', () => metasTab, v => { metasTab = v }],
-  ['profileTab', () => profileTab, v => { profileTab = v }],
+  ['metasTab', getMetasTab, setMetasTab],
+  ['profileTab', getProfileTab, setProfileTab],
   ['editingHabits', getEditingHabits, setEditingHabits],
   ['schoolFaculty', () => brainState.schoolFaculty, v => { brainState.schoolFaculty = v }],
 ].forEach(([name, get, set]) => {
@@ -546,7 +525,7 @@ window.medState = medState
 })
 
 initLayout()
-import('./global-search.js?v=120').then(m => m.mountGlobalSearch?.()).catch(() => {})
+import('./global-search.js?v=141').then(m => m.mountGlobalSearch?.()).catch(() => {})
 window.addEventListener('hashchange', () => scheduleRender(true))
 scheduleRender(true)
 if (shouldShowTour() && ['/', '/plan'].includes(parsePath().path)) {

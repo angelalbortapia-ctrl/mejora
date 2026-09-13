@@ -2,6 +2,7 @@
 
 import { getSettings, saveSettings } from './core.js'
 import { ensureFishConfig, FISH_API_KEY, FISH_VOICE_ID } from './fish-config.js'
+import { getCalmaAudioContext, getVoiceOutputNode, getPrimedVoiceAudio, unlockCalmaAudioOnGesture } from './calma-audio-bus.js'
 
 /** Voces de la biblioteca pública — no necesitas grabarte ni clonar. */
 export const FISH_LIBRARY_VOICES = [
@@ -44,6 +45,7 @@ function fishModelsUrl(query = '') {
 
 let audioCtx = null
 let currentSource = null
+let currentElement = null
 let phraseTimer = null
 let speaking = false
 let speechQueue = []
@@ -52,6 +54,7 @@ let speechGeneration = 0
 let lastFishError = ''
 let cachedVoiceList = null
 let voiceListPromise = null
+let fishProxyUnavailable = false
 
 function getApiKey() {
   const fromSettings = (getSettings().fishApiKey || '').trim()
@@ -61,7 +64,8 @@ function getApiKey() {
 export function hasFishTts() {
   const voice = getFishVoiceId()
   if (!voice) return false
-  return useFishProxy() || Boolean(getApiKey())
+  if (useFishProxy()) return !fishProxyUnavailable
+  return Boolean(getApiKey())
 }
 
 export function hasFishApiKey() {
@@ -141,8 +145,24 @@ export function getLastFishError() {
   return lastFishError
 }
 
+/** Comprueba si el proxy local de Fish está activo (start-server.command). */
+export async function probeFishProxy() {
+  if (!useFishProxy()) return Boolean(getApiKey())
+  try {
+    const res = await fetch(fishTtsUrl(), { method: 'OPTIONS' })
+    if (res.status === 404 || res.status === 501) {
+      fishProxyUnavailable = true
+      return false
+    }
+    fishProxyUnavailable = false
+    return true
+  } catch {
+    fishProxyUnavailable = true
+    return false
+  }
+}
+
 async function ensureAudioContext() {
-  const { getCalmaAudioContext } = await import('./calma-audio-bus.js')
   audioCtx = await getCalmaAudioContext()
   return audioCtx
 }
@@ -186,20 +206,30 @@ async function requestFishAudio(text) {
   })
 
   if (!res.ok) {
+    if (proxied && (res.status === 404 || res.status === 501)) {
+      fishProxyUnavailable = true
+      throw new Error('Proxy Fish no disponible — abre con start-server.command (no python -m http.server)')
+    }
     const err = await res.json().catch(() => ({}))
     const msg = err.message || err.reason || `Fish ${res.status}`
     if (res.status === 401) throw new Error('API key de Fish inválida')
     if (res.status === 402) throw new Error('Sin créditos en Fish Audio — recarga en fish.audio')
+    if (res.status === 500 && proxied) {
+      fishProxyUnavailable = true
+      throw new Error('Proxy Fish sin API key — revisa js/fish-config.local.js')
+    }
     throw new Error(msg)
   }
 
   const bytes = await res.arrayBuffer()
-  const ctx = await ensureAudioContext()
+  const raw = bytes.slice(0)
+  let buffer = null
   try {
-    return await ctx.decodeAudioData(bytes.slice(0))
-  } catch {
-    throw new Error('Fish: no se pudo decodificar el audio')
-  }
+    const ctx = await ensureAudioContext()
+    buffer = await ctx.decodeAudioData(raw.slice(0))
+  } catch (_) {}
+  if (!raw.byteLength) throw new Error('Fish: respuesta de audio vacía')
+  return { buffer, bytes: raw }
 }
 
 const inFlight = new Map()
@@ -211,11 +241,11 @@ async function fetchFishAudio(text) {
   if (inFlight.has(ck)) return inFlight.get(ck)
 
   const task = (async () => {
-    const buffer = await requestFishAudio(text)
-    audioCache.set(ck, buffer)
+    const clip = await requestFishAudio(text)
+    audioCache.set(ck, clip)
     if (audioCache.size > 40) audioCache.delete(audioCache.keys().next().value)
     lastFishError = ''
-    return buffer
+    return clip
   })()
 
   inFlight.set(ck, task)
@@ -286,6 +316,16 @@ function stopCurrentSource() {
   }
 }
 
+function stopCurrentElement() {
+  if (!currentElement) return
+  try {
+    currentElement.pause()
+    currentElement.removeAttribute('src')
+    currentElement.load()
+  } catch (_) {}
+  currentElement = null
+}
+
 export function isFishSpeaking() {
   return speaking
 }
@@ -297,14 +337,55 @@ export function stopFishSpeech() {
   if (phraseTimer) clearTimeout(phraseTimer)
   phraseTimer = null
   stopCurrentSource()
+  stopCurrentElement()
+}
+
+async function playFishMp3(bytes) {
+  if (!bytes?.byteLength) throw new Error('Fish: sin datos de audio')
+  stopCurrentElement()
+  const blob = new Blob([bytes], { type: 'audio/mpeg' })
+  const url = URL.createObjectURL(blob)
+  const audio = getPrimedVoiceAudio()
+  audio.volume = 0.96
+  currentElement = audio
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      URL.revokeObjectURL(url)
+      if (currentElement === audio) currentElement = null
+    }
+    const onDone = () => {
+      audio.removeEventListener('ended', onDone)
+      audio.removeEventListener('error', onErr)
+      cleanup()
+      resolve()
+    }
+    const onErr = () => {
+      audio.removeEventListener('ended', onDone)
+      audio.removeEventListener('error', onErr)
+      cleanup()
+      reject(new Error('No se pudo reproducir audio Fish'))
+    }
+    audio.addEventListener('ended', onDone)
+    audio.addEventListener('error', onErr)
+    audio.src = url
+    audio.play().catch((err) => {
+      onErr()
+      reject(err)
+    })
+  })
 }
 
 export async function playFishBuffer(buffer) {
   const ctx = await ensureAudioContext()
-  const { getVoiceOutputNode } = await import('./calma-audio-bus.js')
+  if (ctx.state === 'suspended') {
+    try { await ctx.resume() } catch (_) {}
+  }
+  if (ctx.state !== 'running') unlockCalmaAudioOnGesture()
   const out = getVoiceOutputNode()
+  if (!out) throw new Error('Bus de audio Calma no inicializado')
   stopCurrentSource()
-  return new Promise((resolve) => {
+  stopCurrentElement()
+  return new Promise((resolve, reject) => {
     const source = ctx.createBufferSource()
     source.buffer = buffer
     source.connect(out)
@@ -313,8 +394,17 @@ export async function playFishBuffer(buffer) {
       if (currentSource === source) currentSource = null
       resolve()
     }
-    source.start(0)
+    try {
+      source.start(0)
+    } catch (err) {
+      currentSource = null
+      reject(err)
+    }
   })
+}
+
+async function playFishClip(clip) {
+  await playFishMp3(clip?.bytes)
 }
 
 const PHRASE_MAX_CHARS = 280
@@ -370,38 +460,50 @@ function fishPauseMs(phrase, index, total, override) {
   return 1050
 }
 
+function abortFishPhraseLoop(gen) {
+  if (gen !== speechGeneration) {
+    speaking = false
+    return true
+  }
+  return false
+}
+
 async function speakPhrasesFish(phrases, { interrupt = true, pauseMs } = {}) {
-  if (!phrases.length) return
+  if (!phrases.length) return false
   if (interrupt) stopFishSpeech()
 
   const gen = speechGeneration
   let i = 0
+  let played = false
   speaking = true
 
-  while (i < phrases.length) {
-    if (gen !== speechGeneration) return
-    const phrase = phrases[i++]
-    try {
-      const buffer = await fetchFishAudio(phrase)
-      if (gen !== speechGeneration) return
-      await playFishBuffer(buffer)
-    } catch (err) {
-      setFishError(err.message || String(err))
-      speaking = false
-      return
+  try {
+    while (i < phrases.length) {
+      if (abortFishPhraseLoop(gen)) return played
+      const phrase = phrases[i++]
+      const clip = await fetchFishAudio(phrase)
+      if (abortFishPhraseLoop(gen)) return played
+      await playFishClip(clip)
+      played = true
+      if (i < phrases.length) {
+        const gap = fishPauseMs(phrases[i - 1], i - 1, phrases.length, pauseMs)
+        await new Promise(r => { phraseTimer = setTimeout(r, gap) })
+        if (abortFishPhraseLoop(gen)) return played
+      }
     }
-    if (i < phrases.length) {
-      const gap = fishPauseMs(phrases[i - 1], i - 1, phrases.length, pauseMs)
-      await new Promise(r => { phraseTimer = setTimeout(r, gap) })
-      if (gen !== speechGeneration) return
-    }
+  } catch (err) {
+    setFishError(err.message || String(err))
+    return played
+  } finally {
+    if (gen === speechGeneration) speaking = false
   }
 
-  speaking = false
   if (gen === speechGeneration && speechQueue.length) {
     const next = speechQueue.shift()
-    await speakFishMeditation(next, { interrupt: false })
+    const queued = await speakFishMeditation(next, { interrupt: false })
+    return played || queued
   }
+  return played
 }
 
 export async function prefetchFishTexts(texts) {
@@ -414,19 +516,20 @@ export async function prefetchFishTexts(texts) {
   }
 }
 
+/** @returns {Promise<boolean>} true si se reprodujo al menos un fragmento */
 export async function speakFishMeditation(text, { interrupt = true, pauseMs } = {}) {
   await ensureFishConfig()
-  if (!text || !hasFishTts()) return
+  if (!text || !hasFishTts()) return false
   const phrases = splitPhrases(text)
-  if (!phrases.length) return
+  if (!phrases.length) return false
 
   if (speaking && !interrupt) {
     speechQueue.push(text)
-    return
+    return true
   }
   if (speaking && interrupt) stopFishSpeech()
 
-  await speakPhrasesFish(phrases, { interrupt, pauseMs })
+  return speakPhrasesFish(phrases, { interrupt, pauseMs })
 }
 
 export async function speakFishSequence(texts) {
