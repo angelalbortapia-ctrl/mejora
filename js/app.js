@@ -36,7 +36,7 @@ import { startTour, shouldShowTour } from '/js/tour.js'
 import { maybeAutoBackup } from '/js/backup.js'
 import { initCloudSync, onCloudStatus } from '/js/cloud-sync.js'
 import { stopAmbientSound, isAmbientPlaying } from '/js/ambient-audio.js'
-import { awardXp, processPlanAwards, showToast } from '/js/awards.js'
+import { awardXp, processPlanAwards, showToast, showUpdateToast } from '/js/awards.js'
 import { moodPickerHTML, heatmapHTML, skillBars, guardDifficulty } from '/js/page-helpers.js'
 import { routineState, stopRoutineIfLeaving, patchRoutineUI } from '/js/routine-service.js'
 import { pomodoro, patchPomodoroUI } from '/js/focus-service.js'
@@ -385,6 +385,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 })
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  let waitingWorker = null
+  let swReloadPending = false
   navigator.serviceWorker.register(`./service-worker.js?v=${ASSET_VERSION}`, { scope: './' }).then(reg => {
     reg.update().catch(() => {})
     reg.addEventListener('updatefound', () => {
@@ -392,16 +394,17 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       if (!worker) return
       worker.addEventListener('statechange', () => {
         if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-          worker.postMessage({ type: 'SKIP_WAITING' })
+          waitingWorker = worker
+          showUpdateToast(() => {
+            swReloadPending = true
+            waitingWorker?.postMessage({ type: 'SKIP_WAITING' })
+          })
         }
       })
     })
   }).catch(() => {})
-  let swReloading = false
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (swReloading) return
-    swReloading = true
-    location.reload()
+    if (swReloadPending) location.reload()
   })
 }
 

@@ -1,7 +1,6 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from '/js/core.js'
-import { withVersion } from '/js/version.js'
 import { forgeSparkAt, haptic } from '/js/fx.js'
 import {
   applyDynamicLesson, bindLessonInteractions, renderLessonBlocks,
@@ -1176,7 +1175,7 @@ export function markLessonComplete(id) {
   if (!done.includes(id)) {
     done.push(id)
     setItem('lessons_done', done)
-    import(withVersion('./school.js')).then(m => m.scheduleLessonReview(id)).catch(() => {})
+    import('/js/school.js').then(m => m.scheduleLessonReview(id)).catch(() => {})
   }
   return done
 }

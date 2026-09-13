@@ -57,4 +57,10 @@ test('enrichProgramSession añade contexto del día', () => {
   assert(steps[0].text.length > 4)
 })
 
+const failed = results.filter(r => !r.ok)
+if (failed.length) {
+  failed.forEach(r => console.error(`✗ ${r.name}: ${r.error}`))
+  throw new Error(`${failed.length} test(s) failed`)
+}
+
 export { results }

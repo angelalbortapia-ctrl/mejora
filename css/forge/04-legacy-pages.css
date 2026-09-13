@@ -1,7 +1,7 @@
 /* Legacy page layouts — migrar gradualmente a módulos FORGE */
 /* LEGACY — importado vía css/forge.css; migrar gradualmente a módulos FORGE */
 
-/* LEGACY — importado vía css/forge.css; tokens FORGE en css/forge/02-forge-vars.css */
+/* LEGACY — importado vía css/forge.css; tokens en css/forge/01-tokens.css */
 
 :root {
   --neon: #a88462;
@@ -655,6 +655,7 @@ html.dark .nav-bottom {
 }
 
 .xp-toast.toast-out { animation: toastOut 0.3s ease-in forwards; }
+.sw-update-toast .sw-update-btn { margin-top: 0.5rem; width: 100%; pointer-events: auto; }
 .toast-icon { font-size: 1.5rem; }
 
 @keyframes toastIn {

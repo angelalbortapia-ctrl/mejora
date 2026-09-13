@@ -15,6 +15,20 @@ function ensureToastContainer() {
   return el
 }
 
+export function showUpdateToast(onUpdate) {
+  if (document.getElementById('sw-update-toast')) return
+  const container = ensureToastContainer()
+  const el = document.createElement('div')
+  el.id = 'sw-update-toast'
+  el.className = 'xp-toast sw-update-toast'
+  el.innerHTML = `<span class="toast-icon">🔄</span><div><strong>Nueva versión disponible</strong><p class="text-sm opacity-80">Actualiza para ver los últimos cambios</p><button type="button" class="btn-primary text-sm py-1 mt-2 sw-update-btn">Actualizar</button></div>`
+  el.querySelector('.sw-update-btn')?.addEventListener('click', () => {
+    el.remove()
+    onUpdate?.()
+  })
+  container.appendChild(el)
+}
+
 export function showToast(message, xp, skill, levelUp = false) {
   const container = ensureToastContainer()
   const el = document.createElement('div')
