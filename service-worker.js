@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const CACHE = 'mejora-v141'
+const CACHE = 'mejora-v143'
 const ASSETS = [
   `${BASE}/manifest.json`,
   `${BASE}/public/favicon.svg`,

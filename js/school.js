@@ -4,13 +4,14 @@ import { getItem, setItem, getToday, esc } from './core.js'
 import {
   LESSONS, LEGENDARY_HALL, getCompletedLessons, getAcademyWeekIndex,
   isLessonUnlocked, getLesson, renderLessonCard, getLessonQuiz,
-  getDailyNeuroPunch,
-} from './brain-academy.js?v=141'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=141'
-import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=141'
-import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=141'
-import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=141'
-import { renderLibraryList } from './school-library.js?v=141'
+  getDailyNeuroPunch, getWeeklyLessonMeta,
+} from './brain-academy.js?v=143'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=143'
+import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=143'
+import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=143'
+import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=143'
+import { renderLibraryList } from './school-library.js?v=143'
+import { renderExploreContent } from './school-catalog.js?v=143'
 
 export { FACULTIES, CURRICULUM }
 
@@ -193,7 +194,7 @@ function renderCurrentWeekFocus(block, stats) {
 
 function facultyCard(id, faculty) {
   const p = getFacultyProgress(id)
-  return `<a href="#/gimnasia" onclick="brainState.brainView='school';brainState.schoolFaculty='${id}';setTimeout(render,0)" class="school-faculty-card no-underline" style="--faculty-color:${faculty.color}">
+  return `<a href="#/gimnasia" onclick="event.preventDefault();goLearn('curriculum',{faculty:'${id}'})" class="school-faculty-card no-underline" style="--faculty-color:${faculty.color}">
     <span class="school-faculty-icon">${faculty.icon}</span>
     <div class="school-faculty-body">
       <h3 class="school-faculty-title">${faculty.label}</h3>
@@ -404,12 +405,11 @@ function renderCurriculumContent(stats) {
   </div>`
 }
 
-function renderFacultyView(schoolFaculty, stats) {
+function renderFacultyContent(schoolFaculty) {
   const faculty = FACULTIES[schoolFaculty]
   const progress = getFacultyProgress(schoolFaculty)
   const lessons = LESSONS.filter(l => faculty.categories.includes(l.category))
-  return `<div class="school-campus school-campus--faculty animate-fade-in">
-    <button type="button" onclick="brainState.schoolFaculty=null;render()" class="school-back">← Facultades</button>
+  return `<button type="button" onclick="goLearn('curriculum')" class="school-back">← Facultades</button>
     <header class="school-hero school-hero--faculty" style="--faculty-color:${faculty.color}">
       <span class="school-hero-icon">${faculty.icon}</span>
       <div class="school-hero-copy">
@@ -421,27 +421,29 @@ function renderFacultyView(schoolFaculty, stats) {
     ${renderFacultyCertificateBanner(schoolFaculty)}
     <div class="academy-lesson-grid school-faculty-grid">
       ${lessons.map(l => renderLessonCard(l)).join('')}
-    </div>
-  </div>`
+    </div>`
 }
 
 export function renderSchoolHub(schoolFaculty = null, schoolSection = 'curriculum', options = {}) {
   const stats = getSchoolStats()
-  const { pubmed = {}, libraryFilter = {} } = options
+  const { pubmed = {}, libraryFilter = {}, showHeader = false, catalogFilter = {} } = options
+  const shellOpts = { stats, showHeader }
   if (schoolFaculty && FACULTIES[schoolFaculty]) {
-    return renderFacultyView(schoolFaculty, stats)
+    return wrapSchoolPage(renderFacultyContent(schoolFaculty), 'curriculum', shellOpts)
   }
   const section = normalizeSchoolSection(schoolSection)
   switch (section) {
+    case 'explore':
+      return wrapSchoolPage(renderExploreContent(catalogFilter, getWeeklyLessonMeta()), 'explore', shellOpts)
     case 'apply':
-      return wrapSchoolPage(renderApplyContent(stats), 'apply', { stats })
+      return wrapSchoolPage(renderApplyContent(stats), 'apply', shellOpts)
     case 'library':
-      return wrapSchoolPage(renderLibraryList(libraryFilter, pubmed), 'library', { stats })
+      return wrapSchoolPage(renderLibraryList(libraryFilter, pubmed), 'library', shellOpts)
     case 'cases':
-      return wrapSchoolPage(renderCasesContent(), 'cases', { stats })
+      return wrapSchoolPage(renderCasesContent(), 'cases', shellOpts)
     case 'certs':
-      return wrapSchoolPage(renderCertsContent(), 'certs', { stats })
+      return wrapSchoolPage(renderCertsContent(), 'certs', shellOpts)
     default:
-      return wrapSchoolPage(renderCurriculumContent(stats), 'curriculum', { stats })
+      return wrapSchoolPage(renderCurriculumContent(stats), 'curriculum', shellOpts)
   }
 }

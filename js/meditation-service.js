@@ -7,20 +7,20 @@ import {
 import {
   MEDITATION_STEPS, MEDITATION_PROGRAMS, getMeditationById, getMeditationIntro,
   getSessionAmbient, getProgramCatalog, getProgramDayIntro, getProgramDayPlan,
-} from './meditations.js?v=141'
-import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=141'
-import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=141'
-import { enrichProgramSession } from './meditation-program-content.js?v=141'
+} from './meditations.js?v=143'
+import { playSingingBowl, resumeAudioContext, startAmbientSound, stopAmbientSound, pauseAmbientSound, resumeAmbientSound } from './ambient-audio.js?v=143'
+import { isGeminiProgramsEnabled, prefetchGeminiDayContent, hasGeminiContent } from './gemini-meditation-content.js?v=143'
+import { enrichProgramSession } from './meditation-program-content.js?v=143'
 import { ensureFishConfig } from './fish-config.js'
 import { playTone } from './sounds.js'
-import { forgeSparkAt, pulseElement } from './fx.js?v=141'
+import { forgeSparkAt, pulseElement } from './fx.js?v=143'
 import {
   initMeditationVoice, unlockMeditationAudioOnGesture, speakMeditation, speakMeditationIntro,
   stopMeditationVoice, pauseMeditationVoice, resumeMeditationVoice, resetBreathCues,
   getMeditationVoiceName, isMeditationVoiceSupported, getStepSpeechText,
   usesApiMedVoice, usesFishMedVoice, warmMeditationVoiceCache,
   estimateSpeechDurationSec, isMeditationVoiceSpeaking, setProgramVoiceOverride,
-} from './meditation-voice.js?v=141'
+} from './meditation-voice.js?v=143'
 
 export const MED_DURATIONS = { facil: 3, medio: 5, dificil: 8, experto: 12 }
 
@@ -137,7 +137,7 @@ export function stopMeditationSession() {
   clearMedTimers()
   stopAmbientSound()
   stopMeditationVoice()
-  import('./meditation-fx.js?v=141').then(m => m.stopCalmaFx?.()).catch(() => {})
+  import('./meditation-fx.js?v=143').then(m => m.stopCalmaFx?.()).catch(() => {})
   setProgramVoiceOverride(null)
   medState.ambientPreview = false
   medState.freeTimer = null

@@ -17,18 +17,18 @@ import { restartOnboarding, resetOnboardingCache } from '../onboarding-ui.js'
 import { startTour } from '../tour.js'
 import { listSectionGuides, startSectionGuide, resetSectionGuides } from '../section-guides.js'
 import { tabBar, settingGroup, settingRow, pageLead } from '../ui.js'
-import { applyCompactSidebar } from '../layout.js?v=141'
+import { applyCompactSidebar } from '../layout.js?v=143'
 import { playSuccess } from '../sounds.js'
-import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '../gemini-tts.js?v=141'
-import { hasGeminiContent } from '../gemini-meditation-content.js?v=141'
-import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '../azure-tts.js?v=141'
+import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '../gemini-tts.js?v=143'
+import { hasGeminiContent } from '../gemini-meditation-content.js?v=143'
+import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '../azure-tts.js?v=143'
 import { isAzureConfigFilePresent } from '../azure-config.js'
 import {
   listFishVoiceOptions, setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed,
   hasFishTts, hasFishApiKey, getFishVoiceId, refreshFishVoiceList, FISH_TTS_MODELS,
-} from '../fish-audio-tts.js?v=141'
+} from '../fish-audio-tts.js?v=143'
 import { ensureFishConfig, isFishConfigFilePresent } from '../fish-config.js'
-import { previewMeditationVoice, unlockMeditationAudioOnGesture } from '../meditation-voice.js?v=141'
+import { previewMeditationVoice, unlockMeditationAudioOnGesture } from '../meditation-voice.js?v=143'
 
 let settingsTab = 'general'
 
@@ -442,7 +442,7 @@ export function bindSettingsGlobals(deps = {}) {
     } catch (e) {
       alert(e.message || 'Error al reproducir vista previa')
     }
-    const { getLastFishError } = await import('../fish-audio-tts.js?v=141')
+    const { getLastFishError } = await import('../fish-audio-tts.js?v=143')
     if (getLastFishError()) alert(getLastFishError())
   }
   ensureFishConfig().then(() => {

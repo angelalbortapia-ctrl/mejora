@@ -1,4 +1,4 @@
-import { icon, rankIcon } from './icons.js?v=141'
+import { icon, rankIcon } from './icons.js?v=143'
 
 /** Navegación — 5 destinos claros */
 export const NAV_SECTIONS = [

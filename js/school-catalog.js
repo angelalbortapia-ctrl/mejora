@@ -1,8 +1,8 @@
 /** Catálogo — búsqueda y filtros de lecciones */
 
 import { esc } from './core.js'
-import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=141'
-import { FACULTIES } from './school-curriculum.js?v=141'
+import { LESSONS, LESSON_CATEGORIES, isLessonUnlocked, renderLessonCard, getCompletedLessons } from './brain-academy.js?v=143'
+import { FACULTIES } from './school-curriculum.js?v=143'
 
 function getFacultyForLesson(lessonId) {
   const lesson = LESSONS.find(l => l.id === lessonId)
@@ -104,6 +104,7 @@ export function renderCatalogToolbar(filter = {}, resultCount = 0) {
       </select>
     </div>
     <p class="catalog-result-meta">${resultCount} lección${resultCount === 1 ? '' : 'es'}${f.q ? ` para “${esc(f.q)}”` : ''}</p>
+    <button type="button" class="btn-ghost catalog-reset-btn" onclick="resetCatalogFilter()">Limpiar filtros</button>
   </section>`
 }
 
@@ -116,31 +117,51 @@ export function renderCatalogGrid(lessons) {
   </div>`
 }
 
-export function renderCatalogPage(filter, weekly) {
+export function renderExploreContent(filter, weekly) {
   const filtered = filterLessons(LESSONS, filter)
-  const done = getCompletedLessons().length
-  const unlocked = LESSONS.filter(l => isLessonUnlocked(l.id)).length
-  return `<div class="catalog-campus animate-fade-in">
-    <header class="brain-neural-hero brain-neural-hero--compact span-full">
-      <div class="brain-neural-hero__glow" aria-hidden="true"></div>
-      <div class="brain-neural-hero__scan" aria-hidden="true"></div>
-      <div class="brain-neural-hero__head">
-        <div class="brain-neural-hero__copy">
-          <p class="brain-neural-hero__kicker">Catálogo</p>
-          <h1 class="brain-neural-hero__title font-display">Todas las lecciones</h1>
-          <p class="brain-neural-hero__sub">${LESSONS.length} lecciones · ${done} completadas · ${unlocked} desbloqueadas</p>
-        </div>
-        <div class="brain-neural-hero__stats">
-          <div class="brain-neural-stat"><span class="brain-neural-stat__val">${done}</span><span class="brain-neural-stat__lbl">hechas</span></div>
-          <div class="brain-neural-stat"><span class="brain-neural-stat__val">${unlocked}</span><span class="brain-neural-stat__lbl">abiertas</span></div>
-        </div>
-      </div>
-      ${weekly?.lesson ? `<button type="button" onclick="openLesson('${weekly.lesson.id}')" class="catalog-featured-btn catalog-featured-btn--neural">
+  const featured = weekly?.lesson
+    ? `<button type="button" onclick="openLesson('${weekly.lesson.id}')" class="catalog-featured-btn catalog-featured-btn--neural span-full">
         <span class="catalog-featured-label">Destacada semana ${weekly.week}</span>
         <span class="catalog-featured-title">${esc(weekly.lesson.title)} →</span>
-      </button>` : ''}
-    </header>
+      </button>`
+    : ''
+  return `${featured}
     ${renderCatalogToolbar(filter, filtered.length)}
-    ${renderCatalogGrid(filtered)}
-  </div>`
+    ${renderCatalogGrid(filtered)}`
+}
+
+function syncCatalogToolbar(f) {
+  const search = document.getElementById('catalog-search')
+  if (search && search.value !== f.q) search.value = f.q
+  const keys = ['category', 'faculty', 'region', 'duration', 'status']
+  const toolbar = document.querySelector('.catalog-toolbar')
+  toolbar?.querySelectorAll('.catalog-select').forEach((sel, i) => {
+    const key = keys[i]
+    if (key && sel.value !== f[key]) sel.value = f[key]
+  })
+}
+
+export function patchCatalogUI(filter) {
+  const meta = document.querySelector('.catalog-result-meta')
+  const toolbar = document.getElementById('catalog-search')?.closest('.catalog-toolbar')
+  if (!toolbar) return false
+  const filtered = filterLessons(LESSONS, filter)
+  const f = normalizeCatalogFilter(filter)
+  syncCatalogToolbar(f)
+  const existing = document.getElementById('catalog-lesson-grid')
+    || document.querySelector('.catalog-empty--live')
+  const next = filtered.length
+    ? renderCatalogGrid(filtered)
+    : '<p class="catalog-empty catalog-empty--live">Ninguna lección coincide con los filtros.</p>'
+  if (existing) {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = next
+    existing.replaceWith(wrap.firstElementChild)
+  } else {
+    toolbar.insertAdjacentHTML('afterend', next)
+  }
+  if (meta) {
+    meta.textContent = `${filtered.length} lección${filtered.length === 1 ? '' : 'es'}${f.q ? ` para “${f.q}”` : ''}`
+  }
+  return true
 }

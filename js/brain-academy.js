@@ -1,15 +1,15 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from './core.js'
-import { forgeSparkAt, haptic } from './fx.js?v=141'
+import { forgeSparkAt, haptic } from './fx.js?v=143'
 import {
   applyDynamicLesson, bindLessonInteractions, renderLessonBlocks,
   LESSON_BLOCK_PRE, LESSON_BLOCK_POST, initLessonEngagement,
   renderLessonEngagementHud, renderLessonMasteryRecap, renderLessonFxLayers, getLessonBonusXp,
-} from './lesson-dynamic.js?v=141'
-import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=141'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=141'
-import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=141'
+} from './lesson-dynamic.js?v=143'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=143'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=143'
+import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=143'
 
 const ACADEMY_START_KEY = 'academyStart'
 
@@ -1000,7 +1000,7 @@ export function renderHomeNeuroCard() {
   return `<section class="m-neuro span-full">
     <div class="m-neuro-head">
       <p class="m-neuro-label">Neuro hoy</p>
-      <a href="#/gimnasia" class="m-neuro-more no-underline" onclick="brainState.brainView='school';setTimeout(render,0)">Escuela →</a>
+      <a href="#/gimnasia" class="m-neuro-more no-underline" onclick="event.preventDefault();goLearn('curriculum')">Escuela →</a>
     </div>
     <p class="m-neuro-punch">${punch}</p>
     <div class="m-neuro-actions">
@@ -1426,7 +1426,7 @@ export function renderLessonFull(lesson) {
   const done = getCompletedLessons().includes(L.id)
   const sectionCount = L.sections?.length || 1
   const exId = L.relatedExercise
-  const backLabel = typeof brainState !== 'undefined' && brainState.brainView === 'school' ? 'Escuela' : 'Catálogo'
+  const backLabel = 'Aprender'
   const keyTerms = L.keyTerms?.length
     ? `<dl class="lesson-keyterms">
         <p class="lesson-keyterms-title">Conceptos clave</p>
@@ -1507,7 +1507,7 @@ export function renderLessonFull(lesson) {
             <textarea id="lesson-reflect-text" class="input-field min-h-28 resize-y w-full" placeholder="Opcional: escribe tu reflexión antes del quiz…"></textarea>
           </div>
           <div class="lesson-reader-actions">
-            ${exId ? `<button type="button" onclick="closeLesson();brainState.brainView='lab';startBrain('${exId}')" class="btn-secondary w-full">Practicar en laboratorio →</button>` : ''}
+            ${exId ? `<button type="button" onclick="closeLesson();goTrain('lab');startBrain('${exId}')" class="btn-secondary w-full">Practicar en laboratorio →</button>` : ''}
             <p class="lesson-complete-hint text-xs text-muted text-center mb-2">Interactúa con la lección para subir dominio</p>
             <button type="button" onclick="completeLesson('${L.id}')" class="btn-primary w-full lesson-complete-btn lesson-btn-glow">
               ${done ? 'Continuar al quiz' : 'Completar lectura → quiz (+30 XP)'}

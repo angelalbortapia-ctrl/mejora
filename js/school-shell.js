@@ -1,9 +1,10 @@
 /** Escuela — shell visual y sub-navegación */
 
-import { subTabBar } from './ui.js?v=141'
+import { subTabBar } from './ui.js?v=143'
 
 export const SCHOOL_SECTIONS = [
   { id: 'curriculum', label: 'Currículo', icon: '📅' },
+  { id: 'explore', label: 'Explorar', icon: '🔍' },
   { id: 'apply', label: 'Aplicación', icon: '🌍' },
   { id: 'library', label: 'Biblioteca', icon: '📚' },
   { id: 'cases', label: 'Casos', icon: '🏛️' },
@@ -12,6 +13,7 @@ export const SCHOOL_SECTIONS = [
 
 export function normalizeSchoolSection(section) {
   if (!section || section === 'curriculum') return 'curriculum'
+  if (section === 'academy' || section === 'catalog') return 'explore'
   return SCHOOL_SECTIONS.some(s => s.id === section) ? section : 'curriculum'
 }
 

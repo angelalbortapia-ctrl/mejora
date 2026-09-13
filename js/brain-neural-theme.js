@@ -1,4 +1,4 @@
-/** Tema neuronal compartido — hero, stats y envoltura visual */
+/** Tema neuronal compartido — hero, stats, pasos siguientes */
 
 import { esc } from './core.js'
 
@@ -14,7 +14,7 @@ export function renderNeuralHero({
   title = '',
   sub = '',
   stats = [],
-  compact = false,
+  compact = true,
   className = '',
 } = {}) {
   const cls = [
@@ -35,6 +35,26 @@ export function renderNeuralHero({
       ${stats.length ? `<div class="brain-neural-hero__stats">${stats.map(s => renderNeuralStat(s.val, s.lbl)).join('')}</div>` : ''}
     </div>
   </header>`
+}
+
+export function renderNextSteps(steps) {
+  const items = steps.filter(Boolean)
+  if (!items.length) return ''
+  return `<section class="brain-next-steps span-full">
+    <h2 class="brain-section-title">Tu siguiente paso</h2>
+    <ol class="brain-next-steps__list">
+      ${items.map((s, i) => `<li class="brain-next-step ${s.done ? 'is-done' : ''} ${s.primary ? 'is-primary' : ''}">
+        <span class="brain-next-step__num">${i + 1}</span>
+        <div class="brain-next-step__body">
+          <p class="brain-next-step__label">${esc(s.label)}</p>
+          ${s.meta ? `<p class="brain-next-step__meta">${esc(s.meta)}</p>` : ''}
+        </div>
+        ${s.done
+          ? '<span class="brain-next-step__badge">✓</span>'
+          : `<button type="button" class="btn-${s.primary ? 'primary' : 'secondary'} brain-next-step__btn" onclick="${s.action}">${esc(s.cta)}</button>`}
+      </li>`).join('')}
+    </ol>
+  </section>`
 }
 
 export function renderNeuralCard(content, { primary = false, className = '' } = {}) {

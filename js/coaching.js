@@ -134,7 +134,7 @@ export const HOME_SHORTCUTS = [
     icon: '🧠',
     title: 'Escuela',
     desc: '62 lecciones · 12 semanas',
-    onclick: "brainState.brainView='school';brainState.schoolFaculty=null;brainState.schoolSection='curriculum';brainState.activePaper=null;brainState.activeLesson=null;render(true)",
+    onclick: "goLearn('curriculum')",
   },
   {
     href: '#/meditacion',

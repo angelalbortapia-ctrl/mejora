@@ -1,7 +1,7 @@
 /** Bloques dinámicos para lecciones — checkpoints, flips, escenarios, gamificación */
 
-import { forgeSparkAt, haptic, celebrate, pulseElement } from './fx.js?v=141'
-import { playSuccess, playLevelUp, playStreak } from './sounds.js?v=141'
+import { forgeSparkAt, haptic, celebrate, pulseElement } from './fx.js?v=143'
+import { playSuccess, playLevelUp, playStreak } from './sounds.js?v=143'
 
 const MASTERY_RANKS = [
   { min: 0, label: 'Explorador', icon: '◎' },
@@ -962,7 +962,7 @@ export function bindLessonInteractions(vp) {
       registerEngagement(vp, 'lab', 'Camino al laboratorio', 3)
       if (typeof window.closeLesson === 'function' && typeof window.startBrain === 'function') {
         window.closeLesson()
-        window.brainState.brainView = 'lab'
+        window.goTrain?.('lab')
         window.startBrain(ex)
       }
     })

@@ -1,8 +1,8 @@
 /** Búsqueda global — lecciones, meditaciones, rutas */
 
-import { LESSONS } from './brain-academy.js?v=141'
-import { MEDITATIONS } from './meditations.js?v=141'
-import { NAV_SECTIONS } from './layout.js?v=141'
+import { LESSONS } from './brain-academy.js?v=143'
+import { MEDITATIONS } from './meditations.js?v=143'
+import { NAV_SECTIONS } from './layout.js?v=143'
 
 const EXTRA = [
   { label: 'Plan del día', href: '#/plan', type: 'Ruta' },

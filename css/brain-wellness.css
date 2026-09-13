@@ -732,6 +732,150 @@
   animation: none !important;
 }
 
+/* ── Tu siguiente paso ── */
+.brain-next-steps {
+  margin-top: 0.25rem;
+}
+
+.brain-next-steps__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.brain-next-step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--neural-border);
+  background: rgba(10, 18, 26, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.brain-next-step.is-primary {
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 24px var(--neural-glow);
+}
+
+.brain-next-step.is-done {
+  opacity: 0.72;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.brain-next-step__num {
+  flex: 0 0 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #e0f7ff;
+  background: rgba(34, 211, 238, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+}
+
+.brain-next-step__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.brain-next-step__label {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--m-text, var(--text-main));
+}
+
+.brain-next-step__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--m-muted, var(--text-muted));
+}
+
+.brain-next-step__btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.brain-next-step__badge {
+  font-size: 1rem;
+  color: #34d399;
+  flex-shrink: 0;
+}
+
+.brain-synapse-theater-wrap {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.brain-synapse-theater-wrap .brain-synapse-theater {
+  border-radius: 16px;
+  border: 1px solid var(--neural-border);
+  overflow: hidden;
+}
+
+.brain-quick-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.brain-quick-nav__btn {
+  flex: 1;
+  min-width: 7rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--neural-border);
+  background: rgba(10, 18, 26, 0.85);
+  color: #a5f3fc;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.brain-quick-nav__btn:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.1);
+  transform: translateY(-1px);
+}
+
+.brain-region-node {
+  cursor: pointer;
+}
+
+.catalog-reset-btn {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.catalog-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-brain-neural .catalog-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.45rem;
+}
+
+@media (max-width: 640px) {
+  .page-brain-neural .catalog-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    Componentes neurales globales en Gimnasia
    ═══════════════════════════════════════════════════════════ */

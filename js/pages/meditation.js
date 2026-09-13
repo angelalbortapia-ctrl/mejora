@@ -6,7 +6,7 @@ import { isUnlocked } from '../unlocks.js'
 function guardDifficulty(d) {
   return d === 'experto' && !isUnlocked('diff_expert') ? 'medio' : d
 }
-import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '../meditations.js?v=141'
+import { MEDITATIONS, MEDITATION_PROGRAMS, MED_CATEGORIES, getProgramCatalog, getAmbientLabel, getSessionAmbient } from '../meditations.js?v=143'
 import {
   medState, MED_DURATIONS, clearMedTimers, stopMeditationSession,
   startMeditation, startFreeTimer, finishFreeTimer, startProgramSession,
@@ -17,7 +17,7 @@ import {
   getSleepStats, getSleepLog, logSleep, getBreathCoherenceLog,
   medAmbientVol, syncMedVoiceFromSettings, setMedVoiceEnabled, getMedVoiceLabel,
   getBreathPhaseMs, toggleMeditationPause, pauseMeditationSession, resumeMeditationSession,
-} from '../meditation-service.js?v=141'
+} from '../meditation-service.js?v=143'
 import {
   initMeditationVoice, isMeditationVoiceSupported, getSelectedVoiceURI,
   setMeditationVoiceURI, getMedVoiceRate, setMedVoiceRate, previewMeditationVoice,
@@ -26,12 +26,12 @@ import {
   listAzureVoiceOptions, listGeminiVoiceOptions,
   getStepInstructionText, getStepCueText,
   unlockMeditationAudioOnGesture,
-} from '../meditation-voice.js?v=141'
+} from '../meditation-voice.js?v=143'
 import {
   listFishVoiceOptions, getFishVoiceId, getFishSpeed, setFishVoiceId, setFishSpeed,
-} from '../fish-audio-tts.js?v=141'
+} from '../fish-audio-tts.js?v=143'
 import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '../meditation-adaptive.js'
-import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '../ambient-audio.js?v=141'
+import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '../ambient-audio.js?v=143'
 import { sunsetBannerHTML } from '../apis.js'
 import { icon } from '../icons.js'
 
@@ -760,12 +760,12 @@ export function bindMeditationGlobals() {
     window.render?.()
   }
   window.setAzureVoice = async (id) => {
-    const { setAzureVoiceId } = await import('../azure-tts.js?v=141')
+    const { setAzureVoiceId } = await import('../azure-tts.js?v=143')
     setAzureVoiceId(id)
     window.render?.()
   }
   window.setGeminiVoice = async (id) => {
-    const { setGeminiVoiceId } = await import('../gemini-tts.js?v=141')
+    const { setGeminiVoiceId } = await import('../gemini-tts.js?v=143')
     setGeminiVoiceId(id)
     window.render?.()
   }
