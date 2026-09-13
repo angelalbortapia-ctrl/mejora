@@ -5,13 +5,13 @@ import {
   LESSONS, LEGENDARY_HALL, getCompletedLessons, getAcademyWeekIndex,
   isLessonUnlocked, getLesson, renderLessonCard, getLessonQuiz,
   getDailyNeuroPunch, getWeeklyLessonMeta,
-} from './brain-academy.js?v=143'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=143'
-import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=143'
-import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=143'
-import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=143'
-import { renderLibraryList } from './school-library.js?v=143'
-import { renderExploreContent } from './school-catalog.js?v=143'
+} from './brain-academy.js?v=145'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=145'
+import { FACULTIES, CURRICULUM } from './school-curriculum.js?v=145'
+import { renderFacultyCertificateBanner, renderCertificatesGrid, isFacultyComplete } from './school-certificates.js?v=145'
+import { wrapSchoolPage, renderZoneHead, normalizeSchoolSection } from './school-shell.js?v=145'
+import { renderLibraryList } from './school-library.js?v=145'
+import { renderExploreContent } from './school-catalog.js?v=145'
 
 export { FACULTIES, CURRICULUM }
 
@@ -194,7 +194,7 @@ function renderCurrentWeekFocus(block, stats) {
 
 function facultyCard(id, faculty) {
   const p = getFacultyProgress(id)
-  return `<a href="#/gimnasia" onclick="event.preventDefault();goLearn('curriculum',{faculty:'${id}'})" class="school-faculty-card no-underline" style="--faculty-color:${faculty.color}">
+  return `<a href="#/gimnasia/aprender" onclick="event.preventDefault();goLearn('curriculum',{faculty:'${id}',skipRender:true});navigate('/gimnasia/aprender')" class="school-faculty-card no-underline" style="--faculty-color:${faculty.color}">
     <span class="school-faculty-icon">${faculty.icon}</span>
     <div class="school-faculty-body">
       <h3 class="school-faculty-title">${faculty.label}</h3>

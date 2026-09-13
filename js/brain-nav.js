@@ -26,7 +26,7 @@ export function goBrainTab(view, opts = {}) {
   if (opts.resetFaculty) s.schoolFaculty = null
   if (opts.resetPaper) { s.activePaper = null; s.paperMeta = null }
   if (opts.resetLesson) { s.activeLesson = null; s.lessonFlow = null }
-  renderNow(true)
+  if (!opts.skipRender) renderNow(true)
 }
 
 export function goLearn(section = 'curriculum', opts = {}) {
@@ -34,6 +34,7 @@ export function goLearn(section = 'curriculum', opts = {}) {
     faculty = null,
     resetLesson = true,
     resetPaper = true,
+    skipRender = false,
     ...rest
   } = opts
   goBrainTab('learn', {
@@ -41,16 +42,17 @@ export function goLearn(section = 'curriculum', opts = {}) {
     schoolFaculty: faculty,
     resetPaper,
     resetLesson,
+    skipRender,
     ...rest,
   })
 }
 
-export function goTrain(section = 'program') {
-  goBrainTab('train', { trainSection: section, resetLesson: true })
+export function goTrain(section = 'program', opts = {}) {
+  goBrainTab('train', { trainSection: section, resetLesson: true, ...opts })
 }
 
-export function goBody(section = 'nutrition') {
-  goBrainTab('body', { bodySection: section })
+export function goBody(section = 'nutrition', opts = {}) {
+  goBrainTab('body', { bodySection: section, ...opts })
 }
 
 export function goHome() {
@@ -66,7 +68,7 @@ export function startTodaySession(repeat = false) {
 export function exploreRegion(regionId) {
   if (typeof window.brainState === 'undefined') return
   window.brainState.catalogFilter = { ...window.brainState.catalogFilter, region: regionId }
-  goLearn('explore')
+  goLearn('explore', { skipRender: true })
   if (typeof window.navigate === 'function') window.navigate('/gimnasia/catalogo')
 }
 

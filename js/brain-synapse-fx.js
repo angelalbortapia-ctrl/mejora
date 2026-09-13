@@ -129,6 +129,10 @@ export function unmountSynapseField(canvasId) {
   else [...runtimes.keys()].forEach(teardown)
 }
 
+export function isSynapseFieldMounted(canvasId = 'brain-synapse-canvas') {
+  return runtimes.has(canvasId)
+}
+
 export function mountSynapseField(canvasId = 'brain-synapse-canvas', options = {}) {
   teardown(canvasId)
   const canvas = document.getElementById(canvasId)
@@ -155,10 +159,13 @@ export function mountSynapseField(canvasId = 'brain-synapse-canvas', options = {
 
   function resize() {
     const shell = document.getElementById('brain-gym-shell')
-    const base = mode === 'ambient' && shell ? shell : canvas.parentElement
+    const visual = canvas.closest('.brain-synapse-visual')
+    const base = mode === 'ambient' && shell ? shell : (visual || canvas.parentElement)
     const rect = base?.getBoundingClientRect()
     w = Math.max(280, rect?.width || canvas.clientWidth || 720)
-    h = Math.max(cfg.minH, rect?.height || canvas.clientHeight || (mode === 'ambient' ? 480 : 420))
+    h = mode === 'theater'
+      ? Math.max(220, Math.min(280, rect?.height || visual?.clientHeight || 260))
+      : Math.max(cfg.minH, rect?.height || canvas.clientHeight || 480)
     canvas.width = Math.floor(w * dpr)
     canvas.height = Math.floor(h * dpr)
     canvas.style.width = `${w}px`
@@ -170,7 +177,9 @@ export function mountSynapseField(canvasId = 'brain-synapse-canvas', options = {
   const ro = typeof ResizeObserver !== 'undefined'
     ? new ResizeObserver(() => resize())
     : null
-  ro?.observe(mode === 'ambient' ? document.getElementById('brain-gym-shell') || canvas : canvas.parentElement || canvas)
+  ro?.observe(mode === 'ambient'
+    ? document.getElementById('brain-gym-shell') || canvas
+    : canvas.closest('.brain-synapse-visual') || canvas.parentElement || canvas)
 
   function onPointer(e) {
     const rect = canvas.getBoundingClientRect()

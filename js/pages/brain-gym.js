@@ -5,7 +5,7 @@ import {
   getStats, updateStats, recordActivity, checkPlanTask, addXp, setRecord,
 } from '../core.js'
 import {
-  genMathProblem, getMemoryConfig, getSimonConfig, getLogicPuzzles, getWordGroup, getAnagrams, pickSequence,
+  genMathProblem, getMemoryConfig, getSimonConfig, getLogicPuzzles, getWordGroup, getAnagrams, pickSequence, COLORS,
 } from '../content.js'
 import {
   COGNITIVE_DOMAINS, EXERCISES, getTodaysSession, getDomainProgress, getProgramStats,
@@ -15,32 +15,33 @@ import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
   initSymbols, flankerArrows, getSwitchAnswer, STROOP_COLORS,
 } from '../brain-exercises.js'
-import { subTabBar, emptyState } from '../ui.js?v=143'
+import { subTabBar, emptyState } from '../ui.js?v=145'
 import { playTone, playClick, playSuccess } from '../sounds.js'
 import { guardDifficulty, difficultyPicker } from '../page-helpers.js'
 import { showToast, awardXp, processPlanAwards } from '../awards.js'
 import { parsePath, navigate } from '../router.js'
 import {
-  getDailyLesson, getWeeklyLesson, getWeeklyLessonMeta, LESSONS, LAB_EXERCISE_IDS, LAB_EXERCISE_GROUPS, EXERCISE_REAL_WORLD,
-  renderLessonCard, renderLessonFull, renderNeuroPunchBanner, renderDebateBanner, renderLegendaryHall,
-  renderHomeNeuroCard, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
-  getSessionDebrief, isLessonUnlocked, getUnlockedLessonCount, isLegendaryLesson, getLessonBonusXp,
-} from '../brain-academy.js?v=143'
+  LESSONS, LAB_EXERCISE_IDS, LAB_EXERCISE_GROUPS, EXERCISE_REAL_WORLD,
+  renderLessonFull, renderLessonPostFlow, getLessonQuiz, markLessonComplete, getCompletedLessons,
+  getSessionDebrief, isLessonUnlocked, getLessonBonusXp,
+} from '../brain-academy.js?v=145'
 import {
-  renderSchoolHub, completeLessonReview, renderHomeReviewBanner,
+  renderSchoolHub, completeLessonReview,
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats, getBrainRegionProgress,
-} from '../school.js?v=143'
-import { patchCatalogUI } from '../school-catalog.js?v=143'
-import { wrapSchoolPage } from '../school-shell.js?v=143'
-import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '../school-library.js?v=143'
-import { downloadFacultyCertificate, checkAndIssueCertificates } from '../school-certificates.js?v=143'
-import { renderInicioHub, renderBodyHub } from '../brain-wellness.js?v=143'
-import { mountSynapseField, unmountSynapseField } from '../brain-synapse-fx.js?v=143'
-import { renderNeuralHero } from '../brain-neural-theme.js?v=143'
-import { normalizeBrainView, bindBrainNavGlobals, goTrain, goBrainTab, goLearn } from '../brain-nav.js?v=143'
+} from '../school.js?v=145'
+import { patchCatalogUI } from '../school-catalog.js?v=145'
+import { wrapSchoolPage } from '../school-shell.js?v=145'
+import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '../school-library.js?v=145'
+import { downloadFacultyCertificate, checkAndIssueCertificates } from '../school-certificates.js?v=145'
+import { renderInicioHub, renderBodyHub } from '../brain-wellness.js?v=145'
+import { mountSynapseField, unmountSynapseField, isSynapseFieldMounted } from '../brain-synapse-fx.js?v=145'
+import { renderNeuralHero } from '../brain-neural-theme.js?v=145'
+import { normalizeBrainView, bindBrainNavGlobals, goTrain, goBrainTab, goLearn } from '../brain-nav.js?v=145'
 
 let catalogFilterTimer = null
 let lastSynapseView = null
+let synapseCanvasEl = null
+let mathTimer = null
 
 function render(immediate = false) {
   if (typeof window.render === 'function') window.render(immediate)
@@ -57,8 +58,14 @@ let brainState = {
   nback: {}, stroop: {}, flanker: {}, switching: {}, gonogo: {}, corsi: {}, symbols: {},
 }
 let brainTimers = []
-function clearBrainTimers() { brainTimers.forEach(t => clearTimeout(t)); brainTimers = [] }
-let logicSession = { puzzles: [], index: 0, score: 0, difficulty: 'medio', finished: false, selected: null }
+function clearBrainTimers() {
+  brainTimers.forEach(t => clearTimeout(t))
+  brainTimers = []
+  if (mathTimer) {
+    clearInterval(mathTimer)
+    mathTimer = null
+  }
+}
 // --- Brain Gym (programa neurociencia + academia) ---
 function getLabExercises() {
   return LAB_EXERCISE_IDS.map(id => EXERCISES[id]).filter(Boolean)
@@ -123,7 +130,7 @@ function renderBrainTabsHtml() {
       const on = active === t.id
       return `<button type="button" role="tab" aria-selected="${on}"
         class="ds-tab ${on ? 'is-active' : ''}"
-        onclick="${BRAIN_TAB_EPHEMERAL_RESET}goBrainTab('${t.id}');navigate('${BRAIN_TAB_HASH[t.id]}')">
+        onclick="${BRAIN_TAB_EPHEMERAL_RESET}goBrainTab('${t.id}',{skipRender:true});navigate('${BRAIN_TAB_HASH[t.id]}')">
         <span class="ds-tab-icon" aria-hidden="true">${t.icon}</span>
         <span>${t.label}</span>
       </button>`
@@ -277,10 +284,15 @@ export function syncBrainSynapseFx() {
     lastSynapseView = null
     return
   }
-  if (lastSynapseView === 'home' && document.getElementById('brain-synapse-canvas')) return
+  const canvas = document.getElementById('brain-synapse-canvas')
+  if (canvas && canvas === synapseCanvasEl && isSynapseFieldMounted('brain-synapse-canvas')) return
+  unmountSynapseField('brain-synapse-canvas')
+  synapseCanvasEl = canvas
   lastSynapseView = 'home'
+  if (!canvas) return
   requestAnimationFrame(() => {
     mountSynapseField('brain-synapse-canvas', { regions: getBrainRegionProgress(), mode: 'theater' })
+    synapseCanvasEl = document.getElementById('brain-synapse-canvas')
   })
 }
 
@@ -301,7 +313,13 @@ function renderBrainGym() {
       </div>`
     }
     const lesson = LESSONS.find(l => l.id === brainState.activeLesson)
-    return lesson ? renderLessonFull(lesson) : ''
+    if (!lesson) {
+      brainState.activeLesson = null
+      brainState.lessonFlow = null
+      navigate('/gimnasia/aprender')
+      return renderBrainHubShell()
+    }
+    return renderLessonFull(lesson)
   }
 
   return renderBrainHubShell()
@@ -401,6 +419,8 @@ window.launchSessionExercise = function() {
 }
 
 window.submitSessionDebrief = function(avgPct) {
+  const note = document.getElementById('session-debrief-text')?.value?.trim()
+  if (note) setItem('lastSessionDebrief', { note, at: getToday(), avg: avgPct })
   finishGuidedSession(avgPct)
 }
 
@@ -1010,11 +1030,10 @@ window.openLesson = function(id) {
     showToast('Esta lección se desbloquea semana a semana en el catálogo', 0, 'mental')
     return
   }
-  goLearn(brainState.schoolSection || 'curriculum', { resetLesson: false, resetPaper: true })
+  goLearn(brainState.schoolSection || 'curriculum', { resetLesson: false, resetPaper: true, skipRender: true })
   brainState.activeLesson = id
   brainState.lessonFlow = null
   navigate(`/gimnasia/leccion/${id}`)
-  render()
 }
 
 window.closeLesson = function() {
@@ -1066,7 +1085,7 @@ window.finishLessonFlow = function(skipReflect = false) {
   brainState.lessonFlow = null
   brainState.activeLesson = null
   checkAndIssueCertificates()
-  goLearn(section)
+  goLearn(section, { skipRender: true })
   navigate('/gimnasia/aprender')
 }
 
@@ -1097,10 +1116,9 @@ window.resetCatalogFilter = function() {
 }
 
 window.startReviewQuiz = function(id) {
-  goLearn('curriculum')
   brainState.reviewFlow = { id, quizIndex: 0, quizScore: 0, phase: 'quiz' }
+  goLearn('curriculum', { skipRender: true })
   navigate('/gimnasia/aprender')
-  render()
 }
 
 window.answerReviewQuiz = function(choice) {
@@ -1124,12 +1142,12 @@ window.answerReviewQuiz = function(choice) {
 
 window.finishReviewQuiz = function() {
   brainState.reviewFlow = null
-  goLearn('curriculum')
+  goLearn('curriculum', { skipRender: true })
   navigate('/gimnasia/aprender')
 }
 
 window.openLibrary = function() {
-  goLearn('library')
+  goLearn('library', { skipRender: true })
   navigate('/gimnasia/biblioteca')
 }
 
@@ -1186,15 +1204,14 @@ window.downloadFacultyCert = function(id) {
 }
 
 window.goToLesson = function(id) {
-  goLearn('curriculum', { resetLesson: false })
+  goLearn('curriculum', { resetLesson: false, skipRender: true })
   brainState.activeLesson = id
   brainState.lessonFlow = null
   navigate(`/gimnasia/leccion/${id}`)
-  render(true)
 }
 
 window.goToLab = function(id) {
-  goTrain('lab')
+  goTrain('lab', { skipRender: true })
   startBrain(id)
   navigate('/gimnasia/laboratorio')
 }
@@ -1202,7 +1219,7 @@ window.goToLab = function(id) {
 window.startLessonPractice = function(exId) {
   brainState.lessonFlow = null
   brainState.activeLesson = null
-  goTrain('lab')
+  goTrain('lab', { skipRender: true })
   startBrain(exId)
   navigate('/gimnasia/laboratorio')
 }
@@ -1319,7 +1336,6 @@ function renderMathGame() {
   </div>`)
 }
 
-let mathTimer = null
 window.mathStart = function() {
   const m = brainState.math
   m.active = true; m.score = 0; m.problem = genMathProblem(m.difficulty); m.answer = ''; m.feedback = null
@@ -1402,12 +1418,17 @@ export function syncGimnasiaRoute(sub = []) {
 
 export function clearEphemeralBrainState() {
   clearBrainTimers()
+  brainState.mode = 'hub'
+  brainState.session = null
   brainState.activeLesson = null
   brainState.lessonFlow = null
   brainState.activePaper = null
   brainState.paperMeta = null
   brainState.reviewFlow = null
   brainState.exercise = null
+  unmountSynapseField()
+  synapseCanvasEl = null
+  lastSynapseView = null
 }
 
 export function bindBrainGymGlobals() {

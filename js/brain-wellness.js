@@ -4,10 +4,10 @@ import { esc } from './core.js'
 import { getProgramStats, getDomainProgress, getTodaysSession } from './brain-program.js'
 import {
   getBrainRegionProgress, getSchoolStats, getCurrentSchoolWeek, getDueReviews,
-} from './school.js?v=143'
-import { getWeeklyLesson, getWeeklyLessonMeta, getCompletedLessons } from './brain-academy.js?v=143'
-import { renderNeuralHero, renderNextSteps } from './brain-neural-theme.js?v=143'
-import { subTabBar } from './ui.js?v=143'
+} from './school.js?v=145'
+import { getWeeklyLesson, getCompletedLessons } from './brain-academy.js?v=145'
+import { renderNeuralHero, renderNextSteps } from './brain-neural-theme.js?v=145'
+import { subTabBar } from './ui.js?v=145'
 
 const NUTRITION_PROTOCOLS = [
   { icon: '🐟', title: 'Omega-3 y DHA', lead: 'Grasas esenciales para membranas neuronales y plasticidad.', bullets: ['2–3 raciones/semana de pescado azul o alga DHA', 'Nueces, chía y linaza como respaldo vegetal', 'Evita freír: el calor oxida los ácidos grasos'], lesson: 'bdnf-exercise', tag: 'Membranas · sinapsis' },
@@ -120,18 +120,20 @@ export function renderInicioHub() {
   })}
     ${nextSteps}
     ${quickNav()}
-    <div class="brain-synapse-theater-wrap span-full">
+    <div class="brain-synapse-theater-wrap">
       <div class="brain-synapse-theater" aria-label="Visualización de red neuronal">
-        <div class="brain-synapse-theater__scan" aria-hidden="true"></div>
-        <div class="brain-synapse-theater__vignette" aria-hidden="true"></div>
-        <canvas id="brain-synapse-canvas" class="brain-synapse-canvas" aria-hidden="true"></canvas>
-        <div class="brain-synapse-hud">
-          <div class="brain-synapse-hud__pill brain-synapse-hud__pill--live">
-            <span class="brain-synapse-live-dot"></span> ${activeRegions}/${regions.length} regiones activas
+        <div class="brain-synapse-visual">
+          <canvas id="brain-synapse-canvas" class="brain-synapse-canvas" aria-hidden="true"></canvas>
+          <div class="brain-synapse-theater__scan" aria-hidden="true"></div>
+          <div class="brain-synapse-theater__vignette" aria-hidden="true"></div>
+          <div class="brain-synapse-hud">
+            <div class="brain-synapse-hud__pill brain-synapse-hud__pill--live">
+              <span class="brain-synapse-live-dot"></span> ${activeRegions}/${regions.length} regiones activas
+            </div>
+            <p class="brain-synapse-hud__hint">Clic en una región abajo para explorar lecciones</p>
           </div>
-          <p class="brain-synapse-hud__hint">Clic en una región para explorar lecciones</p>
         </div>
-        <div class="brain-region-orbit">${regions.map(regionNodeCard).join('')}</div>
+        <div class="brain-region-strip">${regions.map(regionNodeCard).join('')}</div>
       </div>
     </div>
     <section class="brain-domains-orbit span-full">

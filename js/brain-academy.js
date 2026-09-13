@@ -1,15 +1,15 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
 import { getItem, setItem, getWeekNumber } from './core.js'
-import { forgeSparkAt, haptic } from './fx.js?v=143'
+import { forgeSparkAt, haptic } from './fx.js?v=145'
 import {
   applyDynamicLesson, bindLessonInteractions, renderLessonBlocks,
   LESSON_BLOCK_PRE, LESSON_BLOCK_POST, initLessonEngagement,
   renderLessonEngagementHud, renderLessonMasteryRecap, renderLessonFxLayers, getLessonBonusXp,
-} from './lesson-dynamic.js?v=143'
-import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=143'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=143'
-import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=143'
+} from './lesson-dynamic.js?v=145'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=145'
+import { APPLY_LESSONS } from './school-apply-lessons.js?v=145'
+import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=145'
 
 const ACADEMY_START_KEY = 'academyStart'
 
@@ -1175,7 +1175,7 @@ export function markLessonComplete(id) {
   if (!done.includes(id)) {
     done.push(id)
     setItem('lessons_done', done)
-    import('./school.js').then(m => m.scheduleLessonReview(id)).catch(() => {})
+    import('./school.js?v=145').then(m => m.scheduleLessonReview(id)).catch(() => {})
   }
   return done
 }

@@ -8,8 +8,8 @@ import {
   HOME_SHORTCUTS, getDailyIntention, MOOD_COACH,
 } from '../coaching.js'
 import { homeInsightHTML } from '../apis.js'
-import { renderHomeNeuroCard } from '../brain-academy.js?v=143'
-import { renderHomeReviewBanner } from '../school.js?v=143'
+import { renderHomeNeuroCard } from '../brain-academy.js?v=145'
+import { renderHomeReviewBanner } from '../school.js?v=145'
 import { getPremiumCoach } from '../coach-engine.js'
 
 function greeting() {

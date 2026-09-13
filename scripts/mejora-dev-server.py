@@ -131,7 +131,7 @@ def json_bytes(obj):
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 5173
     server = http.server.ThreadingHTTPServer(('127.0.0.1', port), MejoraHandler)
-    print(f'Mejora → http://127.0.0.1:{port}/?v=124  (Fish proxy /api/fish/*)')
+    print(f'Mejora → http://127.0.0.1:{port}/?v=145  (Fish proxy /api/fish/*)')
     if load_fish_key():
         print('Fish API key: OK (fish-config.local.js)')
     else:

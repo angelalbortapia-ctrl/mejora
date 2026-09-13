@@ -1,7 +1,7 @@
 /** Bloques dinámicos para lecciones — checkpoints, flips, escenarios, gamificación */
 
-import { forgeSparkAt, haptic, celebrate, pulseElement } from './fx.js?v=143'
-import { playSuccess, playLevelUp, playStreak } from './sounds.js?v=143'
+import { forgeSparkAt, haptic, celebrate, pulseElement } from './fx.js?v=145'
+import { playSuccess, playLevelUp, playStreak } from './sounds.js?v=145'
 
 const MASTERY_RANKS = [
   { min: 0, label: 'Explorador', icon: '◎' },

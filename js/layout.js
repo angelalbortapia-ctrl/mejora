@@ -1,4 +1,4 @@
-import { icon, rankIcon } from './icons.js?v=143'
+import { icon, rankIcon } from './icons.js?v=145'
 
 /** Navegación — 5 destinos claros */
 export const NAV_SECTIONS = [
@@ -7,7 +7,7 @@ export const NAV_SECTIONS = [
     items: [
       { path: '/', label: 'Hoy', iconKey: 'home', desc: 'Tu día' },
       { path: '/mejora', label: 'Hábitos', iconKey: 'habit', desc: 'Ejecuta sin excusas' },
-      { path: '/gimnasia', label: 'Escuela', iconKey: 'brain', desc: 'Currículo · 52 lecciones' },
+      { path: '/gimnasia', label: 'Gimnasia', iconKey: 'brain', desc: 'Aprender · entrenar · cuerpo' },
       { path: '/meditacion', label: 'Calma', iconKey: 'calm', desc: 'Control bajo presión' },
       { path: '/perfil', label: 'Tú', iconKey: 'profile', desc: 'Progreso y logros' },
     ],
@@ -32,7 +32,7 @@ export const NAV_PATHS = [
 export const BOTTOM_NAV = [
   { path: '/', iconKey: 'home', label: 'Hoy' },
   { path: '/mejora', iconKey: 'habit', label: 'Hábitos' },
-  { path: '/gimnasia', iconKey: 'brain', label: 'Escuela' },
+  { path: '/gimnasia', iconKey: 'brain', label: 'Gimnasia' },
   { path: '/meditacion', iconKey: 'calm', label: 'Calma' },
   { path: '/perfil', iconKey: 'profile', label: 'Tú' },
 ]
