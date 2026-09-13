@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 174
+const ASSET_V = 175
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -120,7 +120,11 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(() =>
+      self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(c => c.postMessage({ type: 'APP_UPDATED', version: ASSET_V }))
+      })
+    )
   )
 })
 
@@ -165,7 +169,15 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url)
   if (url.origin !== location.origin) return
 
-  if (isShellAsset(url) || SHELL_HTML.includes(relPath(url))) {
+  const rel = relPath(url)
+  if (rel === '/js/version.js' || rel.startsWith('/js/version.js?')) {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' }).catch(() => caches.match(e.request))
+    )
+    return
+  }
+
+  if (isShellAsset(url) || SHELL_HTML.includes(rel)) {
     e.respondWith(staleWhileRevalidate(e.request))
     return
   }

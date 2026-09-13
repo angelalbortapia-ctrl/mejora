@@ -4,7 +4,47 @@ import { getItem, setItem, getToday, esc } from '/js/core.js'
 
 export const PRACTICE_TRIALS = 3
 const HISTORY_KEY = 'brainProtocolHistory'
+const SEEN_BRIEF_KEY = 'brainProtocolsSeen'
 const MAX_HISTORY = 10
+
+export function hasSeenProtocolBrief(exerciseId) {
+  return Boolean(getItem(SEEN_BRIEF_KEY, {})[exerciseId])
+}
+
+export function markProtocolBriefSeen(exerciseId) {
+  if (!exerciseId) return
+  const seen = getItem(SEEN_BRIEF_KEY, {})
+  seen[exerciseId] = getToday()
+  setItem(SEEN_BRIEF_KEY, seen)
+}
+
+/** Compara la sesión actual con el historial propio del usuario (sin normas poblacionales). */
+export function interpretVsHistory(metrics, history = []) {
+  const past = history
+    .slice(1)
+    .map(h => h.metrics?.accuracy)
+    .filter(v => typeof v === 'number')
+  if (!past.length) {
+    return {
+      text: 'Primera sesión con historial — sigue entrenando para ver comparativas personales.',
+      delta: null,
+      avg: null,
+      percentile: null,
+    }
+  }
+  const avg = Math.round(mean(past))
+  const delta = (metrics?.accuracy ?? 0) - avg
+  const better = past.filter(v => (metrics?.accuracy ?? 0) >= v).length
+  const percentile = Math.round((better / past.length) * 100)
+  let text
+  if (delta >= 8) text = `Estás ${delta} pp por encima de tu promedio reciente (${avg}%).`
+  else if (delta >= 3) text = `Por encima de tu media habitual (${avg}%) — buena sesión.`
+  else if (delta <= -8) text = `Hoy quedaste ${Math.abs(delta)} pp por debajo de tu promedio (${avg}%). Repite descansado.`
+  else if (delta <= -3) text = `Ligeramente por debajo de tu media (${avg}%). Normal en días de fatiga.`
+  else text = `Rendimiento estable: ${metrics?.accuracy ?? 0}% vs tu promedio de ${avg}%.`
+  if (past.length >= 3 && percentile >= 80) text += ' Estás en tu mejor tercio reciente.'
+  return { text, delta, avg, percentile }
+}
 
 export function createTrialLog() {
   return { practice: [], scored: [] }
@@ -305,11 +345,15 @@ export function renderClinicalReport(exerciseId, metrics, finishBtnHtml, history
       `<div class="brain-report-trend__bar" style="height:${Math.max(8, v)}%" title="${history[i]?.date}: ${v}%"><span>${v}%</span></div>`
     ).join('')}</div>`
     : '<p class="brain-report-trend-empty">Primera sesión registrada — sigue entrenando para ver tendencia.</p>'
+  const interp = interpretVsHistory(metrics, history)
 
   return `<div class="brain-clinical-report">
     <header class="brain-clinical-report__head">
       <p class="brain-clinical-report__kicker">Informe de protocolo</p>
       <p class="brain-clinical-report__score">${metrics.accuracy}%</p>
+      ${interp.avg != null
+        ? `<p class="brain-clinical-report__interp">${esc(interp.text)}</p>`
+        : `<p class="brain-clinical-report__interp brain-clinical-report__interp--new">${esc(interp.text)}</p>`}
       ${best && best.metrics?.accuracy > metrics.accuracy
         ? `<p class="brain-clinical-report__record">Récord: ${best.metrics.accuracy}% (${best.date})</p>`
         : best ? '<p class="brain-clinical-report__record">¡Nuevo récord personal!</p>' : ''}

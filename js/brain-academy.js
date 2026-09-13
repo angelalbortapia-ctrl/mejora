@@ -938,6 +938,7 @@ export const EXERCISE_REAL_WORLD = {
 export const LAB_EXERCISE_IDS = [
   'dualnback', 'nback', 'visnback', 'corsi', 'revspan', 'stroop', 'gonogo', 'flanker', 'switching',
   'cpt', 'pasat', 'ant', 'trail', 'wisconsin', 'symbols', 'reaction', 'logic',
+  'math', 'anagram', 'oddout',
 ]
 
 export const LAB_EXERCISE_GROUPS = [
@@ -960,6 +961,11 @@ export const LAB_EXERCISE_GROUPS = [
     id: 'speed',
     label: 'Velocidad y razonamiento',
     ids: ['symbols', 'reaction', 'logic'],
+  },
+  {
+    id: 'casual',
+    label: 'Entrenamiento casual',
+    ids: ['math', 'anagram', 'oddout'],
   },
 ]
 

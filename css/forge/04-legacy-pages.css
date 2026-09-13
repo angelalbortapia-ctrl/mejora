@@ -1446,6 +1446,37 @@ html.reduce-motion .app-aurora-orb {
   opacity: 0.2;
 }
 
+html.reduce-motion .brain-trial-flash {
+  animation: none !important;
+}
+
+html.reduce-motion .brain-pace-ring__fill {
+  transition: none !important;
+}
+
+html.reduce-motion .brain-cpt-letter {
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+html.reduce-motion .brain-trail-node {
+  transition: none !important;
+}
+
+html.reduce-motion .brain-wc-card,
+html.reduce-motion .brain-wc-target {
+  transition: none !important;
+}
+
+html.reduce-motion .brain-corsi-3d.is-lit {
+  transform: none !important;
+}
+
+html.reduce-motion .brain-ant-cue {
+  animation: none !important;
+}
+
 .mission-brief,
 .plan-mission-brief {
   display: block;
@@ -2139,8 +2170,15 @@ html.reduce-motion .app-aurora-orb {
   margin: 0.2rem 0 0;
 }
 
-.brain-protocol-tag {
+.brain-protocol-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   margin-left: auto;
+  justify-content: flex-end;
+}
+
+.brain-protocol-tag {
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2150,6 +2188,46 @@ html.reduce-motion .app-aurora-orb {
   color: var(--primary);
   background: color-mix(in srgb, var(--primary) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.brain-protocol-tag--clinical {
+  color: #0d9488;
+  background: color-mix(in srgb, #0d9488 14%, transparent);
+  border-color: color-mix(in srgb, #0d9488 30%, transparent);
+}
+
+.brain-protocol-tag--casual {
+  color: #a16207;
+  background: color-mix(in srgb, #eab308 16%, transparent);
+  border-color: color-mix(in srgb, #ca8a04 28%, transparent);
+}
+
+.brain-protocol-card__brief-link {
+  margin-top: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.brain-protocol-card__brief-link:hover {
+  opacity: 0.85;
+}
+
+.brain-clinical-report__interp {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0.35rem 0 0;
+  text-align: center;
+}
+
+.brain-clinical-report__interp--new {
+  font-style: italic;
 }
 
 .brain-protocol-card__desc {

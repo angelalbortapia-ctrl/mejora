@@ -410,6 +410,28 @@ window.addEventListener('beforeinstallprompt', (e) => {
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   let waitingWorker = null
   let swReloadPending = false
+
+  async function fetchRemoteAssetVersion() {
+    const res = await fetch(`./js/version.js?_=${Date.now()}`, { cache: 'no-store' })
+    const text = await res.text()
+    const m = text.match(/ASSET_VERSION\s*=\s*(\d+)/)
+    return m ? Number(m[1]) : null
+  }
+
+  async function applyPendingAppUpdate() {
+    swReloadPending = true
+    const reg = await navigator.serviceWorker.getRegistration()
+    if (reg?.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+    else location.reload()
+  }
+
+  async function checkForNewAssetVersion() {
+    try {
+      const remote = await fetchRemoteAssetVersion()
+      if (remote && remote > ASSET_VERSION) await applyPendingAppUpdate()
+    } catch { /* sin red */ }
+  }
+
   navigator.serviceWorker.register(`./service-worker.js?v=${ASSET_VERSION}`, { scope: './' }).then(reg => {
     reg.update().catch(() => {})
     reg.addEventListener('updatefound', () => {
@@ -418,17 +440,38 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       worker.addEventListener('statechange', () => {
         if (worker.state === 'installed' && navigator.serviceWorker.controller) {
           waitingWorker = worker
-          showUpdateToast(() => {
-            swReloadPending = true
-            waitingWorker?.postMessage({ type: 'SKIP_WAITING' })
+          fetchRemoteAssetVersion().then(remote => {
+            if (remote && remote > ASSET_VERSION) {
+              applyPendingAppUpdate()
+              return
+            }
+            showUpdateToast(() => {
+              swReloadPending = true
+              waitingWorker?.postMessage({ type: 'SKIP_WAITING' })
+            })
+          }).catch(() => {
+            showUpdateToast(() => {
+              swReloadPending = true
+              waitingWorker?.postMessage({ type: 'SKIP_WAITING' })
+            })
           })
         }
       })
     })
   }).catch(() => {})
+
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data?.type === 'APP_UPDATED' && Number(e.data.version) > ASSET_VERSION) {
+      applyPendingAppUpdate()
+    }
+  })
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (swReloadPending) location.reload()
   })
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForNewAssetVersion()
+  })
+  checkForNewAssetVersion()
 }
 
 function showWrongServerBanner() {

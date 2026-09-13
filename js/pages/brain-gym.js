@@ -10,7 +10,7 @@ import {
 } from '/js/content.js'
 import {
   COGNITIVE_DOMAINS, EXERCISES, EXERCISE_GUIDES, getExerciseGuide, getTodaysSession, getDomainProgress, getProgramStats,
-  completeSession, isSessionDoneToday, PROGRAM_DISCLAIMER, getExerciseLevel, updateExerciseLevel,
+  completeSession, isSessionDoneToday, PROGRAM_DISCLAIMER, getExerciseLevel, updateExerciseLevel, CASUAL_EXERCISE_IDS,
 } from '/js/brain-program.js'
 import {
   initNBack, initStroop, initFlanker, initSwitching, initGoNoGo, initCorsi, corsiGenerateSequence,
@@ -23,6 +23,7 @@ import {
 import {
   logTrial, renderPracticeBanner, renderTrialFlash, renderPaceRing,
   isPractice, beginScoredBlock, PRACTICE_TRIALS, getProtocolHistory, analyzeSessionResults,
+  hasSeenProtocolBrief, markProtocolBriefSeen,
 } from '/js/brain-metrics.js'
 import {
   mountClinicalHandlers, CLINICAL_PROTOCOLS, renderStroopSwatches,
@@ -311,11 +312,21 @@ function getLabExercises() {
   return LAB_EXERCISE_IDS.map(id => EXERCISES[id]).filter(Boolean)
 }
 
+function exerciseTierTag(exId) {
+  if (CLINICAL_PROTOCOLS.has(exId)) return '<span class="brain-protocol-tag brain-protocol-tag--clinical">Protocolo clínico</span>'
+  if (CASUAL_EXERCISE_IDS.has(exId)) return '<span class="brain-protocol-tag brain-protocol-tag--casual">Entrenamiento casual</span>'
+  return ''
+}
+
 function renderLabGameCard(ex) {
   const dom = COGNITIVE_DOMAINS[ex.domain]
   const guide = getExerciseGuide(ex.id)
   const rw = guide?.life || EXERCISE_REAL_WORLD[ex.id]
   const adaptive = ex.adaptive ? '<span class="brain-protocol-tag">Adaptativo</span>' : ''
+  const tier = exerciseTierTag(ex.id)
+  const briefBtn = guide
+    ? `<button type="button" class="brain-protocol-card__brief-link" onclick="event.stopPropagation(); showProtocolBrief('${ex.id}')">¿Qué mide?</button>`
+    : ''
   return `<button type="button" onclick="startBrain('${ex.id}')" class="card game-card game-card--lab game-card--protocol text-left">
     <div class="brain-protocol-card">
       <div class="brain-protocol-card__head">
@@ -324,7 +335,7 @@ function renderLabGameCard(ex) {
           <h3 class="brain-protocol-card__title">${ex.name}</h3>
           <p class="brain-protocol-card__paradigm">${ex.paradigm} · ${ex.duration || '~5 min'}</p>
         </div>
-        ${adaptive}
+        <div class="brain-protocol-card__tags">${tier}${adaptive}</div>
       </div>
       ${guide ? `<p class="brain-protocol-card__purpose">${guide.purpose}</p>` : `<p class="brain-protocol-card__desc">${ex.desc}</p>`}
       ${guide ? `<p class="brain-protocol-card__measures">📊 ${guide.measures}</p>` : ''}
@@ -335,6 +346,7 @@ function renderLabGameCard(ex) {
         const last = getProtocolHistory(ex.id)[0]?.metrics?.accuracy
         return last != null ? `<p class="brain-protocol-card__history">Última sesión: ${last}%</p>` : ''
       })()}
+      ${briefBtn}
     </div></button>`
 }
 
@@ -376,6 +388,7 @@ function renderProtocolIntro(exId, startFn, extraHtml = '') {
     </div>
     ${extraHtml}
     <button type="button" onclick="${startFn}" class="btn-primary w-full py-4 mt-4">Iniciar protocolo</button>
+    ${hasSeenProtocolBrief(exId) ? '<p class="brain-protocol-brief__note">Ya conoces este protocolo — puedes iniciar directamente la próxima vez.</p>' : ''}
   </div>`)
 }
 
@@ -910,15 +923,23 @@ function startBrain(id, fromSession = false) {
     brainState.oddout = initOddOut(groups, brainTrialCount(7, diff))
     brainState.oddout.timeLimit = inten.timeLimit
   }
-  brainState.protocolBrief = BRIEF_FIRST_EXERCISES.has(id) ? id : null
+  brainState.protocolBrief = (BRIEF_FIRST_EXERCISES.has(id) && !hasSeenProtocolBrief(id)) ? id : null
   if (document.getElementById('brain-exercise-stage')) render(true)
   else if (typeof window.render === 'function') window.render(true)
   if (!brainState.protocolBrief && TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
 }
 
+window.showProtocolBrief = function(id) {
+  if (!LAB_EXERCISE_IDS.includes(id)) return
+  startBrain(id)
+  brainState.protocolBrief = id
+  render(true)
+}
+
 window.clearProtocolBrief = function() {
   const id = brainState.exercise
   if (!id) return
+  if (BRIEF_FIRST_EXERCISES.has(id)) markProtocolBriefSeen(id)
   brainState.protocolBrief = null
   const stateKey = id === 'dualnback' ? 'dualnback' : id
   const s = brainState[stateKey]

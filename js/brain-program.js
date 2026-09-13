@@ -64,6 +64,9 @@ export const COGNITIVE_DOMAINS = {
   },
 }
 
+/** Minijuegos sin métricas clínicas formales */
+export const CASUAL_EXERCISE_IDS = new Set(['math', 'anagram', 'oddout'])
+
 export const EXERCISES = {
   nback: {
     id: 'nback',
