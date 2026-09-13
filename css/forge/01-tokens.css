@@ -1,4 +1,6 @@
-/* FORGE — tokens unificados (forge oscuro + RPG) y superficie base */
+/* FORGE — tokens unificados (forge oscuro + RPG) y superficie base
+   Paleta coherente (ds-01): noche #0c1424 · oro #f0c75e · jade #5eb8a8 · coral #f07288 · mana #7eb8f0
+   Generada sobre base RPG campaña — evitar hex sueltos fuera de --m-* / --rpg-* */
 
 :root {
   --m-bg: #0a0c10;

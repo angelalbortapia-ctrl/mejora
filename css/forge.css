@@ -11,6 +11,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 @import url('forge/01-tokens.css');
+@import url('forge/02-open-props-scale.css');
+@import url('../fonts-local.css');
 @import url('forge/03-shell.css');
 @import url('forge/04-legacy-pages.css');
 @import url('mejora-redesign.css');

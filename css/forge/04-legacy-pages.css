@@ -2226,6 +2226,10 @@ html.reduce-motion .brain-ant-cue {
   text-align: center;
 }
 
+.brain-clinical-report .btn-secondary {
+  margin-top: var(--size-3, 0.75rem);
+}
+
 .brain-clinical-report__interp--new {
   font-style: italic;
 }
@@ -2398,10 +2402,10 @@ html.reduce-motion .brain-ant-cue {
 
 /* ——— Brain Lab Runtime (protocolo clínico) ——— */
 .page-brain-lab-runtime {
-  --text: var(--on-surface-text, #1c2230);
-  --text-muted: var(--on-surface-muted, #5a6272);
-  --m-text: var(--on-surface-text, #1c2230);
-  --m-muted: var(--on-surface-muted, #5a6272);
+  --text: var(--on-surface-text, #141a24);
+  --text-muted: var(--on-surface-muted, #3d4654);
+  --m-text: var(--on-surface-text, #141a24);
+  --m-muted: var(--on-surface-muted, #3d4654);
   --bg-card: var(--rpg-parchment, #faf8f3);
   --secondary-bg: var(--rpg-parchment-dark, #f0ece4);
   --border: var(--m-border-card, rgba(28, 34, 48, 0.12));

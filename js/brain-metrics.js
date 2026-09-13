@@ -1,6 +1,7 @@
 /** Métricas clínicas, historial y UI de informes — laboratorio cognitivo */
 
 import { getItem, setItem, getToday, esc } from '/js/core.js'
+import { EXERCISES } from '/js/brain-program.js'
 
 export const PRACTICE_TRIALS = 3
 const HISTORY_KEY = 'brainProtocolHistory'
@@ -368,8 +369,21 @@ export function renderClinicalReport(exerciseId, metrics, finishBtnHtml, history
       <h4>Últimas sesiones</h4>
       ${trendBars}
     </section>
+    <button type="button" class="btn-secondary w-full mt-3" onclick="exportBrainReportPdf('${exerciseId}')">Descargar PDF</button>
     ${finishBtnHtml}
   </div>`
+}
+
+export function getClinicalReportExportPayload(exerciseId, metrics, history = []) {
+  const name = EXERCISES[exerciseId]?.name || exerciseId
+  const interp = interpretVsHistory(metrics, history)
+  return {
+    exerciseName: name,
+    date: history[0]?.date || getToday(),
+    metrics,
+    interpretation: interp.text,
+    history,
+  }
 }
 
 export function analyzeSessionResults(results) {

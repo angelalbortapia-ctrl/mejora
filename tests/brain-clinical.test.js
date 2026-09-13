@@ -2,9 +2,11 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   createTrialLog, logTrial, beginScoredBlock, computeMetrics, computeStroopMetrics,
-  saveProtocolResult, getProtocolHistory, interpretVsHistory,
-  hasSeenProtocolBrief, markProtocolBriefSeen, PRACTICE_TRIALS, isPractice,
+  computeWisconsinMetrics, saveProtocolResult, getProtocolHistory, interpretVsHistory,
+  hasSeenProtocolBrief, markProtocolBriefSeen, getClinicalReportExportPayload,
+  PRACTICE_TRIALS, isPractice,
 } from '../js/brain-metrics.js'
+import { initWisconsin } from '../js/brain-exercises.js'
 import { CLINICAL_PROTOCOLS, prepareClinicalState, completeClinicalReport } from '../js/brain-clinical-lab.js'
 import { initStroop, initNBack, initFlanker } from '../js/brain-exercises.js'
 import { CASUAL_EXERCISE_IDS } from '../js/brain-program.js'
@@ -127,6 +129,36 @@ describe('brain-clinical — taxonomía catálogo', () => {
     assert.ok(CASUAL_EXERCISE_IDS.has('math'))
     assert.ok(CASUAL_EXERCISE_IDS.has('anagram'))
     assert.equal(CLINICAL_PROTOCOLS.has('math'), false)
+  })
+})
+
+describe('brain-clinical — wisconsin, trail, ant', () => {
+  it('wisconsin métricas usan index como trials', () => {
+    const m = computeWisconsinMetrics({ index: 12, categories: 2, perseverative: 3 })
+    assert.equal(m.rows.find(r => r.label === 'Trials')?.value, '12')
+  })
+
+  it('flujo wisconsin práctica → evaluado', () => {
+    const s = prepareClinicalState(initWisconsin('medio'))
+    for (let i = 0; i < PRACTICE_TRIALS; i++) {
+      logTrial(s.trialLog, { correct: true }, true)
+      s.index++
+    }
+    beginScoredBlock(s)
+    s.index = 0
+    assert.equal(s.score, 0)
+    assert.equal(s.clinicalBlock, 'scored')
+  })
+})
+
+describe('brain-clinical — export PDF payload', () => {
+  it('getClinicalReportExportPayload incluye nombre e interpretación', () => {
+    const payload = getClinicalReportExportPayload('stroop', { accuracy: 88, rows: [] }, [
+      { date: '2026-09-13', metrics: { accuracy: 88 } },
+      { date: '2026-09-12', metrics: { accuracy: 75 } },
+    ])
+    assert.equal(payload.exerciseName, 'Stroop')
+    assert.ok(payload.interpretation)
   })
 })
 
