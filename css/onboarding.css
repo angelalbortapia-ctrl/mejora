@@ -101,7 +101,7 @@ body.onboarding-open:has(.onboarding-overlay.is-active) .app-main {
 }
 
 .onboarding-title {
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: clamp(1.5rem, 4.5vw, 2rem);
   font-weight: 800;
   line-height: 1.15;
@@ -243,7 +243,7 @@ body.onboarding-open:has(.onboarding-overlay.is-active) .app-main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: 2rem;
   font-weight: 700;
   color: var(--btn-text, #0a0c10);

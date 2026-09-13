@@ -250,7 +250,7 @@ body.lesson-reader-mode .app-content {
 
 .academy-lesson-full-title,
 .lesson-hero-title {
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif) !important;
+  font-family: var(--m-display) !important;
   font-size: clamp(2.5rem, 6.5vw, 4.5rem) !important;
   font-weight: 700 !important;
   line-height: 1.02 !important;
@@ -385,7 +385,7 @@ body.lesson-reader-mode .app-content {
   position: absolute;
   top: -0.5rem;
   right: 1rem;
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: clamp(4rem, 10vw, 7rem);
   font-weight: 800;
   line-height: 1;
@@ -450,7 +450,7 @@ body.lesson-reader-mode .app-content {
 }
 
 .academy-section-title {
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif) !important;
+  font-family: var(--m-display) !important;
   font-size: clamp(1.25rem, 2.5vw, 1.65rem) !important;
   font-weight: 600 !important;
   color: var(--m-text) !important;
@@ -1051,7 +1051,7 @@ body.lesson-reader-mode .app-content {
 
 .lesson-punch-value {
   display: block;
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: clamp(1.35rem, 3vw, 1.75rem);
   font-weight: 700;
   color: var(--m-text);
@@ -1074,7 +1074,7 @@ body.lesson-reader-mode .app-content {
 
 .lesson-stat-big {
   display: block;
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: clamp(2.5rem, 6vw, 3.5rem);
   font-weight: 800;
   color: var(--m-accent);

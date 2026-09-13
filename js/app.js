@@ -22,7 +22,9 @@ import {
   canUseNotifications, getNotificationPermission, requestNotificationPermission,
   startReminderChecker,
 } from '/js/notifications.js'
-import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar } from '/js/layout.js'
+import { initLayout, setActiveNav, updateSidebarStats, updateTopBanner, applyCompactSidebar, remountNav } from '/js/layout.js'
+import { initI18n, setLocale } from '/js/i18n.js'
+import { trackProductEvent, EVENTS } from '/js/product-analytics.js'
 import { celebrate, updateAppShell } from '/js/fx.js'
 import { playClick, playSuccess } from '/js/sounds.js'
 import {
@@ -48,7 +50,7 @@ import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } f
 import { maybeAutoSectionGuide, startSectionGuide } from '/js/section-guides.js'
 import { renderViaje, getViajeTab, setViajeTab, bindJourneyGlobals } from '/js/pages/journey.js'
 import { renderMetas, bindGoalsGlobals, getMetasTab, setMetasTab } from '/js/pages/goals.js'
-import { renderProfile, getProfileTab, setProfileTab } from '/js/pages/profile.js'
+import { renderProfile, getProfileTab, setProfileTab, bindProfileGlobals } from '/js/pages/profile.js'
 import {
   renderBrainGym, bindBrainGymGlobals, clearEphemeralBrainState, syncGimnasiaRoute, patchBrainExerciseUI, patchGimnasiaHubUI, syncBrainSynapseFx, brainState,
 } from '/js/pages/brain-gym.js'
@@ -465,6 +467,12 @@ window.addEventListener('mejora:azure-ready', () => applyVoiceConfigDefaults())
 window.addEventListener('mejora:fish-ready', () => applyVoiceConfigDefaults())
 
 migrateOnboardingFlag()
+initI18n()
+trackProductEvent(EVENTS.APP_OPEN)
+window.addEventListener('mejora:locale', () => {
+  remountNav()
+  scheduleRender(true)
+})
 const initSettings = getSettings()
 document.documentElement.classList.remove('dark')
 if (initSettings.theme && initSettings.theme !== 'default' && !isUnlocked(initSettings.theme)) {
@@ -502,6 +510,7 @@ bindRoutineGlobals()
 bindMejoraGlobals()
 bindEnfoqueGlobals()
 bindJourneyGlobals()
+bindProfileGlobals()
 bindGoalsGlobals()
 bindHomeGlobals({ startGuide: startSectionGuide })
 bindBrainGymGlobals()

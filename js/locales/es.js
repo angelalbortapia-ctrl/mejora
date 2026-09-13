@@ -1,0 +1,62 @@
+/** Español — locale por defecto */
+export default {
+  nav: {
+    home: 'Hoy',
+    habits: 'Hábitos',
+    brain: 'Gimnasia',
+    calm: 'Calma',
+    profile: 'Tú',
+    plan: 'Plan del día',
+    goals: 'Metas',
+    journey: 'Tu historial',
+    solo: 'Solo hoy',
+    routine: 'Rutina',
+    focus: 'Enfoque',
+    settings: 'Ajustes',
+  },
+  navDesc: {
+    home: 'Tu día',
+    habits: 'Ejecuta sin excusas',
+    brain: 'Aprender · entrenar · cuerpo',
+    calm: 'Control bajo presión',
+    profile: 'Progreso y logros',
+  },
+  common: {
+    share: 'Compartir',
+    copied: 'Copiado al portapapeles',
+    shareError: 'No se pudo compartir',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    loading: 'Cargando…',
+    language: 'Idioma',
+    languageHint: 'Afecta menús y textos de la interfaz. El contenido educativo sigue en español.',
+  },
+  settings: {
+    general: 'General',
+    account: 'Cuenta',
+    data: 'Datos',
+    interface: 'Interfaz',
+  },
+  share: {
+    journeyTitle: 'Mi progreso en Mejora',
+    streakTitle: 'Mi racha en Mejora',
+    profileTitle: 'Mi campaña en Mejora',
+    achievementTitle: 'Logro desbloqueado en Mejora',
+    cta: 'Únete a tu campaña de hábitos →',
+  },
+  analytics: {
+    title: 'Actividad en la app',
+    subtitle: 'Eventos de producto (solo en tu dispositivo, sin terceros)',
+    last7: 'Últimos 7 días',
+    last30: 'Últimos 30 días',
+    empty: 'Aún no hay eventos registrados. Completa un hábito o una sesión de calma.',
+  },
+  journey: {
+    shareProgress: 'Compartir mi progreso',
+    shareMilestones: 'Compartir hitos',
+  },
+  profile: {
+    shareRank: 'Compartir mi rango',
+    shareAchievements: 'Compartir logros',
+  },
+}

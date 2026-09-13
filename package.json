@@ -5,10 +5,14 @@
   "scripts": {
     "test": "node --import ./tests/node-setup.mjs --test tests/*.test.js",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint js tests",
     "serve": "python3 scripts/mejora-dev-server.py 5173",
     "sync-version": "node scripts/sync-asset-version.mjs || python3 scripts/sync-asset-version.py"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
     "typescript": "^5.7.2"
   }
 }

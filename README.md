@@ -35,6 +35,16 @@ No uses `python3 -m http.server` — la voz guiada de Calma no funcionará.
 - **Supabase** (opcional) — auth + sync en la nube
 - APIs: Open-Meteo, Wikipedia ES, Open Library, Sunrise-Sunset
 - Contenido curado en español (citas, consejos, trivia local)
+- **i18n** — UI en español/inglés (`js/i18n.js`)
+- **Analytics local** — eventos de producto sin terceros (`docs/ANALYTICS.md`)
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE).
+
+## Contribuir
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md). Docs extra: [docs/I18N.md](docs/I18N.md), [docs/ANALYTICS.md](docs/ANALYTICS.md).
 
 ## Supabase (sync en la nube)
 
@@ -59,6 +69,29 @@ Para GitHub Pages, añade los secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en el
 ## Tests
 
 ```bash
+npm install
+npm test          # unitarios + smoke (CI)
+npm run typecheck
+npm run lint
+```
+
+Navegador (opcional):
+
+```bash
 python3 scripts/mejora-dev-server.py 5173
 # Abre http://127.0.0.1:5173/tests/run.html
 ```
+
+El deploy a GitHub Pages **solo corre si `npm test` y typecheck pasan**.
+
+## Privacidad y datos
+
+- Política: [`privacy.html`](privacy.html) (también en Ajustes → Cuenta / Datos)
+- **Local:** Ajustes → Datos → *Empezar desde cero*
+- **Nube:** Ajustes → Cuenta → *Borrar datos en la nube* (requiere sesión Supabase)
+
+## Offline
+
+Tras una visita con red, el service worker guarda el shell de la app (HTML, CSS, JS del import map) para uso sin conexión en hábitos y navegación básica.
+
+**No offline:** voz Fish Audio (requiere `mejora-dev-server.py` o clave propia), APIs de clima/Wikipedia en tiempo real, sync Supabase.

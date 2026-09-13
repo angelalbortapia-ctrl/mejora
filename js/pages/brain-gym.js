@@ -967,6 +967,9 @@ window.completeLesson = function(id) {
     if (bonus > 0) awardXp('mental', bonus, `Dominio de lección (+${bonus})`)
     recordActivity('brain')
     processPlanAwards(checkPlanTask('brain'))
+    import('/js/product-analytics.js').then(m => {
+      m.trackProductEvent(m.EVENTS.SCHOOL_LESSON, { lessonId: id })
+    }).catch(() => {})
   }
   const quiz = getLessonQuiz(id)
   brainState.lessonFlow = {

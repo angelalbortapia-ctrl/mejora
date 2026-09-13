@@ -272,6 +272,7 @@ export function getSettings() {
     fishApiKey: '', fishVoiceId: '', fishModel: 's2.1-pro-free', fishSpeed: 0.96,
     azureSpeechKey: '', azureSpeechRegion: 'eastus', azureVoice: 'es-MX-DaliaNeural',
     geminiApiKey: '', geminiVoice: 'Despina',
+    locale: 'es',
   })
 }
 
@@ -364,6 +365,9 @@ function markHabitComplete(habit) {
   updateStats({ habitsCompleted: getStats().habitsCompleted + 1 })
   checkAchievements('habit')
   syncGoals()
+  import('/js/product-analytics.js').then(m => {
+    m.trackProductEvent(m.EVENTS.HABIT_COMPLETE, { habitId: habit.id })
+  }).catch(() => {})
   return { success: true, xp: habit.xp + bonus, name: habit.name, completed: true }
 }
 

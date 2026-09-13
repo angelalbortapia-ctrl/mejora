@@ -10,6 +10,8 @@ import { getItem, setItem, getWeekNumber } from '/js/core.js'
 import { getWeeklyReviewSuggestion } from '/js/coach-engine.js'
 import { tabBar, pageHero, sparklineSVG } from '/js/ui.js'
 import { heatmapHTML } from '/js/page-helpers.js'
+import { t } from '/js/i18n.js'
+import { formatAnalyticsPanel } from '/js/product-analytics.js'
 
 let viajeTab = 'resumen'
 
@@ -26,6 +28,26 @@ export function saveWeeklyReviewNote(text) {
 }
 
 export function bindJourneyGlobals() {
+  window.shareJourneyProgress = async () => {
+    const { shareJourney, shareStreak } = await import('/js/share.js')
+    const { t: tr } = await import('/js/i18n.js')
+    try {
+      const r = await shareJourney()
+      if (r?.channel === 'clipboard') alert(tr('common.copied'))
+    } catch {
+      alert(tr('common.shareError'))
+    }
+  }
+  window.shareJourneyStreak = async () => {
+    const { shareStreak } = await import('/js/share.js')
+    const { t: tr } = await import('/js/i18n.js')
+    try {
+      const r = await shareStreak()
+      if (r?.channel === 'clipboard') alert(tr('common.copied'))
+    } catch {
+      alert(tr('common.shareError'))
+    }
+  }
   window.saveWeeklyReview = () => {
     const el = document.getElementById('weekly-review-text')
     if (el) saveWeeklyReviewNote(el.value)
@@ -68,6 +90,11 @@ export function renderViaje() {
       <div class="viaje-kpi"><span class="viaje-kpi-val">${s.habitsCompleted}</span><span class="viaje-kpi-label">Hábitos</span></div>
       <div class="viaje-kpi"><span class="viaje-kpi-val">${s.brainSessions}</span><span class="viaje-kpi-label">Sesiones mente</span></div>
     </div>
+    <div class="flex flex-col gap-2 mb-3">
+      <button type="button" onclick="shareJourneyProgress()" class="btn-secondary w-full">📤 ${t('journey.shareProgress')}</button>
+      <button type="button" onclick="shareJourneyStreak()" class="btn-ghost w-full text-sm">🔥 ${t('share.streakTitle')}</button>
+    </div>
+    <div class="card card-static ds-panel--flat mb-3">${formatAnalyticsPanel(t)}</div>
     <div class="card card-static weekly-summary-card viaje-weekly">
       <h3 class="section-title">Resumen semanal</h3>
       <p class="text-sm text-main leading-relaxed mb-3">${weekly.narrative}</p>
@@ -179,6 +206,7 @@ export function renderViaje() {
             ${m.label}
           </div>`).join('')}
       </div>
+      <button type="button" onclick="shareJourneyProgress()" class="btn-secondary w-full mt-4">📤 ${t('journey.shareMilestones')}</button>
     </div>`
 
   const tabContent = viajeTab === 'resumen' ? resumenBlock

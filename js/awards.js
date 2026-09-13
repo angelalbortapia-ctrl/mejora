@@ -4,6 +4,7 @@ import { SKILLS, addXp, getTotalLevel } from '/js/core.js'
 import { checkNewUnlocks, markUnlockSeen } from '/js/unlocks.js'
 import { celebrate, pulseElement, flashPlanBanner } from '/js/fx.js'
 import { playTone } from '/js/sounds.js'
+import { trackProductEvent, EVENTS } from '/js/product-analytics.js'
 
 function ensureToastContainer() {
   let el = document.getElementById('toast-container')
@@ -43,6 +44,7 @@ export function showToast(message, xp, skill, levelUp = false) {
 }
 
 export function showUnlockToast(unlock) {
+  trackProductEvent(EVENTS.UNLOCK, { id: unlock.id })
   markUnlockSeen(unlock.id)
   const container = ensureToastContainer()
   const el = document.createElement('div')
@@ -59,6 +61,7 @@ export function awardXp(skill, amount, message) {
   const newLevel = getTotalLevel()
   if (result.levelUp) {
     celebrate('level')
+    trackProductEvent(EVENTS.LEVEL_UP, { level: result.newLevel, skill })
     showToast(result.newLevel, amount, skill, true)
   } else showToast(message, amount, skill)
   checkNewUnlocks(prevLevel, newLevel).forEach(showUnlockToast)
@@ -70,6 +73,7 @@ export function processPlanAwards(awards) {
     if (a.bonus) {
       celebrate()
       flashPlanBanner()
+      trackProductEvent(EVENTS.PLAN_COMPLETE)
       showToast('¡Plan del día completo!', a.result.xp, 'discipline')
     } else if (a.task) {
       showToast(a.task.label, a.result.xp, 'discipline')

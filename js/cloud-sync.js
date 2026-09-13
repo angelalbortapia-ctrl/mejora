@@ -11,19 +11,51 @@ let session = null
 let pushTimer = null
 let syncing = false
 let applyingRemote = false
+let lastError = null
+let pendingConflict = null
 const listeners = new Set()
 
 function getMeta() {
   try {
     const raw = localStorage.getItem(PREFIX + META_KEY)
-    return raw ? JSON.parse(raw) : { lastSyncedAt: null, lastRemoteAt: null }
+    return raw ? JSON.parse(raw) : {
+      lastSyncedAt: null,
+      lastRemoteAt: null,
+      localModifiedAt: null,
+    }
   } catch {
-    return { lastSyncedAt: null, lastRemoteAt: null }
+    return { lastSyncedAt: null, lastRemoteAt: null, localModifiedAt: null }
   }
 }
 
 function saveMeta(meta) {
   localStorage.setItem(PREFIX + META_KEY, JSON.stringify(meta))
+}
+
+function touchLocalModified() {
+  const meta = getMeta()
+  meta.localModifiedAt = new Date().toISOString()
+  saveMeta(meta)
+}
+
+function clearSyncError() {
+  lastError = null
+}
+
+function setSyncError(err) {
+  lastError = err?.message || (err ? String(err) : 'Error de sincronización')
+}
+
+export function detectSyncConflict(meta, { remoteAt, remoteHasData, localHasProgress }) {
+  if (!remoteHasData || !localHasProgress || !remoteAt) return false
+  const remoteNewer = !meta.lastRemoteAt || remoteAt > meta.lastRemoteAt
+  if (!remoteNewer) return false
+  const localChangedSinceSync = Boolean(
+    meta.localModifiedAt
+    && meta.lastSyncedAt
+    && meta.localModifiedAt > meta.lastSyncedAt
+  )
+  return localChangedSinceSync
 }
 
 function notify() {
@@ -40,6 +72,10 @@ export function getCloudStatus() {
     syncing,
     lastSyncedAt: getMeta().lastSyncedAt,
     lastRemoteAt: getMeta().lastRemoteAt,
+    lastError,
+    pendingConflict: pendingConflict
+      ? { remoteAt: pendingConflict.remoteAt }
+      : null,
   }
 }
 
@@ -104,6 +140,16 @@ function hasLocalProgress() {
   })
 }
 
+function markSynced(remoteAt) {
+  const meta = getMeta()
+  meta.lastSyncedAt = new Date().toISOString()
+  meta.lastRemoteAt = remoteAt || meta.lastSyncedAt
+  meta.localModifiedAt = null
+  saveMeta(meta)
+  clearSyncError()
+  pendingConflict = null
+}
+
 export async function initCloudSync() {
   try {
     const sb = await getClient()
@@ -117,7 +163,12 @@ export async function initCloudSync() {
       if (session?.user) {
         try {
           await pullFromCloud({ silent: true })
-        } catch {}
+        } catch (err) {
+          setSyncError(err)
+        }
+      } else {
+        pendingConflict = null
+        clearSyncError()
       }
       notify()
     })
@@ -125,10 +176,12 @@ export async function initCloudSync() {
     if (session?.user) {
       try {
         await pullFromCloud({ silent: true })
-      } catch {}
+      } catch (err) {
+        setSyncError(err)
+      }
     }
-  } catch {
-    // Sin red o sin Supabase configurado — la app sigue en local
+  } catch (err) {
+    setSyncError(err)
   }
 
   notify()
@@ -162,6 +215,8 @@ export async function signOut() {
   if (!sb) return
   await sb.auth.signOut()
   session = null
+  pendingConflict = null
+  clearSyncError()
   notify()
 }
 
@@ -180,22 +235,36 @@ export async function pullFromCloud(opts = {}) {
 
     const remoteAt = data?.updated_at || null
     const meta = getMeta()
+    const remoteHasData = Boolean(data?.payload && Object.keys(data.payload).length > 0)
 
     if (opts.mergeLocal && hasLocalProgress()) {
       await pushToCloud({ force: true })
-    } else if (data?.payload && Object.keys(data.payload).length > 0) {
+    } else if (detectSyncConflict(meta, {
+      remoteAt,
+      remoteHasData,
+      localHasProgress: hasLocalProgress(),
+    }) && !opts.forceRemote && !opts.resolveConflict) {
+      pendingConflict = { remoteAt, remotePayload: data.payload }
+      notify()
+      return data
+    } else if (remoteHasData) {
       const remoteNewer = !meta.lastRemoteAt || (remoteAt && remoteAt > meta.lastRemoteAt)
-      if (remoteNewer || !hasLocalProgress()) {
+      if (remoteNewer || !hasLocalProgress() || opts.forceRemote) {
         applyRemotePayload(data.payload)
+        markSynced(remoteAt)
       }
     } else if (hasLocalProgress()) {
       await pushToCloud({ force: true })
+    } else {
+      markSynced(remoteAt)
     }
 
-    meta.lastRemoteAt = remoteAt
-    meta.lastSyncedAt = new Date().toISOString()
-    saveMeta(meta)
+    if (!pendingConflict) notify()
     return data
+  } catch (err) {
+    setSyncError(err)
+    if (!opts.silent) throw err
+    return null
   } finally {
     syncing = false
     notify()
@@ -225,11 +294,55 @@ export async function pushToCloud(opts = {}) {
 
     if (error) throw error
 
-    const meta = getMeta()
-    meta.lastSyncedAt = new Date().toISOString()
-    meta.lastRemoteAt = data?.updated_at || meta.lastSyncedAt
-    saveMeta(meta)
+    markSynced(data?.updated_at)
     return data
+  } catch (err) {
+    setSyncError(err)
+    throw err
+  } finally {
+    syncing = false
+    notify()
+  }
+}
+
+export async function resolveCloudConflict(choice) {
+  if (!pendingConflict) return null
+  if (choice === 'remote') {
+    applyRemotePayload(pendingConflict.remotePayload)
+    markSynced(pendingConflict.remoteAt)
+    pendingConflict = null
+    notify()
+    return 'remote'
+  }
+  if (choice === 'local') {
+    pendingConflict = null
+    await pushToCloud({ force: true })
+    return 'local'
+  }
+  throw new Error('Opción de conflicto inválida')
+}
+
+export async function deleteCloudData() {
+  const sb = await getClient()
+  if (!sb || !session?.user) throw new Error('Inicia sesión para borrar datos en la nube')
+  syncing = true
+  notify()
+  try {
+    const { error } = await sb
+      .from('user_data')
+      .delete()
+      .eq('user_id', session.user.id)
+    if (error) throw error
+    const meta = getMeta()
+    meta.lastRemoteAt = null
+    meta.lastSyncedAt = new Date().toISOString()
+    saveMeta(meta)
+    pendingConflict = null
+    clearSyncError()
+    return true
+  } catch (err) {
+    setSyncError(err)
+    throw err
   } finally {
     syncing = false
     notify()
@@ -238,8 +351,9 @@ export async function pushToCloud(opts = {}) {
 
 export function scheduleCloudPush() {
   if (!session?.user || syncing || applyingRemote) return
+  touchLocalModified()
   clearTimeout(pushTimer)
   pushTimer = setTimeout(() => {
-    pushToCloud().catch(() => {})
+    pushToCloud().catch(err => setSyncError(err))
   }, 2500)
 }

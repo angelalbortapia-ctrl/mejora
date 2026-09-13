@@ -207,7 +207,7 @@
 .ds-section:last-child { margin-bottom: 0; }
 
 .ds-section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -328,7 +328,7 @@
 }
 
 .ds-toolbar-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text);
@@ -426,7 +426,7 @@
 .ds-stat:hover { transform: translateY(-2px); }
 
 .ds-stat-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--primary);

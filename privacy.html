@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacidad — Mejora</title>
+  <meta name="description" content="Política de privacidad de Mejora: datos locales, nube opcional y cómo borrar tu información." />
+  <link rel="stylesheet" href="css/utilities.css?v=157" />
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0c1424;
+      color: #f0f4fc;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem 1.25rem 3rem;
+    }
+    main { max-width: 42rem; margin: 0 auto; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.5rem; color: #ffe49a; }
+    h2 { font-size: 1.1rem; margin: 2rem 0 0.5rem; color: #f0c75e; }
+    p, li { color: rgba(240, 244, 252, 0.88); }
+    a { color: #7eb8f0; }
+    .meta { color: rgba(240, 244, 252, 0.55); font-size: 0.9rem; margin-bottom: 2rem; }
+    .card {
+      background: rgba(250, 248, 243, 0.06);
+      border: 1px solid rgba(240, 199, 94, 0.2);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      margin: 1rem 0;
+    }
+    .card strong { color: #ffe49a; }
+    code { background: rgba(0,0,0,0.35); padding: 0.1rem 0.35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Privacidad</h1>
+    <p class="meta">Última actualización: septiembre 2026 · <a href="./">Volver a Mejora</a></p>
+
+    <p>Mejora es una PWA personal de hábitos, gimnasia cerebral y calma. Por defecto <strong>tus datos viven en tu dispositivo</strong>. La cuenta en la nube es opcional.</p>
+
+    <h2>Qué guardamos en tu dispositivo</h2>
+    <ul>
+      <li>Hábitos, rachas, XP, metas y progreso de gimnasia/escuela</li>
+      <li>Registros de meditación, sueño y estado de ánimo</li>
+      <li>Preferencias (notificaciones, tema, voz de Calma)</li>
+      <li>Claves API opcionales (Fish, Azure, Gemini) si las configuras — <strong>no las subimos a nuestros servidores</strong></li>
+    </ul>
+
+    <h2>Sincronización en la nube (opcional)</h2>
+    <p>Si creas cuenta con Supabase, guardamos un <strong>snapshot cifrado en tránsito (HTTPS)</strong> de tu progreso en la tabla <code>user_data</code>, asociado a tu correo. Solo tú puedes leerlo o borrarlo (políticas RLS).</p>
+    <p>No vendemos ni compartimos tus datos con terceros con fines publicitarios.</p>
+
+    <h2>Servicios externos</h2>
+    <ul>
+      <li><strong>Supabase</strong> — auth y sync (si activas cuenta)</li>
+      <li><strong>Open-Meteo, Wikipedia, Open Library</strong> — clima y contenido educativo (sin identificadores personales)</li>
+      <li><strong>Fish Audio / Azure / Gemini</strong> — solo si configuras voz o guiones; las peticiones salen de tu navegador con tus claves</li>
+    </ul>
+
+    <h2>Cómo borrar tus datos</h2>
+    <div class="card">
+      <p><strong>Solo en este dispositivo</strong><br>
+      Ajustes → Datos → <em>Empezar desde cero</em>. Borra el progreso local irreversiblemente.</p>
+    </div>
+    <div class="card">
+      <p><strong>En la nube (con sesión iniciada)</strong><br>
+      Ajustes → Cuenta → <em>Borrar datos en la nube</em>. Elimina tu snapshot en Supabase. Tu cuenta sigue activa hasta que cierres sesión.</p>
+    </div>
+    <div class="card">
+      <p><strong>Cuenta completa</strong><br>
+      Desde el panel de Supabase del proyecto (si eres administrador) o contactando al desarrollador para solicitar borrado de la cuenta de autenticación.</p>
+    </div>
+
+    <h2>Offline y voz de Calma</h2>
+    <p>La app puede funcionar sin conexión para hábitos y contenido ya visitado. La <strong>voz guiada premium</strong> (Fish Audio) requiere servidor local con proxy o clave configurada; en GitHub Pages puede degradarse a voz del navegador.</p>
+
+    <h2>Contacto</h2>
+    <p>Para dudas sobre privacidad o borrado de datos, abre un issue en el repositorio del proyecto o escribe al mantenedor del despliegue que uses.</p>
+  </main>
+</body>
+</html>

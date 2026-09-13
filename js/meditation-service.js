@@ -345,6 +345,9 @@ export function completeMeditationSession({ sessionId, minutes, kind = 'guided' 
   recordActivity('meditation')
   addXp('mindfulness', xp, 'Meditación completada')
   updateStats({ meditationMinutes: getStats().meditationMinutes + minutes })
+  import('/js/product-analytics.js').then(m => {
+    m.trackProductEvent(m.EVENTS.MEDITATION_COMPLETE, { sessionId, minutes, kind })
+  }).catch(() => {})
   processPlanAwards(checkPlanTask('meditation'))
   if (new Date().getHours() >= 18) processPlanAwards(checkPlanTask('evening'))
 }

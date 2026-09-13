@@ -101,7 +101,7 @@ html[data-theme="forest"] {
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  font-family: 'Sora', 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-family: var(--m-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg);
@@ -218,7 +218,7 @@ body.sidebar-open {
 }
 
 .font-display {
-  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--m-ui);
   letter-spacing: -0.03em;
   font-weight: 700;
 }
@@ -822,7 +822,7 @@ html.dark .nav-bottom {
 }
 
 .section-title {
-  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text);
@@ -883,7 +883,7 @@ html.dark .nav-bottom {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
-  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--m-ui);
 }
 
 .mood-card {
@@ -1059,7 +1059,7 @@ html.dark .nav-bottom {
 .dash-stat-body { min-width: 0; }
 
 .dash-stat .value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--neon);
@@ -1187,7 +1187,7 @@ html.dark .nav-bottom {
 .consistency-ring span {
   position: relative;
   z-index: 1;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-weight: 800;
   font-size: 1.5rem;
   color: var(--neon);
@@ -1371,7 +1371,7 @@ body.sidebar-compact .app-main { margin-left: 76px; width: calc(100% - 76px); }
 }
 
 .empty-state-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--text);
@@ -1652,7 +1652,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .tour-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.125rem;
   font-weight: 700;
   margin: 0 0 0.5rem;
@@ -1932,7 +1932,7 @@ html.reduce-motion .app-aurora-orb {
 
 .brain-game-display {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: clamp(3rem, 12vw, 4.5rem);
   font-weight: 800;
   color: var(--primary);
@@ -1958,7 +1958,7 @@ html.reduce-motion .app-aurora-orb {
   background: color-mix(in srgb, var(--primary) 16%, var(--bg-card));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
@@ -2283,7 +2283,7 @@ html.reduce-motion .app-aurora-orb {
 .home-hero-badge-icon { font-size: 0.9rem; }
 
 .home-hero-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: clamp(1.65rem, 4vw, 2.25rem);
   font-weight: 800;
   line-height: 1.1;
@@ -2417,7 +2417,7 @@ html.reduce-motion .app-aurora-orb {
 .reading-body { min-width: 0; }
 
 .reading-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
@@ -2453,7 +2453,7 @@ html.reduce-motion .app-aurora-orb {
 .sunset-banner-icon { font-size: 2rem; flex-shrink: 0; }
 
 .sunset-banner-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--text);
@@ -2516,7 +2516,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .hero-ring-pct {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--primary);
@@ -2567,7 +2567,7 @@ html.reduce-motion .app-aurora-orb {
   margin-top: 0.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2673,7 +2673,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .home-mega-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   margin: 0 0 0.75rem;
   line-height: 1.1;
 }
@@ -2820,7 +2820,7 @@ html.reduce-motion .app-aurora-orb {
 .home-stat-pill-icon { font-size: 1.1rem; }
 
 .home-stat-pill-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--home-neon);
@@ -2846,7 +2846,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .home-section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.05rem;
   font-weight: 700;
   margin: 0;
@@ -2872,7 +2872,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .home-mood-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--home-text);
@@ -3001,7 +3001,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .page-home .qa-card--home .qa-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-weight: 600;
   font-size: 0.875rem;
   margin: 0;
@@ -3186,7 +3186,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .home-panel-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text);
@@ -3208,7 +3208,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .home-panel-pct {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--neon);
@@ -3426,7 +3426,7 @@ html.reduce-motion .app-aurora-orb {
 }
 
 .pulse-tip-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);

@@ -96,6 +96,7 @@ def patch_other_files():
         text = path.read_text()
         next_text = re.sub(r'\?v=\d+', f'?v={V}', text)
         next_text = re.sub(r"const CACHE = 'mejora-v\d+'", f"const CACHE = 'mejora-v{V}'", next_text)
+        next_text = re.sub(r'const ASSET_V = \d+', f'const ASSET_V = {V}', next_text)
         # Entry script sin ?v= (import map resuelve versión)
         if path.name == 'index.html':
             next_text = re.sub(

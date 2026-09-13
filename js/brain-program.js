@@ -265,6 +265,9 @@ export function completeSession(results) {
     p.weekSessions = (p.weekSessions || 0) + 1
   }
   saveBrainProgram(p)
+  import('/js/product-analytics.js').then(m => {
+    m.trackProductEvent(m.EVENTS.BRAIN_SESSION, { exercises: results?.length || 0 })
+  }).catch(() => {})
   return p
 }
 

@@ -112,10 +112,6 @@ body.theme-rpg .page-brain-neural .ds-zone-title {
 body.theme-rpg .m-home-date,
 body.theme-rpg .m-page-kicker {
   color: var(--rpg-gold);
-  font-family: var(--m-display);
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 body.theme-rpg .m-home-lead,
@@ -137,8 +133,6 @@ body.theme-rpg .sidebar-header {
 body.theme-rpg .sidebar-link {
   color: rgba(245, 240, 232, 0.82) !important;
   border-radius: 8px !important;
-  font-family: var(--m-font) !important;
-  font-size: 0.95rem !important;
 }
 
 body.theme-rpg .sidebar-link:hover {
@@ -201,15 +195,12 @@ body.theme-rpg .app-banner {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
-body.theme-rpg .banner-title,
-body.theme-rpg .banner-subtitle,
-body.theme-rpg .banner-crumb {
+body.theme-rpg .banner-title {
   color: var(--rpg-gold-light) !important;
-  font-family: var(--m-display) !important;
 }
 
 body.theme-rpg .banner-subtitle,
-body.theme-rpg .banner-crumb { color: rgba(245, 240, 232, 0.75) !important; font-family: var(--m-font) !important; }
+body.theme-rpg .banner-crumb { color: rgba(245, 240, 232, 0.75) !important; }
 
 body.theme-rpg .banner-metric {
   background: var(--rpg-parchment) !important;
@@ -231,9 +222,6 @@ body.theme-rpg .btn-primary {
   border: 1px solid rgba(212, 168, 58, 0.55);
   color: var(--rpg-ink);
   border-radius: 8px;
-  font-family: var(--m-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
   box-shadow: 0 4px 12px rgba(240, 199, 94, 0.28);
 }
 
@@ -249,8 +237,6 @@ body.theme-rpg .banner-cta {
   color: var(--rpg-ink);
   border: 1px solid rgba(212, 168, 58, 0.45);
   border-radius: 8px;
-  font-family: var(--m-display);
-  font-weight: 600;
 }
 
 body.theme-rpg .input-field {
@@ -270,10 +256,6 @@ body.theme-rpg .ds-tabs {
 
 body.theme-rpg .ds-tab {
   color: rgba(240, 244, 252, 0.9) !important;
-  font-family: var(--m-font) !important;
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em;
 }
 
 body.theme-rpg .ds-tab:hover:not(.is-active) {
@@ -298,7 +280,6 @@ body.theme-rpg .ds-subtab {
   color: rgba(240, 244, 252, 0.88) !important;
   background: transparent !important;
   border-color: rgba(240, 199, 94, 0.15) !important;
-  font-family: var(--m-font) !important;
 }
 
 body.theme-rpg .ds-subtab.is-active {
@@ -386,7 +367,6 @@ body.theme-rpg .page-brain-neural .brain-next-step__num {
   color: var(--rpg-ink);
   background: var(--rpg-gold);
   border-color: transparent;
-  font-family: var(--m-display);
 }
 
 /* Calma — santuario de mana */
@@ -405,7 +385,6 @@ body.theme-rpg .calma-featured-cta {
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-family: var(--m-display);
 }
 
 body.theme-rpg .calma-program-catalog-card.is-active {
@@ -474,7 +453,6 @@ body.theme-rpg .school-focus-cta {
   color: var(--rpg-ink);
   border: 1px solid rgba(212, 168, 58, 0.45);
   border-radius: 8px;
-  font-family: var(--m-display);
 }
 
 body.theme-rpg .school-focus-cta-label,

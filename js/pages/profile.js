@@ -6,11 +6,35 @@ import {
 import { UNLOCKS, isUnlocked, getNextUnlock } from '/js/unlocks.js'
 import { tabBar, pageHero } from '/js/ui.js'
 import { skillBars } from '/js/page-helpers.js'
+import { t } from '/js/i18n.js'
 
 let profileTab = 'resumen'
 
 export function getProfileTab() { return profileTab }
 export function setProfileTab(v) { profileTab = v }
+
+export function bindProfileGlobals() {
+  window.shareProfileProgress = async () => {
+    const { shareProfile } = await import('/js/share.js')
+    const { t: tr } = await import('/js/i18n.js')
+    try {
+      const r = await shareProfile()
+      if (r?.channel === 'clipboard') alert(tr('common.copied'))
+    } catch {
+      alert(tr('common.shareError'))
+    }
+  }
+  window.shareProfileAchievements = async () => {
+    const { shareTopAchievement } = await import('/js/share.js')
+    const { t: tr } = await import('/js/i18n.js')
+    try {
+      const r = await shareTopAchievement()
+      if (r?.channel === 'clipboard') alert(tr('common.copied'))
+    } catch {
+      alert(tr('common.shareError'))
+    }
+  }
+}
 
 export function renderProfile() {
   const achievements = getAchievements()
@@ -47,6 +71,10 @@ export function renderProfile() {
           ['Meditación', stats.meditationMinutes + ' min'],
           ['Hábitos', stats.habitsCompleted], ['Desafíos', stats.challengesWon],
         ].map(([l, v]) => `<div class="ds-stat"><p class="ds-stat-value">${v}</p><p class="ds-stat-label">${l}</p></div>`).join('')}
+      </div>
+      <div class="flex flex-col gap-2 span-full">
+        <button type="button" onclick="shareProfileProgress()" class="btn-secondary w-full">📤 ${t('profile.shareRank')}</button>
+        <button type="button" onclick="shareProfileAchievements()" class="btn-ghost w-full text-sm">🏅 ${t('profile.shareAchievements')}</button>
       </div>
       <h2 class="ds-section-title span-full">Récords</h2>
       <div class="card span-full">

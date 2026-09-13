@@ -21,6 +21,12 @@
   --m-radius-lg: 10px;
   --m-font: 'Inter', system-ui, -apple-system, sans-serif;
   --m-display: 'Barlow Condensed', 'Inter', system-ui, sans-serif;
+  --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-type-body: 1rem;
+  --m-type-leading: 1.5;
+  --m-type-display-tracking: 0.04em;
+  --m-type-ui-tracking: 0.02em;
+  --m-type-label-tracking: 0.06em;
   --m-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 32px rgba(0, 0, 0, 0.45);
   --m-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
 
@@ -103,6 +109,9 @@ body.theme-rpg {
   --m-radius-lg: 14px;
   --m-display: 'Cinzel', 'Georgia', serif;
   --m-font: 'Crimson Pro', 'Georgia', serif;
+  --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-type-body: 1.0625rem;
+  --m-type-leading: 1.55;
   --m-shadow: 0 4px 16px rgba(10, 8, 20, 0.25);
   --m-shadow-lg: 0 8px 32px rgba(10, 8, 20, 0.32);
   --bg: var(--m-bg);
@@ -155,6 +164,11 @@ body::before {
 
 .font-display {
   font-family: var(--m-display);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--m-type-display-tracking);
   font-weight: 600;
+}
+
+.font-ui {
+  font-family: var(--m-ui);
+  letter-spacing: var(--m-type-ui-tracking);
 }

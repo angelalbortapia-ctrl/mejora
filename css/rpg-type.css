@@ -1,0 +1,184 @@
+/* RPG — tipografía homologada
+   Display: Cinzel · Prosa: Crimson Pro · UI: Inter */
+
+body.theme-rpg {
+  font-family: var(--m-font);
+  font-size: var(--m-type-body);
+  line-height: var(--m-type-leading);
+  font-feature-settings: 'liga' 1, 'kern' 1;
+  text-rendering: optimizeLegibility;
+}
+
+body.theme-rpg :is(
+  h1, h2, h3,
+  .font-display,
+  .m-home-title,
+  .m-page-title,
+  .m-page-toolbar .m-section-title,
+  .banner-title,
+  .logo-text,
+  .logo-mark,
+  .ds-toolbar-title,
+  .ds-zone-title,
+  .ds-stat-value,
+  .habit-card-title,
+  .home-panel-title,
+  .school-panel-title,
+  .school-focus-title,
+  .school-lesson-row-title,
+  .academy-lesson-title,
+  .m-section .m-section-title,
+  .calma-featured-title,
+  .calma-program-name,
+  .calma-program-catalog-name,
+  .calma-complete-title,
+  .onboarding-title,
+  .m-task-label,
+  .brain-neural-hero__title,
+  .brain-wellness-hero__title,
+  .brain-wellness-title,
+  .brain-dash-card__title,
+  .brain-next-step__label,
+  .school-header-title,
+  .school-hero-title,
+  .page-hero h1,
+  .page-hero h2
+) {
+  font-family: var(--m-display) !important;
+  letter-spacing: var(--m-type-display-tracking);
+  font-weight: 600;
+}
+
+body.theme-rpg :is(
+  h4, h5, h6,
+  .ds-list-title,
+  .goal-card-title,
+  .journey-card-title
+) {
+  font-family: var(--m-ui) !important;
+  font-weight: 600;
+  letter-spacing: var(--m-type-ui-tracking);
+}
+
+body.theme-rpg :is(
+  p,
+  .ds-lead,
+  .m-home-lead,
+  .m-page-lead,
+  .onboarding-desc,
+  .school-panel-lead,
+  .school-lesson-row-desc,
+  .academy-lesson-hook,
+  .m-task-brief,
+  .home-panel-sub,
+  .calma-featured-sub,
+  .calma-program-desc,
+  .calma-program-catalog-tagline,
+  .brain-neural-hero__sub,
+  .brain-wellness-lead,
+  .lesson-section-body,
+  .school-focus-body
+) {
+  font-family: var(--m-font);
+  line-height: 1.6;
+}
+
+body.theme-rpg :is(
+  button,
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .banner-cta,
+  .school-focus-cta,
+  .calma-featured-cta,
+  .ds-tab,
+  .ds-subtab,
+  .ds-segment-btn,
+  .sidebar-link,
+  .sidebar-stats-caption,
+  .sidebar-stat,
+  .bottom-nav-link,
+  .bottom-nav-label,
+  .banner-crumb,
+  .banner-subtitle,
+  .banner-metric-label,
+  .banner-metric-value,
+  .ds-section-title,
+  .ds-setting-label,
+  .ds-setting-hint,
+  .ds-chip,
+  .ds-stat-label,
+  label,
+  input,
+  select,
+  textarea,
+  .input-field,
+  .habit-card-meta,
+  .school-lesson-row-meta,
+  .school-panel-meta,
+  .m-page-kicker,
+  .m-home-date,
+  .brain-neural-hero__kicker,
+  .brain-neural-stat__lbl,
+  .school-focus-kicker,
+  .academy-lesson-cat,
+  .calma-featured-label,
+  .school-faculty-pct,
+  .m-task-xp,
+  .m-progress-pill,
+  .brain-next-step__num,
+  .brain-next-step__meta,
+  .brain-dash-card__meta,
+  .settings-row-label,
+  .settings-row-value
+) {
+  font-family: var(--m-ui) !important;
+  letter-spacing: var(--m-type-ui-tracking);
+}
+
+body.theme-rpg :is(
+  .m-page-kicker,
+  .m-home-date,
+  .ds-section-title,
+  .banner-metric-label,
+  .ds-stat-label,
+  .brain-neural-hero__kicker,
+  .school-focus-kicker,
+  .academy-lesson-cat,
+  .calma-featured-label
+) {
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--m-type-label-tracking);
+}
+
+body.theme-rpg .btn-primary,
+body.theme-rpg .btn-secondary,
+body.theme-rpg .banner-cta,
+body.theme-rpg .school-focus-cta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: var(--m-type-label-tracking);
+  text-transform: uppercase;
+}
+
+body.theme-rpg .ds-tab,
+body.theme-rpg .ds-subtab {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: var(--m-type-label-tracking) !important;
+}
+
+body.theme-rpg .sidebar-link {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  letter-spacing: var(--m-type-ui-tracking) !important;
+  text-transform: none !important;
+}
+
+body.theme-rpg .sidebar-link.active .sidebar-link-label {
+  font-weight: 700 !important;
+  letter-spacing: var(--m-type-label-tracking) !important;
+}

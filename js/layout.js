@@ -1,64 +1,80 @@
 import { icon, rankIcon } from '/js/icons.js'
+import { t } from '/js/i18n.js'
 
-/** Navegación — 5 destinos claros */
-export const NAV_SECTIONS = [
-  {
-    label: '',
-    items: [
-      { path: '/', label: 'Hoy', iconKey: 'home', desc: 'Tu día' },
-      { path: '/mejora', label: 'Hábitos', iconKey: 'habit', desc: 'Ejecuta sin excusas' },
-      { path: '/gimnasia', label: 'Gimnasia', iconKey: 'brain', desc: 'Aprender · entrenar · cuerpo' },
-      { path: '/meditacion', label: 'Calma', iconKey: 'calm', desc: 'Control bajo presión' },
-      { path: '/perfil', label: 'Tú', iconKey: 'profile', desc: 'Progreso y logros' },
-    ],
-  },
-]
-
-const EXTRA_ROUTES = {
-  '/plan': { label: 'Plan del día', icon: '📋', desc: 'Lista completa de hoy', section: 'Hoy' },
-  '/metas': { label: 'Metas', icon: '🎯', desc: 'Objetivos a 30 días', section: 'Tú' },
-  '/viaje': { label: 'Tu historial', icon: '📊', desc: 'Actividad y consistencia', section: 'Tú' },
-  '/hoy': { label: 'Solo hoy', icon: '◎', desc: 'Vista enfocada', section: 'Hoy' },
-  '/rutina': { label: 'Rutina', icon: '🌅', desc: 'Sesión guiada', section: 'Hoy' },
-  '/enfoque': { label: 'Enfoque', icon: '⏱️', desc: 'Pomodoro', section: 'Hoy' },
-  '/ajustes': { label: 'Ajustes', icon: '⚙️', desc: 'Preferencias', section: 'Sistema' },
+/** Navegación — 5 destinos claros (labels vía i18n en runtime) */
+export function getNavSections() {
+  return [
+    {
+      label: '',
+      items: [
+        { path: '/', label: t('nav.home'), iconKey: 'home', desc: t('navDesc.home') },
+        { path: '/mejora', label: t('nav.habits'), iconKey: 'habit', desc: t('navDesc.habits') },
+        { path: '/gimnasia', label: t('nav.brain'), iconKey: 'brain', desc: t('navDesc.brain') },
+        { path: '/meditacion', label: t('nav.calm'), iconKey: 'calm', desc: t('navDesc.calm') },
+        { path: '/perfil', label: t('nav.profile'), iconKey: 'profile', desc: t('navDesc.profile') },
+      ],
+    },
+  ]
 }
 
-export const NAV_PATHS = [
-  ...NAV_SECTIONS.flatMap(s => s.items.map(i => i.path)),
-  ...Object.keys(EXTRA_ROUTES),
-]
+export const NAV_SECTIONS = getNavSections()
 
-export const BOTTOM_NAV = [
-  { path: '/', iconKey: 'home', label: 'Hoy' },
-  { path: '/mejora', iconKey: 'habit', label: 'Hábitos' },
-  { path: '/gimnasia', iconKey: 'brain', label: 'Gimnasia' },
-  { path: '/meditacion', iconKey: 'calm', label: 'Calma' },
-  { path: '/perfil', iconKey: 'profile', label: 'Tú' },
-]
+function getExtraRoutes() {
+  return {
+    '/plan': { label: t('nav.plan'), icon: '📋', desc: t('navDesc.home'), section: t('nav.home') },
+    '/metas': { label: t('nav.goals'), icon: '🎯', desc: t('navDesc.profile'), section: t('nav.profile') },
+    '/viaje': { label: t('nav.journey'), icon: '📊', desc: t('navDesc.profile'), section: t('nav.profile') },
+    '/hoy': { label: t('nav.solo'), icon: '◎', desc: t('navDesc.home'), section: t('nav.home') },
+    '/rutina': { label: t('nav.routine'), icon: '🌅', desc: t('navDesc.home'), section: t('nav.home') },
+    '/enfoque': { label: t('nav.focus'), icon: '⏱️', desc: t('navDesc.home'), section: t('nav.home') },
+    '/ajustes': { label: t('nav.settings'), icon: '⚙️', desc: t('nav.settings'), section: t('nav.settings') },
+  }
+}
+
+export function getNavPaths() {
+  return [
+    ...getNavSections().flatMap(s => s.items.map(i => i.path)),
+    ...Object.keys(getExtraRoutes()),
+  ]
+}
+
+export const NAV_PATHS = getNavPaths()
+
+export function getBottomNav() {
+  return [
+    { path: '/', iconKey: 'home', label: t('nav.home') },
+    { path: '/mejora', iconKey: 'habit', label: t('nav.habits') },
+    { path: '/gimnasia', iconKey: 'brain', label: t('nav.brain') },
+    { path: '/meditacion', iconKey: 'calm', label: t('nav.calm') },
+    { path: '/perfil', iconKey: 'profile', label: t('nav.profile') },
+  ]
+}
+
+export const BOTTOM_NAV = getBottomNav()
 
 function navIconMarkup(item) {
   return item.iconKey ? icon(item.iconKey, 'nav-svg') : (item.icon || '')
 }
 
 export function getSectionHomePath(sectionLabel) {
-  if (!sectionLabel || sectionLabel === 'Mejora' || sectionLabel === 'App' || sectionLabel === 'Tú') return '/'
-  const section = NAV_SECTIONS.find(s => s.label === sectionLabel)
+  if (!sectionLabel || sectionLabel === 'Mejora' || sectionLabel === 'App' || sectionLabel === t('nav.profile')) return '/'
+  const section = getNavSections().find(s => s.label === sectionLabel)
   return section?.items[0]?.path || '/'
 }
 
 export function normalizeNavPath(path) {
   const base = '/' + (path.split('/').filter(Boolean)[0] || '')
-  return NAV_PATHS.includes(base) ? base : '/'
+  return getNavPaths().includes(base) ? base : '/'
 }
 
 export function getNavMeta(path) {
-  if (EXTRA_ROUTES[path]) return { path, ...EXTRA_ROUTES[path] }
-  for (const section of NAV_SECTIONS) {
+  const extra = getExtraRoutes()
+  if (extra[path]) return { path, ...extra[path] }
+  for (const section of getNavSections()) {
     const item = section.items.find(i => i.path === path)
     if (item) return { ...item, section: section.label || 'Mejora' }
   }
-  return { path, label: 'Mejora', icon: '✦', desc: 'Tu espacio de crecimiento', section: 'App' }
+  return { path, label: 'Mejora', icon: '✦', desc: t('navDesc.profile'), section: 'App' }
 }
 
 function formatBannerDate() {
@@ -69,10 +85,19 @@ function formatBannerDate() {
   }).replace('.', '')
 }
 
+export function remountNav() {
+  const sidebarNav = document.getElementById('sidebar-nav')
+  const bottomNav = document.getElementById('bottom-nav')
+  if (sidebarNav) sidebarNav.dataset.mounted = ''
+  if (bottomNav) bottomNav.dataset.mounted = ''
+  mountSidebar()
+  mountBottomNav()
+}
+
 export function mountSidebar() {
   const nav = document.getElementById('sidebar-nav')
-  if (!nav || nav.dataset.mounted === 'v5') return
-  nav.innerHTML = NAV_SECTIONS.map(section => `
+  if (!nav || nav.dataset.mounted === 'v6') return
+  nav.innerHTML = getNavSections().map(section => `
     <div class="sidebar-section">
       ${section.label ? `<p class="sidebar-section-label">${section.label}</p>` : ''}
       ${section.items.map(item => `
@@ -83,18 +108,18 @@ export function mountSidebar() {
           </span>
         </a>`).join('')}
     </div>`).join('')
-  nav.dataset.mounted = 'v5'
+  nav.dataset.mounted = 'v6'
 }
 
 export function mountBottomNav() {
   const el = document.getElementById('bottom-nav')
-  if (!el || el.dataset.mounted === 'v5') return
-  el.innerHTML = BOTTOM_NAV.map(item => `
+  if (!el || el.dataset.mounted === 'v6') return
+  el.innerHTML = getBottomNav().map(item => `
     <a href="#${item.path}" data-path="${item.path}" class="bottom-nav-link no-underline" title="${item.label}">
       <span class="bottom-nav-icon" aria-hidden="true">${navIconMarkup(item)}</span>
       <span class="bottom-nav-label">${item.label}</span>
     </a>`).join('')
-  el.dataset.mounted = 'v5'
+  el.dataset.mounted = 'v6'
 }
 
 export function updateBottomNav(path) {

@@ -25,6 +25,11 @@ create policy "user_data_update_own"
   on public.user_data for update
   using (auth.uid() = user_id);
 
+drop policy if exists "user_data_delete_own" on public.user_data;
+create policy "user_data_delete_own"
+  on public.user_data for delete
+  using (auth.uid() = user_id);
+
 -- Perfil ligero (opcional, para mostrar nombre en la app)
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
