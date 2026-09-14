@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" class="harf-htb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harf — HTB Tactical Dark · Uxcel preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="harf-htb-tactical.css">
+  <style>
+    body { margin: 0; min-height: 100vh; }
+    .demo { max-width: 42rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .demo h1 { font-family: var(--htb-font-mono); font-size: 1.5rem; margin: 0 0 0.25rem; }
+    .demo p.lead { color: var(--htb-text-secondary); margin: 0 0 1rem; font-size: 0.875rem; }
+    .demo section > h2 { font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--htb-accent-cyan); margin: 0 0 0.75rem; }
+  </style>
+</head>
+<body class="harf-htb">
+  <main class="demo">
+    <header>
+      <h1>HTB Tactical Dark</h1>
+      <p class="lead">Harf v6.2 — preview de componentes para Uxcel</p>
+    </header>
+
+    <section aria-labelledby="demo-alert">
+      <h2 id="demo-alert">htb_firewall_alert</h2>
+      <div class="htb-firewall-alert" role="alert">
+        <p class="htb-firewall-alert__title">FIREWALL · BLOQUEADO</p>
+        <p class="htb-firewall-alert__body">Conexión rechazada en puerto 443. Verifica credenciales o VPN antes de reintentar.</p>
+        <button type="button" class="htb-firewall-alert__dismiss" aria-label="Cerrar alerta">Descartar</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="demo-grid">
+      <h2 id="demo-grid">htb_hero_grid_chars</h2>
+      <div class="htb-hero-grid" role="group" aria-label="Selector de caracteres">
+        <button type="button" class="htb-hero-grid__cell is-active" aria-pressed="true">0</button>
+        <button type="button" class="htb-hero-grid__cell" aria-pressed="false">1</button>
+        <button type="button" class="htb-hero-grid__cell" aria-pressed="false">#</button>
+        <button type="button" class="htb-hero-grid__cell" aria-pressed="false">$</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="demo-card">
+      <h2 id="demo-card">htb_terminal_card</h2>
+      <article class="htb-terminal-card is-active">
+        <p class="htb-terminal-card__label">root@harf:~#</p>
+        <h3 class="htb-terminal-card__title">Misión activa</h3>
+        <p class="htb-terminal-card__body">Escanea el objetivo, explota el vector y documenta el flag. Tiempo estimado: 45 min.</p>
+      </article>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('.htb-hero-grid__cell').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.htb-hero-grid__cell').forEach(b => {
+          b.classList.remove('is-active')
+          b.setAttribute('aria-pressed', 'false')
+        })
+        btn.classList.add('is-active')
+        btn.setAttribute('aria-pressed', 'true')
+      })
+    })
+  </script>
+</body>
+</html>
