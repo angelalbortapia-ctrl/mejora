@@ -28,7 +28,7 @@ body.lesson-reader-mode .app-content {
   overflow-x: hidden;
   overflow-y: auto;
   scroll-behavior: smooth;
-  background: var(--m-bg, #080809);
+  background: var(--m-bg, #ffffff);
   padding-bottom: 5rem;
 }
 
@@ -189,7 +189,7 @@ body.lesson-reader-mode .app-content {
   left: 0;
   right: 0;
   height: 6rem;
-  background: linear-gradient(to bottom, transparent, var(--m-bg, #080809));
+  background: linear-gradient(to bottom, transparent, var(--m-bg, #ffffff));
   pointer-events: none;
 }
 

@@ -268,9 +268,19 @@ export function migrateOnboardingFlag() {
 }
 
 export function saveSettings(s) {
+  if (s.darkMode) s.darkMode = false
   appStore.saveSettings(s)
-  document.documentElement.classList.toggle('dark', s.darkMode)
+  document.documentElement.classList.remove('dark')
   document.documentElement.classList.toggle('reduce-motion', !!s.reducedMotion)
+}
+
+/** Migración única — Notion Light: ignora darkMode legacy en localStorage */
+export function migrateNotionLight() {
+  const s = getSettings()
+  if (!s.darkMode && !document.documentElement.classList.contains('dark')) return
+  s.darkMode = false
+  appStore.saveSettings(s)
+  document.documentElement.classList.remove('dark')
 }
 
 const DEFAULT_HABITS = [

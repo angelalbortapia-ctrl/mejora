@@ -85,6 +85,67 @@ html.dark {
   color-scheme: light;
 }
 
+html.dark body,
+html.dark .app-main,
+html.dark #app-content,
+html.dark .app-content {
+  background-color: var(--bg-app) !important;
+  background-image: none !important;
+  color: var(--text-main) !important;
+}
+
+/* theme-rpg legacy — forzar Notion si la clase persiste */
+body.theme-rpg {
+  background: var(--bg-app) !important;
+  color: var(--text-main) !important;
+}
+
+body.theme-rpg .sidebar {
+  background: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+body.theme-rpg .sidebar-link {
+  color: var(--text-muted) !important;
+}
+
+body.theme-rpg .sidebar-link:hover,
+body.theme-rpg .sidebar-link.active {
+  background: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+  box-shadow: none !important;
+  border-color: var(--border-color) !important;
+}
+
+body.theme-rpg .sidebar-stats {
+  background: var(--bg-card-hover) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.theme-rpg .sidebar-stats-caption,
+body.theme-rpg .sidebar-stat {
+  color: var(--text-muted) !important;
+}
+
+body.theme-rpg .app-banner {
+  background: var(--bg-app) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+body.theme-rpg .banner-title,
+body.theme-rpg .logo-text {
+  color: var(--text-main) !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  text-shadow: none !important;
+}
+
+body.theme-rpg .banner-subtitle,
+body.theme-rpg .banner-crumb {
+  color: var(--text-muted) !important;
+}
+
 .reduce-motion .card,
 .reduce-motion .htb-card,
 .reduce-motion .module-item,

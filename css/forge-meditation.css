@@ -26,7 +26,7 @@ body.calma-mode .app-content {
   overflow-x: hidden;
   overflow-y: auto;
   scroll-behavior: smooth;
-  background: var(--m-bg, #080809);
+  background: var(--m-bg, #ffffff);
   padding-bottom: 4rem;
 }
 
@@ -133,7 +133,7 @@ body.calma-mode .app-content {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 5rem;
-  background: linear-gradient(to bottom, transparent, var(--m-bg, #080809));
+  background: linear-gradient(to bottom, transparent, var(--m-bg, #ffffff));
   pointer-events: none;
   z-index: 2;
 }
@@ -1678,7 +1678,7 @@ body.mejora-forge .bottom-nav {
 .calma-viewport.lesson-reader-viewport {
   min-height: 100vh;
   max-height: none;
-  background: var(--m-bg, #080809);
+  background: var(--m-bg, #ffffff);
   pointer-events: auto;
 }
 
@@ -1815,7 +1815,7 @@ body.onboarding-open .calma-viewport * {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
-  background: var(--m-bg, #080809);
+  background: var(--m-bg, #ffffff);
 }
 
 @media (min-width: 900px) {
