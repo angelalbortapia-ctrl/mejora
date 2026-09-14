@@ -17,11 +17,11 @@ describe('smoke — rutas y contenido', () => {
     }
   })
 
-  it('meditaciones tienen id y título', () => {
+  it('meditaciones tienen id y nombre', () => {
     assert.ok(MEDITATIONS.length >= 20)
     MEDITATIONS.forEach(m => {
-      assert.ok(m.id, `meditation missing id: ${m.title}`)
-      assert.ok(m.title?.length > 2, `meditation missing title: ${m.id}`)
+      assert.ok(m.id, `meditation missing id: ${m.name}`)
+      assert.ok(m.name?.length > 2, `meditation missing name: ${m.id}`)
     })
   })
 

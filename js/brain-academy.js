@@ -737,11 +737,17 @@ const LESSON_META = {
     caseStudy: 'H.M. participó en 100+ estudios durante 55 años sin recordar haberlos hecho.',
     myth: 'Mito: “la memoria es un archivo”. Realidad: sin hipocampo no hay índice de episodios nuevos.',
     cite: 'Scoville & Milner (1957) · Corkin (2002)',
+    intensity: 'brutal',
+    quote: '“Cada día es solo para él el primero de su vida.” — Corkin sobre H.M.',
+    deepCut: 'H.M. firmaba consentimientos sin recordar haberlos firmado minutos antes.',
   },
   'phineas-gage': {
     caseStudy: 'Gage vivió 12 años más; su cráneo y la barra están en el Warren Museum de Harvard.',
     myth: 'Mito: “la inteligencia está en el IQ”. Realidad: PFC es juicio, planificación y carácter.',
     cite: 'Harlow (1848) · Damasio (1994)',
+    intensity: 'brutal',
+    quote: '“Gage ya no era Gage.” — Dr. Harlow, 1868',
+    deepCut: 'La barra pesaba 6 kg y salió por la parte superior del cráneo. Caminó solo.',
   },
   'predictive-brain': {
     caseStudy: 'La ilusión de adelantamiento visual: tu cerebro “rellena” frames que no llegaron a tiempo.',
@@ -764,16 +770,6 @@ const LESSON_META = {
     cite: 'Weiskrantz et al. (1974) · de Gelder (2010)',
     intensity: 'brutal',
     quote: '“La conciencia es el último en enterarse.” — Weiskrantz',
-  },
-  'patient-hm': {
-    intensity: 'brutal',
-    quote: '“Cada día es solo para él el primero de su vida.” — Corkin sobre H.M.',
-    deepCut: 'H.M. firmaba consentimientos sin recordar haberlos firmado minutos antes.',
-  },
-  'phineas-gage': {
-    intensity: 'brutal',
-    quote: '“Gage ya no era Gage.” — Dr. Harlow, 1868',
-    deepCut: 'La barra pesaba 6 kg y salió por la parte superior del cráneo. Caminó solo.',
   },
   'split-brain': {
     caseStudy: 'Paciente W.J.: la mano izquierda peleaba por el control del volante mientras la derecha corregía.',

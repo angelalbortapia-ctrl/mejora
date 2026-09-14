@@ -90,11 +90,11 @@ function patchTrialHudDOM() {
 }
 
 const TIMED_TRIAL_HANDLERS = {
-  switching: () => switchAnswer('__timeout__'),
-  logic: () => logicAnswer(-1),
-  sequence: () => seqAnswer(-999999),
-  anagram: () => anagramPick(-1),
-  oddout: () => oddoutPick(-1),
+  switching: () => window.switchAnswer('__timeout__'),
+  logic: () => window.logicAnswer(-1),
+  sequence: () => window.seqAnswer(-999999),
+  anagram: () => window.anagramPick(-1),
+  oddout: () => window.oddoutPick(-1),
 }
 
 function queueArmTrial() {
@@ -684,7 +684,7 @@ window.launchSessionExercise = function() {
 window.submitSessionDebrief = function(avgPct) {
   const note = document.getElementById('session-debrief-text')?.value?.trim()
   if (note) setItem('lastSessionDebrief', { note, at: getToday(), avg: avgPct })
-  finishGuidedSession(avgPct)
+  window.finishGuidedSession(avgPct)
 }
 
 window.finishGuidedSession = function(avgPct) {

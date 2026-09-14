@@ -402,7 +402,7 @@ export function mountClinicalHandlers(ctx) {
       s.trialStart = Date.now()
       render()
       brainDelay(() => {
-        if (brainState.exercise === 'ant' && s.subphase === 'flanker') antAnswer('__timeout__')
+        if (brainState.exercise === 'ant' && s.subphase === 'flanker') window.antAnswer('__timeout__')
       }, s.isi)
     }, s.soa)
   }

@@ -1,3 +1,4 @@
+/* global render */
 import {
   PREFIX, SKILLS, DIFFICULTIES, getItem, setItem, getToday, esc,
   getProgress, saveProgress, getLevel, getLevelInfo, getTotalLevel, getRank,

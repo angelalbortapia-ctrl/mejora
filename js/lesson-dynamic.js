@@ -77,7 +77,7 @@ function renderLessonBlock(b, id) {
         <button type="button" class="lesson-scenario-reveal btn-ghost text-sm" data-scenario="${id}">¿Qué pasa en el cerebro? →</button>
         <p class="lesson-scenario-answer" hidden>${esc(b.reveal)}</p>
       </div>`
-    case 'checkpoint':
+    case 'checkpoint': {
       const opts = (b.options || []).map((o, i) =>
         `<button type="button" class="lesson-check-opt" data-idx="${i}">${esc(o)}</button>`
       ).join('')
@@ -88,6 +88,7 @@ function renderLessonBlock(b, id) {
         <div class="lesson-checkpoint-options">${opts}</div>
         <p class="lesson-checkpoint-explain" hidden>${esc(b.explain)}</p>
       </div>`
+    }
     case 'analogy':
       return `<div class="lesson-block lesson-analogy">
         <span class="lesson-block-label">💡 Analogía</span>
@@ -98,11 +99,12 @@ function renderLessonBlock(b, id) {
         </div>
         <p>${esc(b.text)}</p>
       </div>`
-    case 'timeline':
+    case 'timeline': {
       const items = (b.items || []).map(it =>
         `<li><span class="lesson-tl-when">${esc(it.when)}</span><span class="lesson-tl-what">${esc(it.what)}</span></li>`
       ).join('')
       return `<div class="lesson-block lesson-timeline"><span class="lesson-block-label">📅 Línea temporal</span><ol>${items}</ol></div>`
+    }
     case 'action':
       return `<div class="lesson-block lesson-action">
         <span class="lesson-block-label">🏃 Hazlo ahora</span>
