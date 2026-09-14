@@ -291,6 +291,34 @@ export function migrateNotionLight() {
   document.body?.classList.remove('theme-rpg')
 }
 
+function parseBgLuminance(bg) {
+  const m = String(bg || '').match(/[\d.]+/g)
+  if (!m || m.length < 3) return 255
+  return (+m[0] + +m[1] + +m[2]) / 3
+}
+
+/** Si el body sigue oscuro (caché legacy), inyecta notion-light-force.css */
+export function enforceNotionLightRuntime(assetVersion = 193) {
+  const body = document.body
+  if (!body) return
+  const lum = parseBgLuminance(getComputedStyle(body).backgroundColor)
+  if (lum >= 140) return
+  if (!document.getElementById('notion-light-force-link')) {
+    const link = document.createElement('link')
+    link.id = 'notion-light-force-link'
+    link.rel = 'stylesheet'
+    link.href = `/css/notion-light-force.css?v=${assetVersion}`
+    document.head.appendChild(link)
+  }
+  const root = document.documentElement
+  root.dataset.notionLight = '1'
+  root.classList.remove('dark')
+  root.removeAttribute('data-theme')
+  body.classList.remove('theme-rpg')
+  body.style.setProperty('background-color', '#ffffff', 'important')
+  body.style.setProperty('color', '#37352f', 'important')
+}
+
 const DEFAULT_HABITS = [
   { id: 'water', name: 'Hidratación', icon: '💧', category: 'salud', difficulty: 1, xp: 15, type: 'counter', target: 8, unit: 'vasos' },
   { id: 'read', name: 'Lectura', icon: '📚', category: 'mente', difficulty: 2, xp: 25, type: 'counter', target: 20, unit: 'min' },

@@ -9,7 +9,7 @@ import {
   ensureDailyPlan, getPlanProgress, checkPlanTask, isRoutineDoneToday, getWeekNumber,
   GOAL_TEMPLATES, getGoals, addGoal, syncGoals, getHabitWeekChart,
   needsOnboarding, migrateOnboardingFlag, MOODS, getMood, setMood, getMoodWeek, getMoodInsight,
-  getStreakShieldStatus, resetAllData, migrateNotionLight,
+  getStreakShieldStatus, resetAllData, migrateNotionLight, enforceNotionLightRuntime,
 } from '/js/core.js'
 import { ASSET_VERSION } from '/js/version.js'
 import { medState, MED_DURATIONS, stopMeditationSession, syncMeditationFromRoute, getBreathPhaseMs } from '/js/meditation-service.js'
@@ -574,6 +574,9 @@ document.addEventListener('visibilitychange', () => {
 
 migrateOnboardingFlag()
 migrateNotionLight()
+enforceNotionLightRuntime(ASSET_VERSION)
+requestAnimationFrame(() => enforceNotionLightRuntime(ASSET_VERSION))
+document.addEventListener('DOMContentLoaded', () => enforceNotionLightRuntime(ASSET_VERSION))
 initI18n()
 trackProductEvent(EVENTS.APP_OPEN)
 window.addEventListener('mejora:locale', () => {

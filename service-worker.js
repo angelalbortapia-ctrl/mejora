@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 192
+const ASSET_V = 193
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -45,9 +45,10 @@ const SHELL_CSS = [
   '/css/harf-linear.css',
   '/css/harf-interactive.css',
   '/css/forge/07-notion-light.css',
+  '/css/notion-light-force.css',
 ]
 
-const SHELL_HTML = ['/', '/index.html', '/privacy.html']
+const SHELL_HTML = ['/', '/index.html', '/privacy.html', '/reset-cache.html']
 
 function abs(path) {
   if (!path.startsWith('/')) path = `/${path}`

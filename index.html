@@ -8,7 +8,7 @@
   <meta name="description" content="Mejora — tu campaña de hábitos, gimnasia cerebral y calma." />
   <script>
     try {
-      const MEJORA_ASSET_V = 192
+      const MEJORA_ASSET_V = 193
       const root = document.documentElement
       root.dataset.notionLight = '1'
       root.classList.remove('dark')
@@ -38,17 +38,16 @@
         if (s.reducedMotion) root.classList.add('reduce-motion')
         localStorage.setItem('mejora_settings', JSON.stringify(s))
       }
+      const prevV = localStorage.getItem('mejora_asset_v')
+      const purge = !prevV || prevV !== String(MEJORA_ASSET_V)
       localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
-      if ('caches' in window) {
-        caches.keys().then((keys) => {
-          keys.filter((k) => k.startsWith('mejora-v') && k !== 'mejora-v' + MEJORA_ASSET_V)
-            .forEach((k) => caches.delete(k))
-        })
+      if (purge && 'caches' in window) {
+        caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
       }
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((reg) => reg.update())
-        })
+      if (purge && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) =>
+          Promise.all(regs.map((reg) => reg.unregister()))
+        )
       }
     } catch (_) {}
   </script>
@@ -56,14 +55,18 @@
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/utilities.css?v=192" />
-  <link rel="stylesheet" href="css/design-system.css?v=192" />
-  <link rel="stylesheet" href="css/forge.css?v=192" />
-  <link rel="stylesheet" href="css/school.css?v=192" />
-  <link rel="stylesheet" href="css/harf-linear.css?v=192" />
-  <link rel="stylesheet" href="css/harf-interactive.css?v=192" />
-  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=192" />
+  <link rel="stylesheet" href="css/utilities.css?v=193" />
+  <link rel="stylesheet" href="css/design-system.css?v=193" />
+  <link rel="stylesheet" href="css/forge.css?v=193" />
+  <link rel="stylesheet" href="css/school.css?v=193" />
+  <link rel="stylesheet" href="css/harf-linear.css?v=193" />
+  <link rel="stylesheet" href="css/harf-interactive.css?v=193" />
+  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=193" />
+  <link rel="stylesheet" href="css/notion-light-force.css?v=193" />
   <style id="mejora-notion-light-critical">
+    html,
+    html body,
+    html body.mejora-forge,
     html[data-notion-light="1"],
     html[data-notion-light="1"] body,
     html[data-notion-light="1"] body.mejora-forge {
@@ -71,6 +74,12 @@
       background: #ffffff !important;
       color: #37352f !important;
     }
+    html .app-shell,
+    html .app-main,
+    html .app-content,
+    html #app-content,
+    html .app-banner,
+    html .bottom-nav,
     html[data-notion-light="1"] .app-shell,
     html[data-notion-light="1"] .app-main,
     html[data-notion-light="1"] .app-content,
@@ -81,6 +90,8 @@
       background-image: none !important;
       color: #37352f !important;
     }
+    html .sidebar,
+    html .sidebar-nav,
     html[data-notion-light="1"] .sidebar,
     html[data-notion-light="1"] .sidebar-nav {
       background-color: #f7f6f3 !important;
@@ -118,6 +129,14 @@
     html[data-notion-light="1"] body.mejora-forge::before {
       display: none !important;
       background: none !important;
+    }
+    html[data-notion-light="1"] .onboarding-overlay {
+      background: rgba(255, 255, 255, 0.92) !important;
+    }
+    html[data-notion-light="1"] .onboarding-shell {
+      background: #ffffff !important;
+      color: #37352f !important;
+      border-color: #e1dfdd !important;
     }
   </style>
 </head>
@@ -234,7 +253,7 @@
       document.body.appendChild(box)
     })
   </script>
-    <script type="importmap" src="/js/import-map.json?v=192"></script>
-  <script type="module" src="/js/app.js?v=192"></script>
+    <script type="importmap" src="/js/import-map.json?v=193"></script>
+  <script type="module" src="/js/app.js?v=193"></script>
 </body>
 </html>

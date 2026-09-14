@@ -1,0 +1,147 @@
+/* Notion Light — capa final absoluta (v193). Gana sobre SW/caché legacy. */
+
+html,
+html.dark,
+html[data-theme],
+body,
+body.mejora-forge,
+body.mejora-v3,
+body.theme-rpg {
+  color-scheme: light !important;
+  --bg-app: #ffffff !important;
+  --bg-sidebar: #f7f6f3 !important;
+  --bg-card: #ffffff !important;
+  --bg-card-hover: #fbfbfa !important;
+  --border-color: #e1dfdd !important;
+  --text-main: #37352f !important;
+  --text-muted: #9b9a97 !important;
+  --m-bg: #ffffff !important;
+  --m-bg-2: #f7f6f3 !important;
+  --m-surface: #ffffff !important;
+  --m-surface-2: #fbfbfa !important;
+  --m-surface-3: #f1f0ed !important;
+  --m-text: #37352f !important;
+  --m-muted: #9b9a97 !important;
+  --m-border: #e1dfdd !important;
+  --m-accent: #2383e2 !important;
+  --m-accent-hover: #1a73c7 !important;
+  --sidebar-bg: #f7f6f3 !important;
+  --header-bg: #ffffff !important;
+  --bg: #ffffff !important;
+  --text: #37352f !important;
+  --text-muted: #9b9a97 !important;
+  --border: #e1dfdd !important;
+  --secondary-bg: #fbfbfa !important;
+  --gradient-hero: #ffffff !important;
+  --gradient-card: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #37352f !important;
+}
+
+.app-shell,
+#fx-layer,
+.app-main,
+.app-content,
+#app-content,
+.app-banner,
+.bottom-nav,
+.page-shell,
+.page-home,
+.page-home--v3 {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #37352f !important;
+}
+
+.sidebar,
+.sidebar-nav,
+.sidebar-header,
+.sidebar-footer {
+  background-color: #f7f6f3 !important;
+  background-image: none !important;
+  border-color: #e1dfdd !important;
+  box-shadow: none !important;
+}
+
+.sidebar-link,
+.banner-subtitle,
+.m-home-lead,
+.m-home-date,
+.text-muted {
+  color: #9b9a97 !important;
+}
+
+.sidebar-link.active .sidebar-link-label,
+.m-home-title,
+.banner-title,
+.logo-text,
+.text-main {
+  color: #37352f !important;
+  text-shadow: none !important;
+}
+
+.logo-mark {
+  background: #2383e2 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+.bottom-nav {
+  background: #ffffff !important;
+  border-top: 1px solid #e1dfdd !important;
+}
+
+.banner-metric,
+.sidebar-stats,
+.card,
+.m-section,
+.m-now,
+.ds-panel,
+.ds-zone,
+.habit-card,
+.m-coach-card,
+.m-adaptive-mission,
+.m-shortcut,
+.brain-profile,
+.brain-profile__card,
+.qa-card,
+.game-card,
+.onboarding-shell {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #e1dfdd !important;
+  color: #37352f !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.onboarding-overlay {
+  background: rgba(255, 255, 255, 0.94) !important;
+}
+
+.btn-primary,
+.banner-cta {
+  background: #2383e2 !important;
+  border-color: #1a73c7 !important;
+  color: #ffffff !important;
+}
+
+.progress-track {
+  background: #f1f0ed !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #2383e2, #1a73c7) !important;
+}
+
+body.mejora-forge::before,
+body.mejora-v3::before,
+body.theme-rpg::before,
+body.theme-rpg::after,
+.app-aurora,
+.banner-glow {
+  display: none !important;
+  background: none !important;
+}
