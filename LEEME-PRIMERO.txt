@@ -11,7 +11,11 @@ SOLO HAZ ESTO:
 
         ABRE-MEJORA.command
 
-  3. Haz DOBLE CLIC en "ABRE-MEJORA.command"
+  3. NO uses doble clic si Mac dice "desarrollador no
+     identificado". Lee el archivo: SI-MAC-BLOQUEA.txt
+
+     Resumen: CLIC DERECHO en ABRE-MEJORA.command → Abrir
+     → Abrir otra vez en el aviso.
 
   4. Se abrirá una ventana negra (Terminal) unos segundos
      y luego el navegador con Mejora.

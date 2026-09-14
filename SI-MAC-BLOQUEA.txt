@@ -1,0 +1,29 @@
+═══════════════════════════════════════════════
+  macOS dice "desarrollador no identificado"
+═══════════════════════════════════════════════
+
+Es NORMAL. No es virus. Apple bloquea scripts
+descargados de internet.
+
+HAZ ESTO (30 segundos):
+
+  1. NO hagas doble clic.
+
+  2. Clic DERECHO (o Ctrl + clic) en:
+        ABRE-MEJORA.command
+
+  3. Elige "Abrir" (no "Abrir con").
+
+  4. Sale otro aviso → pulsa "Abrir" otra vez.
+
+  5. Se abre Terminal y luego el navegador.
+
+───────────────────────────────────────────────
+
+Si no aparece "Abrir" al clic derecho:
+
+  • Ve a Ajustes del Sistema → Privacidad y seguridad
+  • Baja hasta ver el aviso de ABRE-MEJORA.command
+  • Pulsa "Abrir igualmente"
+
+═══════════════════════════════════════════════

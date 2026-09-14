@@ -43,6 +43,10 @@ start_server() {
 
 cd "$PROJECT" || { alert "No encuentro la carpeta del proyecto."; exit 1; }
 
+# Quitar cuarentena de Chrome (Gatekeeper)
+xattr -cr "$PROJECT" 2>/dev/null || true
+chmod +x "$PROJECT/ABRE-MEJORA.command" "$PROJECT/start-server.command" "$PROJECT/scripts/"*.sh 2>/dev/null || true
+
 clear
 say "Mejora — arrancando…"
 echo "Carpeta: $PROJECT"
