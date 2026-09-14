@@ -50,6 +50,7 @@ import { renderEnfoque, bindEnfoqueGlobals } from '/js/pages/enfoque.js'
 import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } from '/js/pages/settings.js'
 import { maybeAutoSectionGuide, startSectionGuide } from '/js/section-guides.js'
 import { renderViaje, getViajeTab, setViajeTab, bindJourneyGlobals } from '/js/pages/journey.js'
+import { bindMoodTrackerGlobals } from '/js/modules/mood-tracker.js'
 import { renderMetas, bindGoalsGlobals, getMetasTab, setMetasTab } from '/js/pages/goals.js'
 import { renderProfile, getProfileTab, setProfileTab, bindProfileGlobals } from '/js/pages/profile.js'
 import {
@@ -615,6 +616,7 @@ bindRoutineGlobals()
 bindMejoraGlobals()
 bindEnfoqueGlobals()
 bindJourneyGlobals()
+bindMoodTrackerGlobals()
 bindProfileGlobals()
 bindGoalsGlobals()
 bindHomeGlobals({ startGuide: startSectionGuide })

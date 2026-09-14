@@ -5,6 +5,10 @@ import {
 } from '/js/supabase-config.js'
 
 const META_KEY = 'cloudSync'
+const ENC_MARKER = '__mejora_enc'
+const ENC_VERSION = 1
+const PBKDF2_ITER = 100_000
+
 let client = null
 let clientReady = null
 let session = null
@@ -13,7 +17,140 @@ let syncing = false
 let applyingRemote = false
 let lastError = null
 let pendingConflict = null
+let syncPassphrase = null
 const listeners = new Set()
+
+function bytesToB64(bytes) {
+  return btoa(String.fromCharCode(...bytes))
+}
+
+function b64ToBytes(b64) {
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+}
+
+function generateSaltB64() {
+  return bytesToB64(crypto.getRandomValues(new Uint8Array(16)))
+}
+
+export function isSyncEncryptionEnabled() {
+  return Boolean(getSettings().syncEncryptionEnabled)
+}
+
+export function hasSyncPassphrase() {
+  return Boolean(syncPassphrase)
+}
+
+export function setSyncPassphrase(passphrase) {
+  syncPassphrase = passphrase ? String(passphrase) : null
+  clearSyncError()
+}
+
+export function clearSyncPassphrase() {
+  syncPassphrase = null
+}
+
+function getSyncSalt() {
+  const s = getSettings()
+  if (!s.syncEncryptionSalt) {
+    s.syncEncryptionSalt = generateSaltB64()
+    saveSettings(s)
+  }
+  return s.syncEncryptionSalt
+}
+
+async function deriveSyncKey(passphrase, saltB64) {
+  const enc = new TextEncoder()
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey'],
+  )
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: b64ToBytes(saltB64), iterations: PBKDF2_ITER, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt'],
+  )
+}
+
+export function isEncryptedCloudPayload(payload) {
+  return Boolean(payload && typeof payload === 'object' && payload[ENC_MARKER])
+}
+
+export async function encryptCloudPayload(data, passphrase) {
+  const salt = getSyncSalt()
+  const key = await deriveSyncKey(passphrase, salt)
+  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    new TextEncoder().encode(JSON.stringify(data)),
+  )
+  return {
+    [ENC_MARKER]: true,
+    v: ENC_VERSION,
+    salt,
+    iv: bytesToB64(iv),
+    ct: bytesToB64(new Uint8Array(ct)),
+  }
+}
+
+export async function decryptCloudPayload(wrapped, passphrase) {
+  if (!isEncryptedCloudPayload(wrapped)) return wrapped
+  const salt = wrapped.salt || getSyncSalt()
+  const key = await deriveSyncKey(passphrase, salt)
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: b64ToBytes(wrapped.iv) },
+    key,
+    b64ToBytes(wrapped.ct),
+  )
+  return JSON.parse(new TextDecoder().decode(plain))
+}
+
+export async function enableSyncEncryption(passphrase) {
+  if (!passphrase || passphrase.length < 8) {
+    throw new Error('La frase de cifrado debe tener al menos 8 caracteres')
+  }
+  const s = getSettings()
+  if (!s.syncEncryptionSalt) s.syncEncryptionSalt = generateSaltB64()
+  s.syncEncryptionEnabled = true
+  saveSettings(s)
+  setSyncPassphrase(passphrase)
+  if (session?.user) await pushToCloud({ force: true })
+  notify()
+  return true
+}
+
+export async function disableSyncEncryption(passphrase) {
+  if (!isSyncEncryptionEnabled()) return true
+  if (!passphrase) throw new Error('Introduce la frase de cifrado para desactivar')
+  const wrapped = await encryptCloudPayload({ probe: true }, passphrase)
+  try {
+    await decryptCloudPayload(wrapped, passphrase)
+  } catch {
+    throw new Error('Frase de cifrado incorrecta')
+  }
+  const s = getSettings()
+  s.syncEncryptionEnabled = false
+  saveSettings(s)
+  clearSyncPassphrase()
+  if (session?.user) await pushToCloud({ force: true })
+  notify()
+  return true
+}
+
+async function preparePushPayload() {
+  const payload = exportAllData()
+  delete payload[META_KEY]
+  if (!isSyncEncryptionEnabled()) return payload
+  if (!syncPassphrase) throw new Error('Introduce tu frase de cifrado en Ajustes → Cuenta')
+  return encryptCloudPayload(payload, syncPassphrase)
+}
+
+async function unwrapRemotePayload(payload) {
+  if (!isEncryptedCloudPayload(payload)) return payload
+  if (!syncPassphrase) throw new Error('Los datos en la nube están cifrados — introduce tu frase en Ajustes')
+  return decryptCloudPayload(payload, syncPassphrase)
+}
 
 function getMeta() {
   try {
@@ -73,6 +210,8 @@ export function getCloudStatus() {
     lastSyncedAt: getMeta().lastSyncedAt,
     lastRemoteAt: getMeta().lastRemoteAt,
     lastError,
+    encryptionEnabled: isSyncEncryptionEnabled(),
+    passphraseReady: hasSyncPassphrase(),
     pendingConflict: pendingConflict
       ? { remoteAt: pendingConflict.remoteAt }
       : null,
@@ -125,7 +264,7 @@ function applyRemotePayload(payload) {
 
 function hasLocalProgress() {
   const data = exportAllData()
-  const keys = Object.keys(data).filter(k => k !== META_KEY)
+  const keys = Object.keys(data).filter(k => k !== META_KEY && k !== 'syncEncryptionSalt')
   if (keys.length === 0) return false
   if (keys.length === 1 && keys[0] === 'settings') {
     const s = data.settings || {}
@@ -216,6 +355,7 @@ export async function signOut() {
   await sb.auth.signOut()
   session = null
   pendingConflict = null
+  clearSyncPassphrase()
   clearSyncError()
   notify()
 }
@@ -250,7 +390,8 @@ export async function pullFromCloud(opts = {}) {
     } else if (remoteHasData) {
       const remoteNewer = !meta.lastRemoteAt || (remoteAt && remoteAt > meta.lastRemoteAt)
       if (remoteNewer || !hasLocalProgress() || opts.forceRemote) {
-        applyRemotePayload(data.payload)
+        const plain = await unwrapRemotePayload(data.payload)
+        applyRemotePayload(plain)
         markSynced(remoteAt)
       }
     } else if (hasLocalProgress()) {
@@ -279,8 +420,7 @@ export async function pushToCloud(opts = {}) {
   syncing = true
   notify()
   try {
-    const payload = exportAllData()
-    delete payload[META_KEY]
+    const payload = await preparePushPayload()
 
     const { data, error } = await sb
       .from('user_data')
@@ -308,7 +448,8 @@ export async function pushToCloud(opts = {}) {
 export async function resolveCloudConflict(choice) {
   if (!pendingConflict) return null
   if (choice === 'remote') {
-    applyRemotePayload(pendingConflict.remotePayload)
+    const plain = await unwrapRemotePayload(pendingConflict.remotePayload)
+    applyRemotePayload(plain)
     markSynced(pendingConflict.remoteAt)
     pendingConflict = null
     notify()

@@ -34,6 +34,7 @@ import { getAdaptiveProgramBanner, getAdaptiveProgramSession } from '/js/meditat
 import { AMBIENT_PRESETS, startAmbientSound, stopAmbientSound, isAmbientPlaying, getAmbientType, resumeAudioContext, preloadAmbientSounds } from '/js/ambient-audio.js'
 import { sunsetBannerHTML } from '/js/apis.js'
 import { icon } from '/js/icons.js'
+import { renderMicroJournalHTML, shouldShowMicroJournal } from '/js/modules/mood-tracker.js'
 
 function difficultyPicker(current, setter) {
   return `<div class="med-diff-block">
@@ -654,6 +655,7 @@ function completedHTML() {
         <span class="calma-pill">🔥 Racha ${getMeditationStreak()} días</span>
         <span class="calma-pill calma-pill--xp">+${DIFFICULTIES[medState.difficulty].xp} XP</span>
       </div>
+      ${shouldShowMicroJournal('calma') ? renderMicroJournalHTML('calma', { compact: true }) : ''}
       <button type="button" onclick="exitMeditation()" class="calma-cta-primary">${prog ? 'Ver programa' : 'Continuar'}</button>
     </div>
   </div>`

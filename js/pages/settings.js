@@ -12,6 +12,7 @@ import {
 import {
   getCloudStatus, signIn, signUp, signOut, pullFromCloud, pushToCloud,
   resolveCloudConflict, deleteCloudData,
+  enableSyncEncryption, disableSyncEncryption, setSyncPassphrase,
 } from '/js/cloud-sync.js'
 import { exportMonthlyReportText } from '/js/backup.js'
 import { restartOnboarding, resetOnboardingCache } from '/js/onboarding-ui.js'
@@ -68,12 +69,26 @@ function renderCloudAccountPanel() {
     const errorBlock = cloud.lastError
       ? `<p class="ds-setting-hint mt-2" style="color:var(--m-danger)">⚠ ${esc(cloud.lastError)}</p>`
       : ''
+    const encBlock = `
+      <div class="card-static mt-3" style="border-color:var(--forge-accent,#6ee7b7)">
+        <p class="ds-setting-hint"><strong>Cifrado de extremo a extremo</strong> — opcional. Tus datos se cifran en el dispositivo antes de subir (AES-GCM + PBKDF2). La frase no se guarda en el servidor.</p>
+        <p class="ds-setting-hint mt-1">${cloud.encryptionEnabled ? '🔒 Cifrado activo' : '🔓 Sin cifrado'}${cloud.encryptionEnabled && !cloud.passphraseReady ? ' · <span style="color:var(--m-danger)">introduce tu frase abajo</span>' : ''}</p>
+        <input id="cloud-sync-passphrase" type="password" class="input-field mt-2" placeholder="Frase de cifrado (mín. 8 caracteres)" autocomplete="new-password">
+        <div class="flex flex-col gap-2 mt-2">
+          ${cloud.encryptionEnabled
+            ? `<button type="button" onclick="cloudUnlockEncryption()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>🔑 Desbloquear cifrado</button>
+               <button type="button" onclick="cloudDisableEncryption()" class="btn-ghost w-full text-sm" ${cloud.syncing ? 'disabled' : ''}>Desactivar cifrado</button>`
+            : `<button type="button" onclick="cloudEnableEncryption()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>🔒 Activar cifrado</button>`}
+        </div>
+        <p class="ds-setting-hint mt-2">Usa la misma frase en móvil y escritorio. Si la pierdes, no podrás recuperar datos cifrados.</p>
+      </div>`
     return `${pageLead('Tu progreso se guarda en la nube automáticamente.')}
       ${settingGroup('Cuenta', `
         <p class="ds-setting-hint">Conectado como <strong>${esc(cloud.email || '')}</strong></p>
         <p class="ds-setting-hint">Última sync: ${formatCloudTime(cloud.lastSyncedAt)}${cloud.syncing ? ' · sincronizando…' : ''}</p>
         ${errorBlock}
         ${conflictBlock}
+        ${encBlock}
         <div class="flex flex-col gap-2 mt-3">
           <button type="button" onclick="cloudSyncNow()" class="btn-primary w-full" ${cloud.syncing ? 'disabled' : ''}>☁️ Sincronizar ahora</button>
           <button type="button" onclick="cloudPullNow()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>⬇️ Traer de la nube</button>
@@ -454,6 +469,42 @@ export function bindSettingsGlobals(deps = {}) {
       render()
     } catch (e) {
       setCloudMsg(e?.message || 'No se pudieron borrar los datos', false)
+    }
+  }
+
+  window.cloudEnableEncryption = async function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    try {
+      await enableSyncEncryption(passphrase)
+      setCloudMsg('✓ Cifrado activado y datos subidos')
+      playSuccess()
+      render()
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudo activar el cifrado', false)
+    }
+  }
+
+  window.cloudUnlockEncryption = function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    if (!passphrase || passphrase.length < 8) {
+      setCloudMsg('Frase de cifrado requerida (mín. 8 caracteres)', false)
+      return
+    }
+    setSyncPassphrase(passphrase)
+    setCloudMsg('✓ Frase guardada en esta sesión')
+    render()
+  }
+
+  window.cloudDisableEncryption = async function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    if (!confirm('¿Desactivar cifrado? Los datos se volverán a subir sin cifrar.')) return
+    try {
+      await disableSyncEncryption(passphrase)
+      setCloudMsg('✓ Cifrado desactivado')
+      playSuccess()
+      render()
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudo desactivar el cifrado', false)
     }
   }
 

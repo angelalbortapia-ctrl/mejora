@@ -12,6 +12,7 @@ import { tabBar, pageHero, sparklineSVG } from '/js/ui.js'
 import { heatmapHTML } from '/js/page-helpers.js'
 import { t } from '/js/i18n.js'
 import { formatAnalyticsPanel } from '/js/product-analytics.js'
+import { renderBiometricsCorrelationHTML, bindBiometricsGlobals } from '/js/modules/biometrics.js'
 
 let viajeTab = 'resumen'
 
@@ -28,6 +29,7 @@ export function saveWeeklyReviewNote(text) {
 }
 
 export function bindJourneyGlobals() {
+  bindBiometricsGlobals()
   window.shareJourneyProgress = async () => {
     const { shareJourney, shareStreak } = await import('/js/share.js')
     const { t: tr } = await import('/js/i18n.js')
@@ -95,6 +97,7 @@ export function renderViaje() {
       <button type="button" onclick="shareJourneyStreak()" class="btn-ghost w-full text-sm">🔥 ${t('share.streakTitle')}</button>
     </div>
     <div class="card card-static ds-panel--flat mb-3">${formatAnalyticsPanel(t)}</div>
+    ${renderBiometricsCorrelationHTML()}
     <div class="card card-static weekly-summary-card viaje-weekly">
       <h3 class="section-title">Resumen semanal</h3>
       <p class="text-sm text-main leading-relaxed mb-3">${weekly.narrative}</p>

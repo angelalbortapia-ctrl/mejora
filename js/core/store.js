@@ -59,6 +59,8 @@ const DEFAULT_SETTINGS = {
   geminiApiKey: '',
   geminiVoice: 'Despina',
   locale: 'es',
+  syncEncryptionEnabled: false,
+  syncEncryptionSalt: '',
 }
 
 let persistHook = null
