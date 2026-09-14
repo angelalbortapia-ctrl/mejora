@@ -1,34 +1,34 @@
 /* ==========================================================================
-   HARF — SILICON VALLEY ELITE THEME (Vercel / Linear aesthetic)
-   v8.0 · Scope: body.harf-linear (#/clase)
+   HARF — HEIGHT.APP AESTHETIC (v10.0)
+   Dark canvas · elevated surfaces · violet/indigo accents · Inter refined
+   Scope: body.harf-linear (#/clase)
    ========================================================================== */
 
 .harf-linear,
 .harf-linear-page {
-  --harf-glass-surface: rgba(26, 34, 52, 0.75);
-  --harf-glass-blur: blur(16px);
-  --harf-border-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(46, 59, 82, 0.4));
-  --harf-text-pure: #ffffff;
-  --harf-text-cyan: #38bdf8;
-  --harf-text-terminal: #9fe870;
-  --harf-text-body: #e5e7eb;
-  --harf-text-muted: #9ca3af;
-  --harf-bg-base: #0b0f19;
-  --harf-bg-btn: #111927;
-  --harf-border-subtle: #2e3b52;
-  --harf-border-glass: rgba(46, 59, 82, 0.8);
-  --harf-font-sans: Inter, system-ui, -apple-system, sans-serif;
-  --harf-font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-  --harf-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --harf-bg-canvas: #0f1117;
+  --harf-bg-surface: #161922;
+  --harf-bg-elevated: #1e222d;
+  --harf-border-subtle: #2a2f3d;
+  --harf-text-primary: #f3f4f6;
+  --harf-text-secondary: #9ca3af;
+  --harf-accent-indigo: #6366f1;
+  --harf-accent-violet: #8b5cf6;
+  --harf-success-green: #10b981;
+  --harf-font-sans: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  --harf-font-mono: "JetBrains Mono", monospace;
+  --harf-ease: ease;
   --harf-duration: 0.2s;
   --harf-radius: 12px;
-  --harf-radius-btn: 6px;
+  --harf-radius-btn: 8px;
+  --harf-radius-pill: 4px;
   --harf-space-section: 48px;
   --harf-space-card: 32px;
-  --harf-shadow-elevated: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --harf-glow-terminal: 0 0 20px rgba(159, 232, 112, 0.2);
+  --harf-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --harf-shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --harf-glow-indigo: 0 0 15px rgba(99, 102, 241, 0.2);
 
-  color: var(--harf-text-body);
+  color: var(--harf-text-primary);
   font-family: var(--harf-font-sans);
   font-size: 0.9375rem;
   line-height: 1.6;
@@ -36,11 +36,10 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* 1. Fondo general con profundidad real */
-body.harf-linear,
-body.harf-linear html {
-  background-color: var(--harf-bg-base) !important;
-  color: var(--harf-text-body);
+/* Canvas */
+body.harf-linear {
+  background-color: var(--harf-bg-canvas) !important;
+  color: var(--harf-text-primary);
   font-family: var(--harf-font-sans);
   letter-spacing: -0.01em;
   min-height: 100vh;
@@ -48,14 +47,22 @@ body.harf-linear html {
 
 body.harf-linear .app-main,
 body.harf-linear #app-content {
-  background: var(--harf-bg-base);
+  background: var(--harf-bg-canvas);
 }
 
 body.harf-linear.theme-rpg::before {
   display: none;
 }
 
-/* ── Layout shell ── */
+/* Subtle glass layer on elevated panels (Height-style depth) */
+body.harf-linear .app-banner {
+  background: rgba(22, 25, 34, 0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--harf-border-subtle);
+}
+
+/* ── Layout ── */
 .harf-linear-page {
   max-width: 72rem;
   margin: 0 auto;
@@ -68,22 +75,22 @@ body.harf-linear.theme-rpg::before {
 .harf-linear-hero {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-width: 40rem;
+  gap: 14px;
+  max-width: 42rem;
 }
 
 .harf-linear-hero__display {
   margin: 0;
-  color: var(--harf-text-pure);
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  font-weight: 700;
+  color: var(--harf-text-primary);
+  font-size: clamp(2rem, 4.5vw, 2.625rem);
+  font-weight: 600;
   letter-spacing: -0.03em;
-  line-height: 1.08;
+  line-height: 1.12;
 }
 
 .harf-linear-hero__lead {
   margin: 0;
-  color: var(--harf-text-muted);
+  color: var(--harf-text-secondary);
   font-size: 1.0625rem;
   line-height: 1.55;
   max-width: 36rem;
@@ -92,13 +99,13 @@ body.harf-linear.theme-rpg::before {
 .harf-linear-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
 .harf-linear-split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
 @media (max-width: 768px) {
@@ -110,62 +117,48 @@ body.harf-linear.theme-rpg::before {
 .harf-linear-stack {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .harf-linear-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
-/* 2. Tarjetas: glassmorphism / cristal líquido */
+/* ── .htb-card (Height surface) ── */
 body.harf-linear .htb-card,
 body.harf-linear .card,
 body.harf-linear .lesson-container,
 body.harf-linear .panel-content,
 body.harf-linear .ds-panel {
-  background: var(--harf-glass-surface) !important;
-  backdrop-filter: var(--harf-glass-blur) !important;
-  -webkit-backdrop-filter: var(--harf-glass-blur) !important;
-  border: 1px solid var(--harf-border-glass) !important;
+  background: var(--harf-bg-surface) !important;
+  border: 1px solid var(--harf-border-subtle) !important;
   border-radius: var(--harf-radius) !important;
   padding: var(--harf-space-card) !important;
-  box-shadow: var(--harf-shadow-elevated) !important;
+  box-shadow: var(--harf-shadow-card) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 body.harf-linear .htb-card {
-  position: relative;
   transition:
     border-color var(--harf-duration) var(--harf-ease),
     box-shadow var(--harf-duration) var(--harf-ease),
     transform var(--harf-duration) var(--harf-ease);
 }
 
-body.harf-linear .htb-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: var(--harf-border-gradient);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.65;
-}
-
 body.harf-linear .htb-card:hover {
-  border-color: rgba(56, 189, 248, 0.35) !important;
-  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  box-shadow: var(--harf-shadow-card), var(--harf-glow-indigo) !important;
+  transform: translateY(-1px);
 }
 
 body.harf-linear .htb-card.is-active {
-  border-color: rgba(159, 232, 112, 0.45) !important;
-  box-shadow: var(--harf-shadow-elevated), var(--harf-glow-terminal) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  background: var(--harf-bg-elevated) !important;
+  box-shadow: var(--harf-shadow-glass), var(--harf-glow-indigo) !important;
 }
 
 body.harf-linear .htb-card--link {
@@ -182,68 +175,85 @@ body.harf-linear .htb-card__footer {
   padding-top: 8px;
 }
 
-/* 3. Títulos limpios — alto contraste */
+/* ── .htb-title ── */
 body.harf-linear h1,
 body.harf-linear h2,
 body.harf-linear h3,
 body.harf-linear .htb-title,
 body.harf-linear .title-main,
 body.harf-linear .harf-linear-hero__display {
-  color: var(--harf-text-pure) !important;
+  color: var(--harf-text-primary) !important;
   font-weight: 600 !important;
   font-family: var(--harf-font-sans) !important;
 }
 
 body.harf-linear .htb-title {
   margin: 0;
-  font-size: 18px;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
 }
 
 body.harf-linear .htb-title--lg {
   font-size: clamp(1.375rem, 3vw, 1.75rem);
-  letter-spacing: -0.022em;
+  letter-spacing: -0.025em;
 }
 
-/* 4. Etiquetas técnicas — JetBrains Mono */
-body.harf-linear .htb-meta-tag,
-body.harf-linear .code-label,
+/* ── .htb-meta-tag (violet pill) ── */
+body.harf-linear .htb-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  font-family: var(--harf-font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500;
+  color: var(--harf-accent-violet) !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--harf-radius-pill);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+body.harf-linear .htb-meta-tag--success {
+  color: var(--harf-success-green) !important;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+body.harf-linear .htb-meta-tag--indigo {
+  color: var(--harf-accent-indigo) !important;
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+body.harf-linear .htb-meta-tag--muted {
+  color: var(--harf-text-secondary) !important;
+  background: rgba(156, 163, 175, 0.08);
+  border-color: var(--harf-border-subtle);
+}
+
 body.harf-linear code,
 body.harf-linear pre {
   font-family: var(--harf-font-mono) !important;
-  font-size: 11px !important;
-  color: var(--harf-text-cyan) !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase;
-}
-
-body.harf-linear .htb-meta-tag {
-  display: inline-block;
-  margin: 0;
-  font-weight: 500;
-}
-
-body.harf-linear .htb-meta-tag--terminal {
-  color: var(--harf-text-terminal) !important;
-}
-
-body.harf-linear pre,
-body.harf-linear code {
+  font-size: 0.8125rem;
+  color: var(--harf-accent-violet);
   text-transform: none;
   letter-spacing: normal;
 }
 
-/* 5. Botones tácticos de consola */
+/* ── .htb-tactical-btn (Height button) ── */
 body.harf-linear button,
 body.harf-linear .htb-tactical-btn,
 body.harf-linear .btn-primary,
 body.harf-linear .btn-secondary {
-  background: var(--harf-bg-btn) !important;
+  background: var(--harf-bg-elevated) !important;
   border: 1px solid var(--harf-border-subtle) !important;
-  color: var(--harf-text-body) !important;
-  font-family: var(--harf-font-mono) !important;
-  padding: 12px 24px !important;
+  color: var(--harf-text-primary) !important;
+  font-family: var(--harf-font-sans) !important;
+  font-weight: 500 !important;
+  padding: 10px 20px !important;
   border-radius: var(--harf-radius-btn) !important;
   transition: all var(--harf-duration) var(--harf-ease) !important;
   cursor: pointer !important;
@@ -254,10 +264,10 @@ body.harf-linear button:hover,
 body.harf-linear .htb-tactical-btn:hover,
 body.harf-linear .btn-primary:hover,
 body.harf-linear .btn-secondary:hover {
-  border-color: var(--harf-text-terminal) !important;
-  color: var(--harf-text-terminal) !important;
-  box-shadow: var(--harf-glow-terminal) !important;
-  background: rgba(159, 232, 112, 0.04) !important;
+  background: var(--harf-border-subtle) !important;
+  border-color: var(--harf-accent-indigo) !important;
+  color: #ffffff !important;
+  box-shadow: var(--harf-glow-indigo) !important;
 }
 
 body.harf-linear .htb-tactical-btn {
@@ -266,15 +276,14 @@ body.harf-linear .htb-tactical-btn {
   justify-content: center;
   gap: 8px;
   margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   text-decoration: none;
   white-space: nowrap;
 }
 
 body.harf-linear .htb-tactical-btn:focus-visible,
 body.harf-linear button:focus-visible {
-  outline: 2px solid var(--harf-text-cyan);
+  outline: 2px solid var(--harf-accent-indigo);
   outline-offset: 2px;
 }
 
@@ -284,40 +293,42 @@ body.harf-linear button:active {
 }
 
 body.harf-linear .htb-tactical-btn--primary {
-  border-color: rgba(159, 232, 112, 0.5) !important;
-  color: var(--harf-text-terminal) !important;
-  background: rgba(159, 232, 112, 0.06) !important;
+  background: var(--harf-accent-indigo) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  color: #ffffff !important;
 }
 
 body.harf-linear .htb-tactical-btn--primary:hover {
-  background: rgba(159, 232, 112, 0.12) !important;
+  background: #5558e3 !important;
+  border-color: var(--harf-accent-indigo) !important;
+  box-shadow: var(--harf-glow-indigo) !important;
 }
 
 body.harf-linear .htb-tactical-btn--ghost,
 body.harf-linear .btn-ghost {
-  border-color: transparent !important;
-  color: var(--harf-text-muted) !important;
   background: transparent !important;
+  border-color: transparent !important;
+  color: var(--harf-text-secondary) !important;
 }
 
 body.harf-linear .htb-tactical-btn--ghost:hover,
 body.harf-linear .btn-ghost:hover {
+  background: rgba(30, 34, 45, 0.6) !important;
   border-color: var(--harf-border-subtle) !important;
-  color: var(--harf-text-body) !important;
+  color: var(--harf-text-primary) !important;
   box-shadow: none !important;
-  background: rgba(255, 255, 255, 0.03) !important;
 }
 
-/* ── Body copy ── */
+/* ── Body & stats ── */
 body.harf-linear .htb-body {
   margin: 0;
-  color: var(--harf-text-muted);
+  color: var(--harf-text-secondary);
   font-size: 0.9375rem;
   line-height: 1.65;
 }
 
 body.harf-linear .htb-body strong {
-  color: var(--harf-text-pure);
+  color: var(--harf-text-primary);
   font-weight: 600;
 }
 
@@ -331,15 +342,14 @@ body.harf-linear .htb-stat-row {
 }
 
 body.harf-linear .htb-stat-row li {
-  font-family: var(--harf-font-mono);
   font-size: 0.75rem;
-  color: var(--harf-text-muted);
+  color: var(--harf-text-secondary);
 }
 
 body.harf-linear .htb-stat-row li span {
   display: block;
-  color: var(--harf-text-pure);
-  font-size: 1.25rem;
+  color: var(--harf-text-primary);
+  font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -348,7 +358,7 @@ body.harf-linear .htb-stat-row li span {
 body.harf-linear .htb-module-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -358,33 +368,33 @@ body.harf-linear .htb-module-list__item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid var(--harf-border-subtle);
   border-radius: var(--harf-radius-btn);
-  background: rgba(17, 25, 39, 0.5);
+  background: var(--harf-bg-canvas);
   font-size: 0.875rem;
+  color: var(--harf-text-secondary);
+  transition: border-color var(--harf-duration) var(--harf-ease);
 }
 
 body.harf-linear .htb-module-list__item.is-done {
-  border-color: rgba(159, 232, 112, 0.35);
-  color: var(--harf-text-terminal);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: var(--harf-success-green);
+  background: rgba(16, 185, 129, 0.05);
 }
 
 body.harf-linear .htb-module-list__item.is-current {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.12);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: var(--harf-text-primary);
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: var(--harf-glow-indigo);
 }
 
-/* ── Legacy HTB bridge ── */
-body.harf-linear .htb-terminal-card {
-  background: var(--harf-glass-surface) !important;
-  backdrop-filter: var(--harf-glass-blur) !important;
-  -webkit-backdrop-filter: var(--harf-glass-blur) !important;
-}
-
+/* Legacy HTB components */
+body.harf-linear .htb-terminal-card,
 body.harf-linear .htb-firewall-alert {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--harf-bg-surface) !important;
+  border-color: var(--harf-border-subtle) !important;
 }
 
 body.harf-linear.reduce-motion .htb-card,

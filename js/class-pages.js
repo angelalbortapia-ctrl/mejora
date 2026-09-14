@@ -1,4 +1,4 @@
-/** Harf — Class pages (Silicon Valley Linear shell v8.0) */
+/** Harf — Class pages (Height.app aesthetic v10.0) */
 
 import { esc } from '/js/core.js'
 
@@ -50,9 +50,9 @@ function moduleById(id) {
 }
 
 function statusLabel(status) {
-  if (status === 'done') return { text: 'Completado', className: 'htb-meta-tag--terminal' }
-  if (status === 'current') return { text: 'En curso', className: '' }
-  return { text: 'Bloqueado', className: '' }
+  if (status === 'done') return { text: 'Completado', className: 'htb-meta-tag--success' }
+  if (status === 'current') return { text: 'En curso', className: 'htb-meta-tag--indigo' }
+  return { text: 'Bloqueado', className: 'htb-meta-tag--muted' }
 }
 
 function lessonState(module, index) {
@@ -86,17 +86,17 @@ export function renderClassHub() {
 
   return `<div class="harf-linear-page animate-fade-in">
     <header class="harf-linear-hero">
-      <p class="htb-meta-tag">Harf · Silicon Valley track</p>
-      <h1 class="harf-linear-hero__display">Academia táctica</h1>
-      <p class="harf-linear-hero__lead">Ruta guiada con glass UI, métricas claras y botones de consola. ${done}/${total} módulos completados.</p>
+      <p class="htb-meta-tag htb-meta-tag--indigo">Harf · Learning track</p>
+      <h1 class="harf-linear-hero__display">Academia</h1>
+      <p class="harf-linear-hero__lead">Ruta estructurada con la claridad de Height: superficies limpias, progreso visible y foco en lo esencial. ${done}/${total} módulos completados.</p>
       <div class="harf-linear-actions">
-        <button type="button" class="htb-tactical-btn htb-tactical-btn--primary" onclick="startNextClassModule()">▶ Continuar ruta</button>
-        <a href="#/" class="htb-tactical-btn htb-tactical-btn--ghost no-underline">← Volver</a>
+        <button type="button" class="htb-tactical-btn htb-tactical-btn--primary" onclick="startNextClassModule()">Continuar ruta</button>
+        <a href="#/" class="htb-tactical-btn htb-tactical-btn--ghost no-underline">Volver al inicio</a>
       </div>
     </header>
 
     <section aria-labelledby="harf-class-grid-title">
-      <p id="harf-class-grid-title" class="htb-meta-tag">Catálogo de módulos</p>
+      <p id="harf-class-grid-title" class="htb-meta-tag">Todos los módulos</p>
       <div class="harf-linear-grid" style="margin-top:16px">
         ${CLASS_MODULES.map(renderModuleCard).join('')}
       </div>
@@ -109,11 +109,11 @@ export function renderClassModule(moduleId) {
   if (!m) {
     return `<div class="harf-linear-page">
       <div class="htb-card">
-        <p class="htb-meta-tag">Error</p>
+        <p class="htb-meta-tag htb-meta-tag--muted">Error</p>
         <h1 class="htb-title">Módulo no encontrado</h1>
         <p class="htb-body">El identificador <code>${esc(moduleId)}</code> no existe en el catálogo.</p>
         <div class="harf-linear-actions" style="margin-top:20px">
-          <a href="#/clase" class="htb-tactical-btn no-underline">← Academia</a>
+          <a href="#/clase" class="htb-tactical-btn no-underline">Volver a Academia</a>
         </div>
       </div>
     </div>`
@@ -127,16 +127,16 @@ export function renderClassModule(moduleId) {
       <h1 class="htb-title htb-title--lg">${esc(m.title)}</h1>
       <p class="harf-linear-hero__lead">${esc(m.desc)}</p>
       <div class="harf-linear-actions">
-        <button type="button" class="htb-tactical-btn htb-tactical-btn--primary" onclick="launchClassLab('${m.id}')">$ launch_lab.sh</button>
-        <a href="#/clase" class="htb-tactical-btn htb-tactical-btn--ghost no-underline">← Catálogo</a>
+        <button type="button" class="htb-tactical-btn htb-tactical-btn--primary" onclick="launchClassLab('${m.id}')">Abrir laboratorio</button>
+        <a href="#/clase" class="htb-tactical-btn htb-tactical-btn--ghost no-underline">Catálogo</a>
       </div>
     </header>
 
     <div class="harf-linear-split">
       <article class="htb-card is-active">
-        <p class="htb-meta-tag">Briefing</p>
-        <h2 class="htb-title">Objetivos de sesión</h2>
-        <p class="htb-body">Ejecuta cada lección en orden. Documenta hallazgos en tu journal antes de pasar al siguiente bloque.</p>
+        <p class="htb-meta-tag">Sesión</p>
+        <h2 class="htb-title">Objetivos</h2>
+        <p class="htb-body">Completa cada lección en orden. Registra hallazgos antes de avanzar al siguiente bloque.</p>
         <ul class="htb-module-list" style="margin-top:20px">
           ${m.lessons.map((lesson, i) => `
             <li class="htb-module-list__item ${lessonState(m, i)}">
@@ -147,16 +147,16 @@ export function renderClassModule(moduleId) {
       </article>
 
       <article class="htb-card">
-        <p class="htb-meta-tag">Métricas</p>
-        <h2 class="htb-title">Panel operativo</h2>
+        <p class="htb-meta-tag">Resumen</p>
+        <h2 class="htb-title">Detalles</h2>
         <ul class="htb-stat-row" style="margin-top:16px">
           <li><span>${esc(m.duration)}</span>tiempo est.</li>
           <li><span>${esc(m.level)}</span>dificultad</li>
           <li><span>${m.lessons.length}</span>lecciones</li>
         </ul>
-        <p class="htb-body" style="margin-top:20px">Entorno aislado · sin tráfico hacia producción · logs auditables.</p>
+        <p class="htb-body" style="margin-top:20px">Entorno aislado · sin tráfico a producción · actividad auditada.</p>
         <div class="harf-linear-actions" style="margin-top:24px">
-          <button type="button" class="htb-tactical-btn" onclick="openClassNotes('${m.id}')">Ver notas</button>
+          <button type="button" class="htb-tactical-btn" onclick="openClassNotes('${m.id}')">Notas</button>
           <button type="button" class="htb-tactical-btn" onclick="markClassComplete('${m.id}')">Marcar completo</button>
         </div>
       </article>
@@ -187,7 +187,7 @@ export function bindClassGlobals() {
     const m = moduleById(id)
     if (!m || m.status === 'locked') return
     document.body.classList.add('harf-linear')
-    alert(`Lab "${m.title}" — conecta tu entorno Harf para iniciar la VM.`)
+    alert(`Laboratorio "${m.title}" — conecta tu entorno Harf para iniciar la sesión.`)
   }
 
   window.openClassNotes = (id) => {
