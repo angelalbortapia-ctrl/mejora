@@ -1,0 +1,39 @@
+═══════════════════════════════════════════════
+  MEJORA — CÓMO ABRIR (sin saber de terminal)
+═══════════════════════════════════════════════
+
+SOLO HAZ ESTO:
+
+  1. Busca la carpeta "Mejora" en tu Mac
+     (suele estar en Descargas / Downloads)
+
+  2. Dentro de la carpeta, busca el archivo:
+
+        ABRE-MEJORA.command
+
+  3. Haz DOBLE CLIC en "ABRE-MEJORA.command"
+
+  4. Se abrirá una ventana negra (Terminal) unos segundos
+     y luego el navegador con Mejora.
+
+  5. Si la pantalla se ve OSCURA todavía:
+     en el navegador pulsa al mismo tiempo:
+        Cmd  +  Shift  +  R
+     (en Mac)
+
+───────────────────────────────────────────────
+
+Si al hacer doble clic dice que el archivo no existe
+o no abre nada:
+
+  → Tu carpeta está vieja. Necesitas la carpeta nueva
+    del proyecto (pídela a quien te la compartió o
+    descárgala de GitHub).
+
+───────────────────────────────────────────────
+
+Link directo (solo funciona DESPUÉS del paso 3):
+
+  http://127.0.0.1:5173/?reset=1&v=194#/
+
+═══════════════════════════════════════════════
