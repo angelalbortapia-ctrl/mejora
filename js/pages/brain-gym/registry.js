@@ -1,6 +1,7 @@
 /** Registro central de protocolos — Strategy + carga dinámica */
 
 import { BaseProtocol, createProtocol } from '/js/pages/brain-gym/base-protocol.js'
+import { getProtocolContext } from '/js/pages/brain-gym/protocol-context.js'
 
 const registry = new Map()
 let bootstrapped = false
@@ -43,6 +44,11 @@ export function listProtocols({ clinicalOnly = false, freeOnly = false } = {}) {
 export function setActiveProtocol(id) {
   if (activeProtocolId && activeProtocolId !== id) destroyActiveProtocol()
   activeProtocolId = id || null
+  if (!id) return
+  const p = registry.get(id)
+  if (p?.init) {
+    try { p.init(getProtocolContext()) } catch { /* contexto aún no listo */ }
+  }
 }
 
 export function destroyActiveProtocol() {

@@ -1,6 +1,8 @@
 import { enrichMission } from '/js/coaching.js'
+import { appStore, STORE_PREFIX } from '/js/core/store.js'
 
-export const PREFIX = 'mejora_'
+export const PREFIX = STORE_PREFIX
+export { appStore } from '/js/core/store.js'
 export const SKILLS = {
   mental: { name: 'Neurociencia', icon: '🧠', color: '#00d4ff' },
   mindfulness: { name: 'Calma', icon: '🧘', color: '#a78bfa' },
@@ -25,17 +27,11 @@ export const RANKS = [
 ]
 
 export function getItem(key, fallback = null) {
-  try {
-    const raw = localStorage.getItem(PREFIX + key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch { return fallback }
+  return appStore.get(key, fallback)
 }
 
 export function setItem(key, value) {
-  localStorage.setItem(PREFIX + key, JSON.stringify(value))
-  if (typeof window !== 'undefined') {
-    import('/js/cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
-  }
+  return appStore.set(key, value)
 }
 
 /** Borra todo el progreso local (FORGE desde cero). */
@@ -65,18 +61,11 @@ export function esc(str) {
 }
 
 export function getProgress() {
-  return getItem('progress', {
-    xp: { mental: 0, mindfulness: 0, discipline: 0, wisdom: 0 },
-    achievements: [],
-    records: {},
-    habitData: {},
-    daily: { date: null, ids: [], done: [] },
-    weekly: { week: null, done: 0, target: 5 },
-  })
+  return appStore.getProgress()
 }
 
 export function saveProgress(p) {
-  setItem('progress', p)
+  return appStore.saveProgress(p)
 }
 
 export function xpForLevel(level) {
@@ -246,34 +235,15 @@ export function getMoodInsight() {
 }
 
 export function getStats() {
-  return getItem('stats', {
-    brainSessions: 0, meditationMinutes: 0, reflections: 0,
-    habitsCompleted: 0, routinesCompleted: 0, challengesWon: 0,
-  })
+  return appStore.getStats()
 }
 
 export function updateStats(updates) {
-  const merged = { ...getStats(), ...updates }
-  setItem('stats', merged)
-  return merged
+  return appStore.updateStats(updates)
 }
 
 export function getSettings() {
-  return getItem('settings', {
-    darkMode: false, sound: true, reminderHour: 20, notificationsEnabled: false,
-    habitRemindersEnabled: false, habitReminderHour: 18,
-    sunsetRemindersEnabled: true,
-    defaultDifficulty: 'medio', onboardingComplete: false, userName: '',
-    theme: 'default', country: 'MX', compactSidebar: false, reducedMotion: false, tourComplete: false,
-    autoBackupEnabled: false, lastAutoBackup: null,
-    latitude: null, longitude: null, locationName: '', locationAsked: false,
-    medAmbient: 'off', medAmbientVolume: 0.28, medVoice: true, medVoiceURI: '', medVoiceRate: 0.48,
-    medVoiceEngine: 'browser',
-    fishApiKey: '', fishVoiceId: '', fishModel: 's2.1-pro-free', fishSpeed: 0.96, fishProxyUrl: '',
-    azureSpeechKey: '', azureSpeechRegion: 'eastus', azureVoice: 'es-MX-DaliaNeural',
-    geminiApiKey: '', geminiVoice: 'Despina',
-    locale: 'es',
-  })
+  return appStore.getSettings()
 }
 
 export function needsOnboarding() {
@@ -292,7 +262,7 @@ export function migrateOnboardingFlag() {
 }
 
 export function saveSettings(s) {
-  setItem('settings', s)
+  appStore.saveSettings(s)
   document.documentElement.classList.toggle('dark', s.darkMode)
   document.documentElement.classList.toggle('reduce-motion', !!s.reducedMotion)
 }

@@ -70,6 +70,17 @@ describe('brain-clinical — métricas e historial', () => {
   })
 })
 
+describe('brain-clinical — OOP protocols', () => {
+  it('StroopProtocol extiende BaseProtocol', async () => {
+    const { BaseProtocol } = await import('../js/pages/brain-gym/base-protocol.js')
+    const { StroopProtocol } = await import('../js/pages/brain-gym/protocols/stroop.js')
+    const p = new StroopProtocol()
+    assert.ok(p instanceof BaseProtocol)
+    assert.equal(p.id, 'stroop')
+    assert.equal(p.clinical, true)
+  })
+})
+
 describe('brain-clinical — briefing visto', () => {
   it('marca y detecta protocolos vistos', () => {
     assert.equal(hasSeenProtocolBrief('stroop'), false)
