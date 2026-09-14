@@ -46,6 +46,7 @@ const SHELL_CSS = [
   '/css/school.css',
   '/css/forge-lessons.css',
   '/css/harf-linear.css',
+  '/css/harf-interactive.css',
 ]
 
 const SHELL_HTML = ['/', '/index.html', '/privacy.html']

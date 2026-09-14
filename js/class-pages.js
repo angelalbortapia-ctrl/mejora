@@ -1,4 +1,4 @@
-/** Harf — Class pages (Height.app aesthetic v10.0) */
+/** Harf — Class pages (Notion Light Pro v21.5) */
 
 import { esc } from '/js/core.js'
 
@@ -74,8 +74,8 @@ function renderModuleCard(m) {
     <h2 class="htb-title">${esc(m.title)}</h2>
     <p class="htb-body">${esc(m.desc)}</p>
     <ul class="htb-stat-row htb-card__footer">
-      <li><span>${esc(m.duration)}</span>duración</li>
-      <li><span>${esc(m.level)}</span>nivel</li>
+      <li class="metric-box"><span>${esc(m.duration)}</span>duración</li>
+      <li class="metric-box"><span>${esc(m.level)}</span>nivel</li>
     </ul>
   </a>`
 }
@@ -88,7 +88,7 @@ export function renderClassHub() {
     <header class="harf-linear-hero">
       <p class="htb-meta-tag htb-meta-tag--indigo">Harf · Learning track</p>
       <h1 class="harf-linear-hero__display">Academia</h1>
-      <p class="harf-linear-hero__lead">Ruta estructurada con la claridad de Height: superficies limpias, progreso visible y foco en lo esencial. ${done}/${total} módulos completados.</p>
+      <p class="harf-linear-hero__lead">Ruta estructurada con jerarquía Notion Light: superficies claras, progreso visible y foco en lo esencial. ${done}/${total} módulos completados.</p>
       <div class="harf-linear-actions">
         <button type="button" class="htb-tactical-btn htb-tactical-btn--primary" onclick="startNextClassModule()">Continuar ruta</button>
         <a href="#/" class="htb-tactical-btn htb-tactical-btn--ghost no-underline">Volver al inicio</a>
@@ -139,7 +139,7 @@ export function renderClassModule(moduleId) {
         <p class="htb-body">Completa cada lección en orden. Registra hallazgos antes de avanzar al siguiente bloque.</p>
         <ul class="htb-module-list" style="margin-top:20px">
           ${m.lessons.map((lesson, i) => `
-            <li class="htb-module-list__item ${lessonState(m, i)}">
+            <li class="htb-module-list__item module-item ${lessonState(m, i)}">
               <span aria-hidden="true">${m.status === 'done' || (m.status === 'current' && i === 0) ? '✓' : '○'}</span>
               <span>${esc(lesson)}</span>
             </li>`).join('')}
@@ -150,9 +150,9 @@ export function renderClassModule(moduleId) {
         <p class="htb-meta-tag">Resumen</p>
         <h2 class="htb-title">Detalles</h2>
         <ul class="htb-stat-row" style="margin-top:16px">
-          <li><span>${esc(m.duration)}</span>tiempo est.</li>
-          <li><span>${esc(m.level)}</span>dificultad</li>
-          <li><span>${m.lessons.length}</span>lecciones</li>
+          <li class="metric-box"><span>${esc(m.duration)}</span>tiempo est.</li>
+          <li class="metric-box"><span>${esc(m.level)}</span>dificultad</li>
+          <li class="metric-box"><span>${m.lessons.length}</span>lecciones</li>
         </ul>
         <p class="htb-body" style="margin-top:20px">Entorno aislado · sin tráfico a producción · actividad auditada.</p>
         <div class="harf-linear-actions" style="margin-top:24px">
