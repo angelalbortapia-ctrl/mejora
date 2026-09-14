@@ -36,6 +36,12 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* Lock dark appearance — ignore macOS auto light/dark switching */
+html:has(body.harf-linear) {
+  color-scheme: dark only;
+  background-color: var(--harf-bg-canvas);
+}
+
 /* Canvas */
 body.harf-linear {
   background-color: var(--harf-bg-canvas) !important;
@@ -43,6 +49,7 @@ body.harf-linear {
   font-family: var(--harf-font-sans);
   letter-spacing: -0.01em;
   min-height: 100vh;
+  color-scheme: dark only;
 }
 
 body.harf-linear .app-main,
@@ -50,15 +57,16 @@ body.harf-linear #app-content {
   background: var(--harf-bg-canvas);
 }
 
-body.harf-linear.theme-rpg::before {
-  display: none;
+body.harf-linear.theme-rpg::before,
+body.harf-linear.theme-rpg::after {
+  display: none !important;
 }
 
-/* Subtle glass layer on elevated panels (Height-style depth) */
+/* Solid banner — no macOS vibrancy / backdrop shifts */
 body.harf-linear .app-banner {
-  background: rgba(22, 25, 34, 0.85) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--harf-bg-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-bottom: 1px solid var(--harf-border-subtle);
 }
 

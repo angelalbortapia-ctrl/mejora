@@ -320,9 +320,21 @@ function applyRenderChrome(path, prevPath, sameRoute) {
   }
 }
 
+const HARF_THEME_COLOR = '#0f1117'
+const DEFAULT_THEME_COLOR = '#162238'
+
+function syncHarfAppearance(path) {
+  const isHarf = path === '/clase'
+  document.body.classList.toggle('harf-linear', isHarf)
+  document.documentElement.style.colorScheme = isHarf ? 'dark only' : ''
+  if (isHarf) document.documentElement.classList.remove('dark')
+  const themeMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeMeta) themeMeta.setAttribute('content', isHarf ? HARF_THEME_COLOR : DEFAULT_THEME_COLOR)
+}
+
 function renderCore() {
   const { path, sub, full } = parsePath()
-  document.body.classList.toggle('harf-linear', path === '/clase')
+  syncHarfAppearance(path)
   if (path === '/desafios') {
     location.replace('#/plan')
     return
