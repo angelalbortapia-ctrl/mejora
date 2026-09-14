@@ -2,7 +2,7 @@
 
 import { createProtocol } from '/js/pages/brain-gym/base-protocol.js'
 import {
-  getProtocolContext, advanceTimedTrial, queueArmTrial, registerTimedHandler,
+  getProtocolContext, advanceTimedTrial, queueArmTrial, registerTimedHandler, unregisterTimedHandler,
 } from '/js/pages/brain-gym/protocol-context.js'
 import {
   logTrial, beginScoredBlock, PRACTICE_TRIALS, isPractice,
@@ -109,7 +109,11 @@ export function createStroopProtocol() {
         ${renderTrialFlash(s)}
       </div>`, { arena: true })
     },
-    destroy() {
+    cleanup() {
+      try {
+        getProtocolContext().clearTrialDeadline()
+      } catch { /* contexto ya liberado */ }
+      unregisterTimedHandler('stroop')
       delete window.stroopAnswer
     },
   })

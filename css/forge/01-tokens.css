@@ -1,23 +1,31 @@
-/* FORGE — tokens unificados (Linear dark + RPG opcional)
-   Linear: #08090a · #8A8F98 muted · #5E6AD2 accent
+/* FORGE — tokens unificados (Raycast dark + RPG opcional)
+   Raycast: #09090b canvas · glass surfaces · violet accent
    RPG (theme-rpg): paleta campaña — evitar hex sueltos fuera de --m-* / --rpg-* */
 
 :root {
-  /* Linear-inspired base palette */
-  --m-bg: #08090a;
-  --m-bg-2: #0a0b0c;
-  --m-surface: #121314;
-  --m-surface-2: #18181b;
-  --m-surface-3: #1f2023;
-  --m-text: #eeeff1;
-  --m-muted: #8a8f98;
-  --m-muted-2: #5c5f66;
-  --m-border: rgba(255, 255, 255, 0.06);
-  --m-border-strong: rgba(255, 255, 255, 0.1);
-  --m-accent: #5e6ad2;
-  --m-accent-hover: #6b77e0;
-  --m-accent-soft: rgba(94, 106, 210, 0.12);
-  --m-accent-glow: rgba(94, 106, 210, 0.18);
+  /* Raycast v1.80 — paleta oscura profunda */
+  --bg-app: #09090b;
+  --surface-card: #121215;
+  --surface-hover: #1a1a1f;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(139, 92, 246, 0.4);
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+
+  --m-bg: var(--bg-app);
+  --m-bg-2: #0c0c0e;
+  --m-surface: var(--surface-card);
+  --m-surface-2: var(--surface-hover);
+  --m-surface-3: #222228;
+  --m-text: var(--text-primary);
+  --m-muted: var(--text-secondary);
+  --m-muted-2: #71717a;
+  --m-border: var(--border-subtle);
+  --m-border-strong: rgba(255, 255, 255, 0.14);
+  --m-accent: #8b5cf6;
+  --m-accent-hover: #a78bfa;
+  --m-accent-soft: rgba(139, 92, 246, 0.12);
+  --m-accent-glow: rgba(139, 92, 246, 0.28);
   --m-steel: #71717a;
   --m-danger: #f87171;
   --m-success: #4da384;
@@ -35,11 +43,12 @@
   --m-type-label-tracking: 0;
   --m-ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
   --m-duration: 0.15s;
-  --m-glass-bg: #121314;
-  --m-glass-border: rgba(255, 255, 255, 0.06);
-  --m-glass-blur: 0px;
+  --m-glass-bg: rgba(18, 18, 21, 0.72);
+  --m-glass-border: var(--border-subtle);
+  --m-glass-blur: 16px;
+  --m-lab-card-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.7);
   --m-linear-ring: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --m-glass-shadow: var(--m-linear-ring), 0 2px 6px rgba(0, 0, 0, 0.28), 0 12px 32px rgba(0, 0, 0, 0.22);
+  --m-glass-shadow: var(--m-linear-ring), var(--m-lab-card-shadow);
   --m-shadow: var(--m-glass-shadow);
   --m-shadow-lg: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.32);
 
@@ -80,8 +89,8 @@
   --btn-text: #0a0c10;
   --secondary-bg: var(--m-surface-2);
   --input-bg: var(--m-surface-2);
-  --header-bg: rgba(8, 9, 10, 0.92);
-  --sidebar-bg: #08090a;
+  --header-bg: rgba(9, 9, 11, 0.88);
+  --sidebar-bg: var(--bg-app);
   --radius: var(--m-radius);
   --radius-lg: var(--m-radius-lg);
   --gradient-hero: var(--m-surface);

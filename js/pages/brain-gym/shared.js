@@ -1,7 +1,8 @@
 /** Estado compartido y runtime del laboratorio cerebral */
 
 import { esc, DIFFICULTIES } from '/js/core.js'
-import { EXERCISES, COGNITIVE_DOMAINS } from '/js/brain-program.js'
+import { EXERCISES, COGNITIVE_DOMAINS, getExerciseGuide } from '/js/brain-program.js'
+import { hasSeenProtocolBrief } from '/js/brain-metrics.js'
 
 export let brainState = {
   exercise: null, difficulty: 'medio', mode: 'hub', brainView: 'home', trainSection: 'program', bodySection: 'nutrition',
@@ -192,9 +193,17 @@ export function renderBrainLabShell(body, opts = {}) {
   const backFn = brainState.mode === 'session' ? 'cancelSession()' : 'exitExercise()'
   const status = getLiveStatusFn()
   const domain = COGNITIVE_DOMAINS[ex.domain]
+  const showReview = brainState.exercise
+    && brainState.protocolBrief !== brainState.exercise
+    && getExerciseGuide(brainState.exercise)
+    && hasSeenProtocolBrief(brainState.exercise)
+  const reviewBtn = showReview
+    ? `<button type="button" class="brain-lab-header__review" onclick="showProtocolBrief('${brainState.exercise}')">Repasar instrucciones</button>`
+    : ''
   return `<div id="brain-lab-runtime" class="page-shell page-brain-lab-runtime route-enter">
     <header class="brain-lab-header" id="brain-lab-header">
       <button type="button" onclick="${backFn}" class="brain-lab-header__exit">Salir</button>
+      ${reviewBtn}
       <div class="brain-lab-header__main">
         <p class="brain-lab-header__domain">${domain?.name || 'Entrenamiento cognitivo'}</p>
         <h1 class="brain-lab-header__title">${ex.name || 'Protocolo'}</h1>

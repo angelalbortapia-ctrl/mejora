@@ -143,7 +143,11 @@ export function createNBackProtocol() {
         ${s.feedback ? `<p class="brain-feedback brain-feedback--${s.feedback === 'ok' ? 'ok' : 'bad'}">${s.feedback === 'ok' ? '✓ Precisión' : '✗ Error'}</p>` : ''}
       </div>`, { arena: true })
     },
-    destroy() {
+    cleanup() {
+      try {
+        const { brainState } = getProtocolContext()
+        if (brainState.nback) clearNbackPaceTick(brainState.nback)
+      } catch { /* contexto ya liberado */ }
       delete window.nbackStart
       delete window.nbackRespond
     },

@@ -135,5 +135,19 @@ export function renderSoloHoy() {
       <p class="text-sm text-muted">Buen trabajo. Mañana seguimos.</p>
     </div>`}
     </div>
+    <button type="button" class="panic-anchor-fab" onclick="launchPanicAnchor()" aria-label="Ancla de emergencia — respiración inmediata">
+      <span class="panic-anchor-fab__icon" aria-hidden="true">⚓</span>
+      <span class="panic-anchor-fab__label">Emergencia</span>
+    </button>
   </div>`
+}
+
+export function bindPlanGlobals() {
+  window.launchPanicAnchor = () => {
+    if (typeof window.startMeditation === 'function') {
+      window.startMeditation('panic-anchor')
+      return
+    }
+    window.location.hash = '#/meditacion'
+  }
 }

@@ -44,7 +44,7 @@ import { moodPickerHTML, heatmapHTML, skillBars, guardDifficulty } from '/js/pag
 import { routineState, stopRoutineIfLeaving, patchRoutineUI } from '/js/routine-service.js'
 import { pomodoro, patchPomodoroUI } from '/js/focus-service.js'
 import { renderRoutine, bindRoutineGlobals } from '/js/pages/routine.js'
-import { renderPlan, renderSoloHoy } from '/js/pages/plan.js'
+import { renderPlan, renderSoloHoy, bindPlanGlobals } from '/js/pages/plan.js'
 import { renderMejora, bindMejoraGlobals, getEditingHabits, setEditingHabits } from '/js/pages/mejora.js'
 import { renderEnfoque, bindEnfoqueGlobals } from '/js/pages/enfoque.js'
 import { renderSettings, bindSettingsGlobals, getSettingsTab, setSettingsTab } from '/js/pages/settings.js'
@@ -618,6 +618,7 @@ bindJourneyGlobals()
 bindProfileGlobals()
 bindGoalsGlobals()
 bindHomeGlobals({ startGuide: startSectionGuide })
+bindPlanGlobals()
 bindBrainGymGlobals()
 bindClassGlobals()
 bindSettingsGlobals({

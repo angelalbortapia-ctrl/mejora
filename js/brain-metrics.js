@@ -26,12 +26,23 @@ export const METRIC_GLOSSARY = {
 const SEEN_BRIEF_KEY = 'brainProtocolsSeen'
 const MAX_HISTORY = 10
 
+function briefingStorageKey(exerciseId) {
+  return `mejora_briefing_${exerciseId}`
+}
+
 export function hasSeenProtocolBrief(exerciseId) {
+  if (!exerciseId) return false
+  try {
+    if (localStorage.getItem(briefingStorageKey(exerciseId))) return true
+  } catch { /* ignore */ }
   return Boolean(getItem(SEEN_BRIEF_KEY, {})[exerciseId])
 }
 
 export function markProtocolBriefSeen(exerciseId) {
   if (!exerciseId) return
+  try {
+    localStorage.setItem(briefingStorageKey(exerciseId), getToday())
+  } catch { /* ignore */ }
   const seen = getItem(SEEN_BRIEF_KEY, {})
   seen[exerciseId] = getToday()
   setItem(SEEN_BRIEF_KEY, seen)

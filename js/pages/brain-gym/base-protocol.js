@@ -49,10 +49,15 @@ export class BaseProtocol {
     return computeMetrics(this.id, state?.trialLog, state)
   }
 
-  /** Limpieza de timers/listeners */
-  destroy() {
+  /** Limpieza de timers/listeners — obligatorio al cambiar de ruta */
+  cleanup() {
     this._ctx = null
     this._container = null
+  }
+
+  /** @deprecated Usar cleanup() */
+  destroy() {
+    this.cleanup()
   }
 
   get ctx() {
@@ -66,6 +71,8 @@ export function createProtocol(spec) {
   if (spec.handleInput) base.handleInput = spec.handleInput.bind(base)
   if (spec.computeMetrics) base.computeMetrics = spec.computeMetrics.bind(base)
   if (spec.onStart) base.onStart = spec.onStart.bind(base)
-  if (spec.destroy) base.destroy = spec.destroy.bind(base)
+  if (spec.cleanup) base.cleanup = spec.cleanup.bind(base)
+  else if (spec.destroy) base.cleanup = spec.destroy.bind(base)
+  base.destroy = () => base.cleanup()
   return base
 }

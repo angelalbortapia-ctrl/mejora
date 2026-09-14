@@ -4,6 +4,7 @@ import { BaseProtocol, createProtocol } from '/js/pages/brain-gym/base-protocol.
 
 const registry = new Map()
 let bootstrapped = false
+let activeProtocolId = null
 
 export function registerProtocol(specOrInstance) {
   const isPlainSpec = specOrInstance?.id
@@ -39,9 +40,22 @@ export function listProtocols({ clinicalOnly = false, freeOnly = false } = {}) {
  * @param {string} id
  * @param {object} legacyFallback — fn(id) => html si no está en registry
  */
+export function setActiveProtocol(id) {
+  if (activeProtocolId && activeProtocolId !== id) destroyActiveProtocol()
+  activeProtocolId = id || null
+}
+
+export function destroyActiveProtocol() {
+  if (!activeProtocolId) return
+  const p = registry.get(activeProtocolId)
+  try { p?.cleanup?.() } catch (err) { console.error(`[registry] cleanup ${activeProtocolId}`, err) }
+  activeProtocolId = null
+}
+
 export function renderExercise(id, legacyFallback) {
   const p = registry.get(id)
   if (p?.render) {
+    setActiveProtocol(id)
     try {
       return p.render()
     } catch (err) {
@@ -67,7 +81,8 @@ export function bootstrapRegistry(legacyHandlers = {}) {
 }
 
 export function resetRegistry() {
-  registry.forEach(p => { try { p.destroy?.() } catch {} })
+  destroyActiveProtocol()
+  registry.forEach(p => { try { p.cleanup?.() } catch {} })
   registry.clear()
   bootstrapped = false
 }

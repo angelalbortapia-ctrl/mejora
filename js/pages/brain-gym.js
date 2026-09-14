@@ -44,7 +44,7 @@ import {
   renderSchoolHub, completeLessonReview,
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats, getBrainRegionProgress,
 } from '/js/school.js'
-import { renderExercise, hasProtocol } from '/js/pages/brain-gym/registry.js'
+import { renderExercise, hasProtocol, destroyActiveProtocol, setActiveProtocol } from '/js/pages/brain-gym/registry.js'
 import { initProtocolContext } from '/js/pages/brain-gym/protocol-context.js'
 import { buildClinicalProtocolRegistry, registerFreeLabProtocols } from '/js/pages/brain-gym/protocolos/index.js'
 import { patchStroopUI } from '/js/pages/brain-gym/protocolos/stroop.js'
@@ -297,7 +297,7 @@ function patchMathTimerDOM() {
 }
 
 const BRIEF_FIRST_EXERCISES = new Set([
-  'stroop', 'flanker', 'switching', 'logic', 'nback', 'cpt', 'gonogo',
+  'stroop', 'flanker', 'switching', 'logic', 'nback', 'dualnback', 'cpt', 'gonogo',
   'visnback', 'trail', 'wisconsin', 'ant',
 ])
 
@@ -817,6 +817,7 @@ function startBrain(id, fromSession = false) {
     brainState.oddout.timeLimit = inten.timeLimit
   }
   brainState.protocolBrief = (BRIEF_FIRST_EXERCISES.has(id) && !hasSeenProtocolBrief(id)) ? id : null
+  setActiveProtocol(hasProtocol(id) ? id : null)
   if (document.getElementById('brain-exercise-stage')) render(true)
   else if (typeof window.render === 'function') window.render(true)
   if (!brainState.protocolBrief && TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
@@ -2002,6 +2003,7 @@ export function syncGimnasiaRoute(sub = []) {
 }
 
 export function clearEphemeralBrainState() {
+  destroyActiveProtocol()
   clearBrainTimers()
   brainState._trialBusy = false
   brainState.mode = 'hub'
@@ -2039,6 +2041,7 @@ export function bindBrainGymGlobals() {
   window.endExerciseBlock = endExerciseBlock
   bindBrainNavGlobals()
   window.exitExercise = function() {
+    destroyActiveProtocol()
     clearBrainTimers()
     brainState.exercise = null
     goTrain(brainState.trainSection === 'lab' ? 'lab' : 'program')

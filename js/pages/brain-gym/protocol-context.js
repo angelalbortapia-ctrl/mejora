@@ -17,6 +17,10 @@ export function registerTimedHandler(id, fn) {
   timedHandlers.set(id, fn)
 }
 
+export function unregisterTimedHandler(id) {
+  timedHandlers.delete(id)
+}
+
 export function queueArmTrial(id) {
   const { brainState, brainTimers, getIntensity, startTrialDeadline } = getProtocolContext()
   const handler = timedHandlers.get(id)

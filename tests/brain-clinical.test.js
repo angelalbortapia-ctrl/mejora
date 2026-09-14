@@ -76,6 +76,13 @@ describe('brain-clinical — briefing visto', () => {
     markProtocolBriefSeen('stroop')
     assert.equal(hasSeenProtocolBrief('stroop'), true)
   })
+
+  it('persiste en mejora_briefing_[protocolId]', () => {
+    markProtocolBriefSeen('nback-test-key')
+    assert.ok(localStorage.getItem('mejora_briefing_nback-test-key'))
+    assert.equal(hasSeenProtocolBrief('nback-test-key'), true)
+    localStorage.removeItem('mejora_briefing_nback-test-key')
+  })
 })
 
 describe('brain-clinical — flujo stroop simulado', () => {
