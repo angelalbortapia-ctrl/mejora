@@ -58,6 +58,7 @@ import {
 import { ensureGeminiConfig } from '/js/gemini-config.js'
 import { ensureAzureConfig } from '/js/azure-config.js'
 import { ensureFishConfig } from '/js/fish-config.js'
+import { renderClassRoute, bindClassGlobals } from '/js/class-pages.js'
 
 
 // --- State ---
@@ -101,6 +102,7 @@ const routes = {
   '/meditacion': renderMeditation, '/mejora': renderMejora, '/enfoque': renderEnfoque,
   '/ajustes': renderSettings, '/perfil': renderProfile,
   '/metas': renderMetas, '/viaje': renderViaje, '/hoy': renderSoloHoy,
+  '/clase': () => renderClassRoute(parsePath().sub),
 }
 
 window.setOnboardGoal = function(i) { onboarding.goal = i; render() }
@@ -320,6 +322,7 @@ function applyRenderChrome(path, prevPath, sameRoute) {
 
 function renderCore() {
   const { path, sub, full } = parsePath()
+  document.body.classList.toggle('harf-linear', path === '/clase')
   if (path === '/desafios') {
     location.replace('#/plan')
     return
@@ -604,6 +607,7 @@ bindProfileGlobals()
 bindGoalsGlobals()
 bindHomeGlobals({ startGuide: startSectionGuide })
 bindBrainGymGlobals()
+bindClassGlobals()
 bindSettingsGlobals({
   invalidateDailyApis: () => { dailyApis = null },
   reloadDailyApis: () => loadDailyApis(true),
