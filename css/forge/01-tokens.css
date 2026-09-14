@@ -1,35 +1,47 @@
-/* FORGE — tokens unificados (Raycast dark + RPG opcional)
-   Raycast: #09090b canvas · glass surfaces · violet accent
-   RPG (theme-rpg): paleta campaña — evitar hex sueltos fuera de --m-* / --rpg-* */
+/* FORGE — tokens unificados (Notion Light Pro v21.5)
+   Fondo blanco · sidebar cálido · bordes arcilla · acento azul Notion */
 
 :root {
-  /* Raycast v1.80 — paleta oscura profunda */
-  --bg-app: #09090b;
-  --surface-card: #121215;
-  --surface-hover: #1a1a1f;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-highlight: rgba(139, 92, 246, 0.4);
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
+  /* Notion Light — tokens canónicos */
+  --bg-app: #ffffff;
+  --bg-sidebar: #f7f6f3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbfbfa;
+  --border-color: #e1dfdd;
+  --text-main: #37352f;
+  --text-muted: #9b9a97;
+  --shadow-notion: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-notion-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --transition-smooth: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --surface-card: var(--bg-card);
+  --surface-hover: var(--bg-card-hover);
+  --border-subtle: var(--border-color);
+  --border-highlight: #d3d1cb;
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
 
   --m-bg: var(--bg-app);
-  --m-bg-2: #0c0c0e;
-  --m-surface: var(--surface-card);
-  --m-surface-2: var(--surface-hover);
-  --m-surface-3: #222228;
-  --m-text: var(--text-primary);
-  --m-muted: var(--text-secondary);
-  --m-muted-2: #71717a;
-  --m-border: var(--border-subtle);
-  --m-border-strong: rgba(255, 255, 255, 0.14);
-  --m-accent: #8b5cf6;
-  --m-accent-hover: #a78bfa;
-  --m-accent-soft: rgba(139, 92, 246, 0.12);
-  --m-accent-glow: rgba(139, 92, 246, 0.28);
-  --m-steel: #71717a;
-  --m-danger: #f87171;
-  --m-success: #4da384;
-  --m-success-soft: rgba(77, 163, 132, 0.1);
+  --m-bg-2: var(--bg-sidebar);
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --m-surface-3: #f1f0ed;
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-muted-2: #b4b4b0;
+  --m-border: var(--border-color);
+  --m-border-strong: #d3d1cb;
+  --m-accent: #2383e2;
+  --m-accent-hover: #1a73c7;
+  --m-accent-soft: rgba(35, 131, 226, 0.08);
+  --m-accent-glow: rgba(35, 131, 226, 0.15);
+  --m-steel: #9b9a97;
+  --m-danger: #e16259;
+  --m-success: #0f7b6c;
+  --m-success-soft: rgba(15, 123, 108, 0.08);
   --m-radius: 6px;
   --m-radius-lg: 8px;
   --m-font: 'Inter', system-ui, -apple-system, sans-serif;
@@ -42,15 +54,15 @@
   --m-type-ui-tracking: -0.011em;
   --m-type-label-tracking: 0;
   --m-ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
-  --m-duration: 0.15s;
-  --m-glass-bg: rgba(18, 18, 21, 0.72);
-  --m-glass-border: var(--border-subtle);
-  --m-glass-blur: 16px;
-  --m-lab-card-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.7);
-  --m-linear-ring: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --m-glass-shadow: var(--m-linear-ring), var(--m-lab-card-shadow);
-  --m-shadow: var(--m-glass-shadow);
-  --m-shadow-lg: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.32);
+  --m-duration: 0.2s;
+  --m-glass-bg: var(--bg-card);
+  --m-glass-border: var(--border-color);
+  --m-glass-blur: 0px;
+  --m-lab-card-shadow: var(--shadow-notion);
+  --m-linear-ring: none;
+  --m-glass-shadow: var(--shadow-notion);
+  --m-shadow: var(--shadow-notion);
+  --m-shadow-lg: var(--shadow-notion-hover);
 
   /* RPG palette — cielo zafiro + oro cálido + jade */
   --rpg-night: #0c1424;
@@ -86,17 +98,17 @@
   --primary-soft: var(--m-accent-soft);
   --primary-glow: var(--m-accent-glow);
   --neon: var(--m-accent);
-  --btn-text: #0a0c10;
-  --secondary-bg: var(--m-surface-2);
-  --input-bg: var(--m-surface-2);
-  --header-bg: rgba(9, 9, 11, 0.88);
-  --sidebar-bg: var(--bg-app);
+  --btn-text: #ffffff;
+  --secondary-bg: var(--bg-card-hover);
+  --input-bg: var(--bg-card);
+  --header-bg: var(--bg-app);
+  --sidebar-bg: var(--bg-sidebar);
   --radius: var(--m-radius);
   --radius-lg: var(--m-radius-lg);
   --gradient-hero: var(--m-surface);
   --gradient-card: var(--m-surface);
   --shadow: var(--m-shadow);
-  --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-sm: var(--shadow-notion);
   --glass-bg: var(--m-glass-bg);
   --glass-border: var(--m-glass-border);
   --glass-glow: rgba(94, 106, 210, 0.04);
@@ -104,51 +116,52 @@
   --danger: var(--m-danger);
 }
 
-html { color-scheme: dark; }
+html { color-scheme: light; }
 
+/* theme-rpg: mantiene clase legacy pero usa Notion Light */
 body.theme-rpg {
-  --m-bg: var(--rpg-night);
-  --m-bg-2: var(--rpg-night-mid);
-  --m-text: #f0f4fc;
-  --m-muted: rgba(220, 228, 245, 0.75);
-  --m-border: rgba(240, 199, 94, 0.22);
-  --m-border-strong: rgba(240, 199, 94, 0.4);
-  --m-surface: var(--rpg-parchment);
-  --m-surface-2: var(--rpg-parchment-dark);
-  --m-surface-3: #e4e0d8;
-  --on-surface-text: var(--rpg-ink);
-  --on-surface-muted: var(--rpg-ink-muted);
-  --m-border-card: rgba(28, 34, 48, 0.1);
-  --m-border-card-strong: rgba(28, 34, 48, 0.18);
-  --m-accent: var(--rpg-gold);
-  --m-accent-hover: var(--rpg-gold-light);
-  --m-accent-soft: rgba(240, 199, 94, 0.2);
-  --m-accent-glow: rgba(240, 199, 94, 0.38);
-  --m-steel: var(--rpg-jade);
-  --m-danger: var(--rpg-coral);
-  --m-success: var(--rpg-jade);
-  --m-radius: 10px;
-  --m-radius-lg: 14px;
-  --m-display: 'Cinzel', 'Georgia', serif;
-  --m-font: 'Crimson Pro', 'Georgia', serif;
+  --m-bg: var(--bg-app);
+  --m-bg-2: var(--bg-sidebar);
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-border: var(--border-color);
+  --m-border-strong: #d3d1cb;
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --m-surface-3: #f1f0ed;
+  --on-surface-text: var(--text-main);
+  --on-surface-muted: var(--text-muted);
+  --m-border-card: var(--border-color);
+  --m-border-card-strong: #d3d1cb;
+  --m-accent: #2383e2;
+  --m-accent-hover: #1a73c7;
+  --m-accent-soft: rgba(35, 131, 226, 0.08);
+  --m-accent-glow: rgba(35, 131, 226, 0.12);
+  --m-steel: var(--text-muted);
+  --m-danger: #e16259;
+  --m-success: #0f7b6c;
+  --m-radius: 6px;
+  --m-radius-lg: 8px;
+  --m-display: var(--m-font);
+  --m-font: 'Inter', system-ui, -apple-system, sans-serif;
   --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
-  --m-type-body: 1.0625rem;
-  --m-type-leading: 1.55;
-  --m-shadow: 0 4px 16px rgba(10, 8, 20, 0.25);
-  --m-shadow-lg: 0 8px 32px rgba(10, 8, 20, 0.32);
-  --bg: var(--m-bg);
-  --bg-card: var(--rpg-parchment);
-  --text: var(--m-text);
-  --text-muted: var(--m-muted);
-  --border: var(--m-border);
-  --primary: var(--rpg-gold);
-  --btn-text: var(--rpg-ink);
-  --secondary-bg: var(--rpg-parchment-dark);
-  --header-bg: linear-gradient(180deg, var(--rpg-slate-light) 0%, var(--rpg-slate) 100%);
-  --sidebar-bg: linear-gradient(180deg, #2a4068 0%, var(--rpg-slate) 45%, #0a1020 100%);
-  --gradient-card: linear-gradient(165deg, #fff 0%, var(--rpg-parchment) 50%, var(--rpg-parchment-dark) 100%);
-  --glass-bg: rgba(250, 248, 243, 0.94);
-  color-scheme: dark;
+  --m-type-body: 0.8125rem;
+  --m-type-leading: 1.5;
+  --m-shadow: var(--shadow-notion);
+  --m-shadow-lg: var(--shadow-notion-hover);
+  --bg: var(--bg-app);
+  --bg-card: var(--bg-card);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --border: var(--border-color);
+  --primary: var(--m-accent);
+  --btn-text: #ffffff;
+  --secondary-bg: var(--bg-card-hover);
+  --header-bg: var(--bg-app);
+  --sidebar-bg: var(--bg-sidebar);
+  --gradient-card: var(--bg-card);
+  --glass-bg: var(--bg-card);
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

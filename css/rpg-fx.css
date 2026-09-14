@@ -1,8 +1,9 @@
 /* ═══ RPG — efectos y micro-interacciones ═══ */
 
-/* Cielo vivo */
+/* Desactivado — Notion Light sin cielo animado */
 body.theme-rpg::before {
-  animation: rpg-sky-breathe 14s ease-in-out infinite alternate;
+  animation: none;
+  display: none;
 }
 
 @keyframes rpg-sky-breathe {
@@ -10,25 +11,8 @@ body.theme-rpg::before {
   100% { filter: brightness(1.1) saturate(1.08); }
 }
 
-/* Partículas doradas flotantes */
 body.theme-rpg::after {
-  display: block !important;
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.55;
-  background-image:
-    radial-gradient(2px 2px at 10% 70%, rgba(240, 199, 94, 0.55), transparent),
-    radial-gradient(2px 2px at 25% 85%, rgba(94, 184, 168, 0.4), transparent),
-    radial-gradient(1.5px 1.5px at 40% 75%, rgba(255, 228, 150, 0.5), transparent),
-    radial-gradient(2px 2px at 55% 90%, rgba(126, 184, 240, 0.35), transparent),
-    radial-gradient(1.5px 1.5px at 70% 80%, rgba(240, 199, 94, 0.45), transparent),
-    radial-gradient(2px 2px at 85% 72%, rgba(255, 228, 150, 0.4), transparent),
-    radial-gradient(1px 1px at 30% 60%, rgba(255, 255, 255, 0.35), transparent),
-    radial-gradient(1px 1px at 65% 55%, rgba(255, 255, 255, 0.25), transparent);
-  animation: rpg-embers-rise 18s linear infinite;
+  display: none !important;
 }
 
 @keyframes rpg-embers-rise {

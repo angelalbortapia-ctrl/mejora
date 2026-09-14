@@ -1,36 +1,36 @@
 /* ═══════════════════════════════════════════════════════════
-   FORGE Premium UI — Linear / Vercel / Raycast aesthetic
-   Dark zinc-950 · glass surfaces · violet accent · emerald XP
+   FORGE Premium UI — Notion Light Pro
+   Superficies blancas · sidebar cálido · acento azul
    ═══════════════════════════════════════════════════════════ */
 
 /* Reafirma tokens premium tras capa legacy (04-legacy-pages redefine :root) */
 body.mejora-forge,
 body.mejora-v3 {
   --bg: var(--bg-app);
-  --bg-elevated: rgba(24, 24, 27, 0.72);
-  --bg-card: rgba(24, 24, 27, 0.55);
-  --bg-surface: rgba(39, 39, 42, 0.65);
-  --text: #fafafa;
-  --text-muted: #a1a1aa;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.14);
-  --primary: #8b5cf6;
-  --primary-hover: #a78bfa;
-  --primary-soft: rgba(139, 92, 246, 0.12);
-  --primary-glow: rgba(139, 92, 246, 0.28);
-  --neon: #8b5cf6;
-  --btn-text: #fafafa;
-  --secondary-bg: rgba(255, 255, 255, 0.04);
-  --input-bg: rgba(24, 24, 27, 0.8);
-  --header-bg: rgba(9, 9, 11, 0.85);
-  --sidebar-bg: #09090b;
-  --glass-bg: rgba(24, 24, 27, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --success: #10b981;
-  --danger: #f87171;
-  --gradient-hero: linear-gradient(135deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.95) 50%, #09090b 100%);
-  --gradient-card: linear-gradient(165deg, rgba(39, 39, 42, 0.65) 0%, rgba(24, 24, 27, 0.8) 100%);
-  --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
+  --bg-elevated: var(--bg-card-hover);
+  --bg-card: var(--bg-card);
+  --bg-surface: var(--bg-sidebar);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --border: var(--border-color);
+  --border-hover: #d3d1cb;
+  --primary: #2383e2;
+  --primary-hover: #1a73c7;
+  --primary-soft: rgba(35, 131, 226, 0.08);
+  --primary-glow: rgba(35, 131, 226, 0.12);
+  --neon: #2383e2;
+  --btn-text: #ffffff;
+  --secondary-bg: var(--bg-card-hover);
+  --input-bg: var(--bg-card);
+  --header-bg: var(--bg-app);
+  --sidebar-bg: var(--bg-sidebar);
+  --glass-bg: var(--bg-card);
+  --glass-border: var(--border-color);
+  --success: #0f7b6c;
+  --danger: #e16259;
+  --gradient-hero: var(--bg-app);
+  --gradient-card: var(--bg-card);
+  --shadow: var(--shadow-notion);
 }
 
 /* ── Glass primitives ── */
@@ -47,12 +47,12 @@ body.mejora-v3 {
 .brain-protocol-debrief,
 .brain-lab-header,
 .brain-lab-stage {
-  background: var(--surface-card) !important;
-  backdrop-filter: blur(var(--m-glass-blur));
-  -webkit-backdrop-filter: blur(var(--m-glass-blur));
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: 14px;
-  box-shadow: var(--m-lab-card-shadow);
+  background: var(--bg-card) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px;
+  box-shadow: var(--shadow-notion);
 }
 
 /* ── Metric typography ── */
@@ -646,15 +646,15 @@ body.mejora-v3 {
   font-size: 0.625rem;
 }
 
-/* ═══ RUNTIME CLÍNICO — dark glass (no parchment) ═══ */
+/* ═══ RUNTIME CLÍNICO — Notion Light ═══ */
 .page-brain-lab-runtime {
-  --text: var(--m-text);
-  --text-muted: var(--m-muted);
-  --m-text: var(--m-text);
-  --m-muted: var(--m-muted);
-  --bg-card: var(--m-glass-bg);
-  --secondary-bg: rgba(255, 255, 255, 0.04);
-  --border: var(--m-glass-border);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --bg-card: var(--bg-card);
+  --secondary-bg: var(--bg-card-hover);
+  --border: var(--border-color);
   --on-surface-text: var(--m-text);
   --on-surface-muted: var(--m-muted);
   color: var(--m-text);
@@ -662,11 +662,11 @@ body.mejora-v3 {
 
 .page-brain-lab-runtime .brain-lab-header {
   border-top: none !important;
-  border-radius: 14px;
+  border-radius: 6px;
   padding: 0.85rem 1rem;
-  background: var(--surface-card) !important;
-  border: 1px solid var(--border-subtle) !important;
-  box-shadow: var(--m-lab-card-shadow);
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-notion);
 }
 
 .brain-lab-header__review {
@@ -714,10 +714,10 @@ body.mejora-v3 {
 }
 
 .page-brain-lab-runtime .brain-lab-metrics {
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 0.65rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--m-glass-border);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
 }
 
 .page-brain-lab-runtime .brain-lab-metrics__label {
@@ -744,33 +744,34 @@ body.mejora-v3 {
   color: var(--m-text) !important;
 }
 
-/* Primary buttons — violet glow */
-body:not(.theme-rpg) .btn-primary {
-  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #fafafa !important;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 16px rgba(139, 92, 246, 0.35);
+/* Primary buttons — Notion blue */
+body.mejora-forge .btn-primary {
+  background: #2383e2 !important;
+  border: 1px solid #1a73c7 !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-notion);
   font-weight: 600;
 }
 
-body:not(.theme-rpg) .btn-primary:hover {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 6px 24px rgba(139, 92, 246, 0.45);
+body.mejora-forge .btn-primary:hover {
+  background: #1a73c7 !important;
+  box-shadow: var(--shadow-notion-hover);
 }
 
-body:not(.theme-rpg) .btn-secondary {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid var(--m-glass-border) !important;
-  color: var(--m-text) !important;
+body.mejora-forge .btn-secondary {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
 }
 
-body:not(.theme-rpg) .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
+body.mejora-forge .btn-secondary:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: #d3d1cb !important;
 }
 
 /* Progress bars */
-body:not(.theme-rpg) .progress-fill {
-  background: linear-gradient(90deg, #10b981, #34d399) !important;
+body.mejora-forge .progress-fill {
+  background: linear-gradient(90deg, #0f7b6c, #2ea893) !important;
 }
 
 /* Reduced motion */

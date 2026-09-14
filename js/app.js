@@ -322,7 +322,7 @@ function applyRenderChrome(path, prevPath, sameRoute) {
 }
 
 const HARF_THEME_COLOR = '#ffffff'
-const DEFAULT_THEME_COLOR = '#162238'
+const DEFAULT_THEME_COLOR = '#ffffff'
 
 function syncHarfAppearance(path) {
   const isHarf = path === '/clase'
