@@ -9,3 +9,7 @@ js/azure-config.local.js
 js/fish-config.local.js
 *.app/
 *.icns
+*.zip
+
+# Local bundles
+mejora-LISTO*.zip
