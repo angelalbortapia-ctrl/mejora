@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 191
+const ASSET_V = 192
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -36,9 +36,6 @@ const SHELL_CSS = [
   '/css/forge/04-legacy-pages.css',
   '/css/mejora-redesign.css',
   '/css/brain-wellness.css',
-  '/css/rpg-theme.css',
-  '/css/rpg-type.css',
-  '/css/rpg-fx.css',
   '/css/forge-pages.css',
   '/css/forge-meditation.css',
   '/css/forge-fx.css',

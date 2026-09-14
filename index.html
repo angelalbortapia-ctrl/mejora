@@ -8,11 +8,24 @@
   <meta name="description" content="Mejora — tu campaña de hábitos, gimnasia cerebral y calma." />
   <script>
     try {
+      const MEJORA_ASSET_V = 192
       const root = document.documentElement
+      root.dataset.notionLight = '1'
       root.classList.remove('dark')
       root.removeAttribute('data-theme')
       root.style.colorScheme = 'light'
       root.style.backgroundColor = '#ffffff'
+      root.style.setProperty('--bg-app', '#ffffff')
+      root.style.setProperty('--bg-sidebar', '#f7f6f3')
+      root.style.setProperty('--bg-card', '#ffffff')
+      root.style.setProperty('--m-bg', '#ffffff')
+      root.style.setProperty('--m-surface', '#ffffff')
+      root.style.setProperty('--m-surface-2', '#fbfbfa')
+      root.style.setProperty('--m-text', '#37352f')
+      root.style.setProperty('--m-muted', '#9b9a97')
+      root.style.setProperty('--m-accent', '#2383e2')
+      root.style.setProperty('--text-main', '#37352f')
+      root.style.setProperty('--sidebar-bg', '#f7f6f3')
       document.addEventListener('DOMContentLoaded', () => {
         document.body.style.backgroundColor = '#ffffff'
         document.body.style.color = '#37352f'
@@ -25,19 +38,88 @@
         if (s.reducedMotion) root.classList.add('reduce-motion')
         localStorage.setItem('mejora_settings', JSON.stringify(s))
       }
+      localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          keys.filter((k) => k.startsWith('mejora-v') && k !== 'mejora-v' + MEJORA_ASSET_V)
+            .forEach((k) => caches.delete(k))
+        })
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.update())
+        })
+      }
     } catch (_) {}
   </script>
   <title>Mejora — Disciplina y rendimiento</title>
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/utilities.css?v=191" />
-  <link rel="stylesheet" href="css/design-system.css?v=191" />
-  <link rel="stylesheet" href="css/forge.css?v=191" />
-  <link rel="stylesheet" href="css/school.css?v=191" />
-  <link rel="stylesheet" href="css/harf-linear.css?v=191" />
-  <link rel="stylesheet" href="css/harf-interactive.css?v=191" />
-  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=191" />
+  <link rel="stylesheet" href="css/utilities.css?v=192" />
+  <link rel="stylesheet" href="css/design-system.css?v=192" />
+  <link rel="stylesheet" href="css/forge.css?v=192" />
+  <link rel="stylesheet" href="css/school.css?v=192" />
+  <link rel="stylesheet" href="css/harf-linear.css?v=192" />
+  <link rel="stylesheet" href="css/harf-interactive.css?v=192" />
+  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=192" />
+  <style id="mejora-notion-light-critical">
+    html[data-notion-light="1"],
+    html[data-notion-light="1"] body,
+    html[data-notion-light="1"] body.mejora-forge {
+      color-scheme: light !important;
+      background: #ffffff !important;
+      color: #37352f !important;
+    }
+    html[data-notion-light="1"] .app-shell,
+    html[data-notion-light="1"] .app-main,
+    html[data-notion-light="1"] .app-content,
+    html[data-notion-light="1"] #app-content,
+    html[data-notion-light="1"] .app-banner,
+    html[data-notion-light="1"] .bottom-nav {
+      background-color: #ffffff !important;
+      background-image: none !important;
+      color: #37352f !important;
+    }
+    html[data-notion-light="1"] .sidebar,
+    html[data-notion-light="1"] .sidebar-nav {
+      background-color: #f7f6f3 !important;
+      border-right: 1px solid #e1dfdd !important;
+      box-shadow: none !important;
+    }
+    html[data-notion-light="1"] .logo-mark {
+      background: #2383e2 !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+    }
+    html[data-notion-light="1"] :is(
+      .card, .m-section, .ds-panel, .habit-card, .m-coach-card,
+      .brain-profile, .qa-card, .m-adaptive-mission, .m-shortcut
+    ) {
+      background-color: #ffffff !important;
+      border: 1px solid #e1dfdd !important;
+      color: #37352f !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04) !important;
+    }
+    html[data-notion-light="1"] :is(.m-home-title, .banner-title, .logo-text) {
+      color: #37352f !important;
+      text-shadow: none !important;
+    }
+    html[data-notion-light="1"] :is(.m-home-lead, .banner-subtitle, .sidebar-link) {
+      color: #9b9a97 !important;
+    }
+    html[data-notion-light="1"] .btn-primary,
+    html[data-notion-light="1"] .banner-cta {
+      background: #2383e2 !important;
+      color: #fff !important;
+      border-color: #1a73c7 !important;
+    }
+    html[data-notion-light="1"] #fx-layer,
+    html[data-notion-light="1"] body.mejora-forge::before {
+      display: none !important;
+      background: none !important;
+    }
+  </style>
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -152,7 +234,7 @@
       document.body.appendChild(box)
     })
   </script>
-    <script type="importmap" src="/js/import-map.json?v=191"></script>
-  <script type="module" src="/js/app.js?v=191"></script>
+    <script type="importmap" src="/js/import-map.json?v=192"></script>
+  <script type="module" src="/js/app.js?v=192"></script>
 </body>
 </html>

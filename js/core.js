@@ -274,17 +274,21 @@ export function saveSettings(s) {
   document.documentElement.classList.toggle('reduce-motion', !!s.reducedMotion)
 }
 
-/** Migración única — Notion Light: ignora darkMode legacy en localStorage */
+/** Migración — Notion Light: ignora darkMode y temas legacy en localStorage */
 export function migrateNotionLight() {
   const s = getSettings()
   const needsThemeReset = s.theme && s.theme !== 'default'
-  if (!s.darkMode && !needsThemeReset && !document.documentElement.classList.contains('dark')
-      && !document.documentElement.hasAttribute('data-theme')) return
-  s.darkMode = false
-  if (needsThemeReset) s.theme = 'default'
-  appStore.saveSettings(s)
-  document.documentElement.classList.remove('dark')
-  document.documentElement.removeAttribute('data-theme')
+  if (s.darkMode || needsThemeReset) {
+    s.darkMode = false
+    if (needsThemeReset) s.theme = 'default'
+    appStore.saveSettings(s)
+  }
+  const root = document.documentElement
+  root.dataset.notionLight = '1'
+  root.classList.remove('dark')
+  root.removeAttribute('data-theme')
+  root.style.colorScheme = 'light'
+  document.body?.classList.remove('theme-rpg')
 }
 
 const DEFAULT_HABITS = [

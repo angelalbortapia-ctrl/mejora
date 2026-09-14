@@ -1650,7 +1650,7 @@ body.mejora-forge .page-profile .profile-rank-badge {
 .global-search-empty { padding: 1rem; color: var(--m-muted); font-size: 0.875rem; }
 
 body.mejora-forge .onboarding-overlay {
-  background: rgba(10, 12, 16, 0.94) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
 }
 
 body.mejora-forge .onboarding-shell,

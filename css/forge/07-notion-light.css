@@ -168,7 +168,9 @@ aside,
   color: var(--text-main) !important;
 }
 
-.onboarding-overlay {
+body.mejora-forge .onboarding-overlay,
+body.mejora-v3 .onboarding-overlay,
+html[data-notion-light="1"] .onboarding-overlay {
   background: rgba(255, 255, 255, 0.92) !important;
 }
 
@@ -209,6 +211,79 @@ body.theme-rpg .logo-text,
 body.theme-rpg .m-home-title {
   color: var(--text-main) !important;
   text-shadow: none !important;
+}
+
+.m-section,
+.m-now,
+.m-adaptive-mission,
+.m-shortcut,
+.m-coach-card,
+.m-habits-panel,
+.brain-profile,
+.brain-profile__card,
+.ds-zone,
+.ds-panel,
+.qa-card,
+.pulse-card,
+.m-task,
+.habit-card,
+.game-card,
+.school-panel,
+.bottom-nav-link {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion) !important;
+}
+
+.m-home-title,
+.m-page-title,
+.banner-title,
+.logo-text,
+.sidebar-link-label,
+.brain-profile__label {
+  color: var(--text-main) !important;
+  text-shadow: none !important;
+}
+
+.m-home-lead,
+.m-home-date,
+.m-page-lead,
+.banner-subtitle,
+.sidebar-link,
+.brain-profile__domain-label {
+  color: var(--text-muted) !important;
+}
+
+.logo-mark {
+  background: #2383e2 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.progress-track {
+  background: #f1f0ed !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #2383e2, #1a73c7) !important;
+}
+
+.btn-primary,
+.banner-cta {
+  background: #2383e2 !important;
+  border-color: #1a73c7 !important;
+  color: #ffffff !important;
+}
+
+#fx-layer,
+.app-aurora,
+body.mejora-forge::before,
+body.mejora-v3::before {
+  background: none !important;
+  background-image: none !important;
 }
 
 .reduce-motion .card,
