@@ -3,25 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0a0c10" />
-  <meta name="description" content="Mejora — disciplina, hábitos, neurociencia y calma bajo presión." />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="Mejora — tu campaña de hábitos, gimnasia cerebral y calma." />
   <script>
     try {
+      const MEJORA_ASSET_V = 194
+      const root = document.documentElement
+      root.dataset.notionLight = '1'
+      root.classList.remove('dark')
+      root.removeAttribute('data-theme')
+      root.style.colorScheme = 'light'
+      root.style.backgroundColor = '#ffffff'
+      root.style.setProperty('--bg-app', '#ffffff')
+      root.style.setProperty('--bg-sidebar', '#f7f6f3')
+      root.style.setProperty('--bg-card', '#ffffff')
+      root.style.setProperty('--m-bg', '#ffffff')
+      root.style.setProperty('--m-surface', '#ffffff')
+      root.style.setProperty('--m-surface-2', '#fbfbfa')
+      root.style.setProperty('--m-text', '#37352f')
+      root.style.setProperty('--m-muted', '#9b9a97')
+      root.style.setProperty('--m-accent', '#2383e2')
+      root.style.setProperty('--text-main', '#37352f')
+      root.style.setProperty('--sidebar-bg', '#f7f6f3')
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.style.backgroundColor = '#ffffff'
+        document.body.style.color = '#37352f'
+        document.body.classList.remove('theme-rpg')
+      })
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
-      if (s && s.reducedMotion) document.documentElement.classList.add('reduce-motion')
+      if (s) {
+        if (s.darkMode) s.darkMode = false
+        if (s.theme && s.theme !== 'default') s.theme = 'default'
+        if (s.reducedMotion) root.classList.add('reduce-motion')
+        localStorage.setItem('mejora_settings', JSON.stringify(s))
+      }
+      const forceReset = /(?:^|[?&])reset=1(?:&|$)/.test(location.search)
+        || location.pathname.includes('reset-cache')
+      if (forceReset || localStorage.getItem('mejora_asset_v') !== String(MEJORA_ASSET_V)) {
+        localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
+        if ('caches' in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) =>
+            Promise.all(regs.map((reg) => reg.unregister()))
+          )
+        }
+        if (forceReset && location.search.includes('reset=1')) {
+          const clean = new URL(location.href)
+          clean.searchParams.delete('reset')
+          history.replaceState(null, '', clean.pathname + clean.search + clean.hash)
+        }
+      }
     } catch (_) {}
   </script>
   <title>Mejora — Disciplina y rendimiento</title>
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/utilities.css" />
-  <link rel="stylesheet" href="css/design-system.css?v=81" />
-  <link rel="stylesheet" href="css/forge.css?v=81" />
-  <link rel="stylesheet" href="css/school.css?v=81" />
+  <link rel="stylesheet" href="css/utilities.css?v=194" />
+  <link rel="stylesheet" href="css/design-system.css?v=194" />
+  <link rel="stylesheet" href="css/fonts-local.css?v=194" />
+  <link rel="stylesheet" href="css/forge/01-tokens.css?v=194" />
+  <link rel="stylesheet" href="css/forge/02-open-props-scale.css?v=194" />
+  <link rel="stylesheet" href="css/forge/03-shell.css?v=194" />
+  <link rel="stylesheet" href="css/forge/04-legacy-pages.css?v=194" />
+  <link rel="stylesheet" href="css/forge/05-premium-ui.css?v=194" />
+  <link rel="stylesheet" href="css/forge/06-linear-ui.css?v=194" />
+  <link rel="stylesheet" href="css/mejora-redesign.css?v=194" />
+  <link rel="stylesheet" href="css/forge-pages.css?v=194" />
+  <link rel="stylesheet" href="css/forge-meditation.css?v=194" />
+  <link rel="stylesheet" href="css/forge-fx.css?v=194" />
+  <link rel="stylesheet" href="css/onboarding.css?v=194" />
+  <link rel="stylesheet" href="css/forge-lessons.css?v=194" />
+  <link rel="stylesheet" href="css/brain-wellness.css?v=194" />
+  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=194" />
+  <link rel="stylesheet" href="css/school.css?v=194" />
+  <link rel="stylesheet" href="css/harf-linear.css?v=194" />
+  <link rel="stylesheet" href="css/harf-interactive.css?v=194" />
+  <link rel="stylesheet" href="css/notion-light-force.css?v=194" />
+  <style id="mejora-notion-light-critical">
+    html,
+    html body,
+    html body.mejora-forge,
+    html[data-notion-light="1"],
+    html[data-notion-light="1"] body,
+    html[data-notion-light="1"] body.mejora-forge {
+      color-scheme: light !important;
+      background: #ffffff !important;
+      color: #37352f !important;
+    }
+    html .app-shell,
+    html .app-main,
+    html .app-content,
+    html #app-content,
+    html .app-banner,
+    html .bottom-nav,
+    html[data-notion-light="1"] .app-shell,
+    html[data-notion-light="1"] .app-main,
+    html[data-notion-light="1"] .app-content,
+    html[data-notion-light="1"] #app-content,
+    html[data-notion-light="1"] .app-banner,
+    html[data-notion-light="1"] .bottom-nav {
+      background-color: #ffffff !important;
+      background-image: none !important;
+      color: #37352f !important;
+    }
+    html .sidebar,
+    html .sidebar-nav,
+    html[data-notion-light="1"] .sidebar,
+    html[data-notion-light="1"] .sidebar-nav {
+      background-color: #f7f6f3 !important;
+      border-right: 1px solid #e1dfdd !important;
+      box-shadow: none !important;
+    }
+    html[data-notion-light="1"] .logo-mark {
+      background: #2383e2 !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+    }
+    html[data-notion-light="1"] :is(
+      .card, .m-section, .ds-panel, .habit-card, .m-coach-card,
+      .brain-profile, .qa-card, .m-adaptive-mission, .m-shortcut
+    ) {
+      background-color: #ffffff !important;
+      border: 1px solid #e1dfdd !important;
+      color: #37352f !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04) !important;
+    }
+    html[data-notion-light="1"] :is(.m-home-title, .banner-title, .logo-text) {
+      color: #37352f !important;
+      text-shadow: none !important;
+    }
+    html[data-notion-light="1"] :is(.m-home-lead, .banner-subtitle, .sidebar-link) {
+      color: #9b9a97 !important;
+    }
+    html[data-notion-light="1"] .btn-primary,
+    html[data-notion-light="1"] .banner-cta {
+      background: #2383e2 !important;
+      color: #fff !important;
+      border-color: #1a73c7 !important;
+    }
+    html[data-notion-light="1"] #fx-layer,
+    html[data-notion-light="1"] body.mejora-forge::before {
+      display: none !important;
+      background: none !important;
+    }
+    html[data-notion-light="1"] .onboarding-overlay {
+      background: rgba(255, 255, 255, 0.92) !important;
+    }
+    html[data-notion-light="1"] .onboarding-shell {
+      background: #ffffff !important;
+      color: #37352f !important;
+      border-color: #e1dfdd !important;
+    }
+  </style>
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -121,7 +258,7 @@
   <div id="tour-overlay" class="tour-overlay" aria-hidden="true"></div>
   <script>
     if (location.protocol === 'file:') {
-      document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Usa <strong>Mejora.app</strong> o en terminal:</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre><p style="color:#8a8480">Luego abre <a href="http://localhost:5173" style="color:#c4a484">http://localhost:5173</a></p></div>'
+      document.body.innerHTML = '<div style="max-width:28rem;margin:4rem auto;padding:2rem;font-family:system-ui;color:#ece8e3;background:#111"><h1 style="margin:0 0 1rem">Mejora necesita servidor local</h1><p style="color:#8a8480;line-height:1.5">No abras <code>index.html</code> directo. Doble clic en <strong>start-server.command</strong> o <strong>Mejora.app</strong>.</p><pre style="background:#1a1918;padding:1rem;border-radius:8px;overflow:auto">open ~/Downloads/Mejora/start-server.command</pre></div>'
     }
   </script>
   <script type="module">
@@ -131,11 +268,12 @@
       box.style.cssText = 'max-width:28rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;color:#eceff4;background:#12161c;border:1px solid #3d4a5c;border-radius:8px'
       const detail = (e.message || 'Error desconocido').replace(/</g, '&lt;')
       const file = (e.filename || '').split('/').pop() || 'módulo JS'
-      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 0.75rem;line-height:1.5;color:#c45c5c"><strong>' + file + ':</strong> ' + detail + '</p><p style="margin:0 0 1rem;line-height:1.5;color:#8a8480">Recarga con <strong>Cmd+Shift+R</strong>. Si persiste, reinicia el servidor en el puerto 5173.</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">cd ~/Downloads/Mejora\npython3 -m http.server 5173</pre>'
+      box.innerHTML = '<h2 style="margin:0 0 0.5rem">Mejora no pudo cargar</h2><p style="margin:0 0 0.75rem;line-height:1.5;color:#c45c5c"><strong>' + file + ':</strong> ' + detail + '</p><p style="margin:0 0 1rem;line-height:1.5;color:#8a8480">Recarga con <strong>Cmd+Shift+R</strong>. Abre con <strong>start-server.command</strong> (doble clic), no con python -m http.server.</p><pre style="background:#0a0c10;padding:0.75rem;border-radius:8px;overflow:auto">open ~/Downloads/Mejora/start-server.command</pre>'
       document.body.innerHTML = ''
       document.body.appendChild(box)
     })
   </script>
-  <script type="module" src="js/app.js?v=81"></script>
+    <script type="importmap" src="/js/import-map.json?v=194"></script>
+  <script type="module" src="/js/app.js?v=194"></script>
 </body>
 </html>

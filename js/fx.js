@@ -69,6 +69,7 @@ export function flashPlanBanner() {
 }
 
 export function isFocusMode(path, state = {}) {
+  if (path === '/meditacion') return false
   if (path === '/hoy') return true
   if (state.meditation) return true
   if (state.pomodoro) return true
@@ -81,12 +82,16 @@ let lastShellKey = ''
 
 export function updateAppShell(path, state = {}) {
   const page = (path.slice(1) || 'home').split('/')[0]
-  const focus = isFocusMode(path, state)
+  const lessonReader = !!state.lessonReader
+  const calma = path === '/meditacion'
+  const focus = isFocusMode(path, state) && !lessonReader && !calma
   const enfoqueActive = !!(state.pomodoro && path === '/enfoque')
-  const key = `${page}|${focus}|${enfoqueActive}`
+  const key = `${page}|${focus}|${enfoqueActive}|${lessonReader}|${calma}`
   if (key === lastShellKey) return
   lastShellKey = key
   document.body.dataset.page = page
+  document.body.classList.toggle('lesson-reader-mode', lessonReader)
+  document.body.classList.toggle('calma-mode', calma)
   document.body.classList.toggle('focus-mode', focus)
   document.body.classList.toggle('page-enfoque-active', enfoqueActive)
 }

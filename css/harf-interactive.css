@@ -1,0 +1,66 @@
+/* ==========================================================================
+   HARF — NOTION LIGHT PRO · micro-animaciones (v21.5)
+   Hover fluido · elevación de superficies · sidebar Notion
+   Scope: body.harf-linear (#/clase)
+   ========================================================================== */
+
+body.harf-linear .htb-card,
+body.harf-linear .module-item,
+body.harf-linear .metric-box {
+  background-color: var(--notion-bg);
+  border: 1px solid var(--notion-border);
+  border-radius: 6px;
+  box-shadow: var(--notion-shadow);
+  transition: var(--transition-smooth);
+  backface-visibility: hidden;
+}
+
+body.harf-linear .htb-card:hover,
+body.harf-linear .module-item:hover {
+  transform: translateY(-2px);
+  background-color: var(--notion-card-hover);
+  box-shadow: var(--notion-shadow-hover);
+  border-color: #d3d1cb;
+}
+
+body.harf-linear .metric-box:hover {
+  background-color: var(--notion-card-hover);
+  box-shadow: var(--notion-shadow-hover);
+  border-color: #d3d1cb;
+}
+
+body.harf-linear aside.sidebar,
+body.harf-linear .sidebar-nav {
+  background-color: var(--notion-sidebar);
+  border-right: 1px solid var(--notion-border);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.harf-linear .htb-module-list__item.module-item {
+  transition: var(--transition-smooth);
+}
+
+body.harf-linear .htb-module-list__item.module-item:hover {
+  transform: translateY(-1px);
+  background-color: var(--notion-card-hover);
+  box-shadow: var(--notion-shadow-hover);
+  border-color: #d3d1cb;
+}
+
+body.harf-linear.reduce-motion .htb-card,
+body.harf-linear.reduce-motion .module-item,
+body.harf-linear.reduce-motion .metric-box,
+body.harf-linear.reduce-motion .htb-module-list__item {
+  transition: none !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.harf-linear .htb-card,
+  body.harf-linear .module-item,
+  body.harf-linear .metric-box,
+  body.harf-linear .htb-module-list__item {
+    transition: none !important;
+    transform: none !important;
+  }
+}

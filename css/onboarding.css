@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(248, 250, 252, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -22,8 +22,12 @@ body.onboarding-open {
   overflow: hidden;
 }
 
-body.onboarding-open .app-main {
+body.onboarding-open:has(.onboarding-overlay.is-active) .app-shell {
   pointer-events: none;
+}
+
+body.onboarding-open:has(.onboarding-overlay.is-active) .onboarding-overlay {
+  pointer-events: auto;
 }
 
 @keyframes ob-fade-in {
@@ -37,9 +41,10 @@ body.onboarding-open .app-main {
   max-height: min(92vh, 720px);
   overflow-y: auto;
   border-radius: 1.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: linear-gradient(160deg, #ffffff, #f8fafc);
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(13, 148, 136, 0.08) inset;
+  border: 1px solid var(--m-border, #e1dfdd);
+  background: linear-gradient(160deg, var(--m-surface, #ffffff), var(--m-surface-2, #fbfbfa));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: var(--m-text, #37352f);
 }
 
 .onboarding-overlay.is-active .onboarding-shell {
@@ -96,26 +101,25 @@ body.onboarding-open .app-main {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--neon);
+  color: var(--m-accent, var(--neon));
   margin: 0 0 0.5rem;
 }
 
 .onboarding-title {
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: clamp(1.5rem, 4.5vw, 2rem);
   font-weight: 800;
   line-height: 1.15;
   margin: 0 0 0.5rem;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #0f172a, #0d9488 55%, #6366f1);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--m-text, #eceff4);
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
 .onboarding-desc {
   font-size: 0.9375rem;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
   line-height: 1.55;
   margin: 0 0 1.5rem;
 }
@@ -226,7 +230,7 @@ body.onboarding-open .app-main {
 
 .onboarding-skip button {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
   background: none;
   border: none;
   cursor: pointer;
@@ -243,7 +247,7 @@ body.onboarding-open .app-main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--m-display, 'Barlow Condensed', sans-serif);
+  font-family: var(--m-display);
   font-size: 2rem;
   font-weight: 700;
   color: var(--btn-text, #0a0c10);
@@ -271,7 +275,7 @@ body.onboarding-open .app-main {
   gap: 0.65rem;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
 }
 
 .onboarding-info-icon {
@@ -320,7 +324,7 @@ body.onboarding-open .app-main {
 
 .onboarding-hint {
   font-size: 0.9375rem;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
   line-height: 1.5;
   margin: 0 0 1.25rem;
 }
@@ -341,7 +345,7 @@ body.onboarding-open .app-main {
   border: 1px solid var(--border);
   background: var(--secondary-bg);
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
 }
 
 .onboarding-pillar-icon {
@@ -366,7 +370,7 @@ body.onboarding-open .app-main {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
   cursor: pointer;
 }
 
@@ -375,7 +379,7 @@ body.onboarding-open .app-main {
   padding-left: 1.15rem;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--text-muted);
+  color: var(--m-muted, var(--text-muted, #8a8480));
 }
 
 .onboarding-checklist li { margin-bottom: 0.5rem; }

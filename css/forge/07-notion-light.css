@@ -1,0 +1,305 @@
+/* ═══════════════════════════════════════════════════════════
+   FORGE — Notion Light UI (v21.5) — CAPA FINAL (máxima prioridad)
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-app: #ffffff;
+  --bg-sidebar: #f7f6f3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbfbfa;
+  --border-color: #e1dfdd;
+  --text-main: #37352f;
+  --text-muted: #9b9a97;
+  --shadow-notion: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-notion-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --transition-smooth: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --bg: var(--bg-app);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --border: var(--border-color);
+  --m-bg: var(--bg-app);
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --sidebar-bg: var(--bg-sidebar);
+}
+
+html,
+html[data-theme],
+html.dark {
+  color-scheme: light !important;
+}
+
+html,
+html body,
+body,
+body.mejora-forge,
+body.mejora-v3 {
+  background-color: var(--bg-app) !important;
+  background-image: none !important;
+  color: var(--text-main) !important;
+}
+
+.app-shell,
+#fx-layer,
+aside,
+.sidebar,
+.sidebar-nav,
+.app-banner,
+.app-main,
+#app-content,
+.app-content,
+.bottom-nav {
+  background-color: var(--bg-app) !important;
+  background-image: none !important;
+}
+
+.app-shell {
+  background-color: var(--bg-app) !important;
+}
+
+.sidebar,
+.sidebar-nav {
+  background-color: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-link {
+  color: var(--text-muted) !important;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-stats {
+  background: var(--bg-card-hover) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.sidebar-stats-caption,
+.sidebar-stat {
+  color: var(--text-muted) !important;
+}
+
+.bottom-nav {
+  background: var(--bg-app) !important;
+  border-top: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.card,
+.htb-card,
+.module-item,
+.metric-box,
+.kanban-column,
+.kanban-card,
+.ds-panel,
+.card-static,
+.habit-card,
+.m-section,
+.m-now,
+.game-card,
+.m-shortcut {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  box-shadow: var(--shadow-notion) !important;
+  transition: var(--transition-smooth) !important;
+  backface-visibility: hidden;
+}
+
+.card:hover,
+.htb-card:hover,
+.module-item:hover,
+.kanban-card:hover,
+.habit-card:hover,
+.ds-panel:hover,
+.game-card:hover,
+.m-shortcut:hover {
+  transform: translateY(-1px) !important;
+  background-color: var(--bg-card-hover) !important;
+  box-shadow: var(--shadow-notion-hover) !important;
+  border-color: #d3d1cb !important;
+}
+
+.page-home,
+.page-home--v3,
+.page-home .m-home {
+  color: var(--text-main) !important;
+  background: transparent !important;
+}
+
+.page-home .text-main,
+.page-home .m-home-title,
+.m-home-title,
+.banner-title,
+.text-main {
+  color: var(--text-main) !important;
+}
+
+.page-home .text-muted,
+.page-home .m-home-lead,
+.m-home-lead,
+.m-home-date,
+.banner-subtitle,
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.btn-primary {
+  background: #2383e2 !important;
+  border: 1px solid #1a73c7 !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-notion) !important;
+}
+
+.btn-secondary {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+body.mejora-forge .onboarding-overlay,
+body.mejora-v3 .onboarding-overlay,
+html[data-notion-light="1"] .onboarding-overlay {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.onboarding-shell {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion-hover) !important;
+}
+
+.xp-toast {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion-hover) !important;
+}
+
+/* theme-rpg legacy */
+body.theme-rpg {
+  background: var(--bg-app) !important;
+  color: var(--text-main) !important;
+}
+
+body.theme-rpg .sidebar,
+body.theme-rpg .app-banner,
+body.theme-rpg .bottom-nav {
+  background: var(--bg-sidebar) !important;
+  box-shadow: none !important;
+}
+
+body.theme-rpg .sidebar-link,
+body.theme-rpg .banner-subtitle,
+body.theme-rpg .banner-crumb {
+  color: var(--text-muted) !important;
+}
+
+body.theme-rpg .banner-title,
+body.theme-rpg .logo-text,
+body.theme-rpg .m-home-title {
+  color: var(--text-main) !important;
+  text-shadow: none !important;
+}
+
+.m-section,
+.m-now,
+.m-adaptive-mission,
+.m-shortcut,
+.m-coach-card,
+.m-habits-panel,
+.brain-profile,
+.brain-profile__card,
+.ds-zone,
+.ds-panel,
+.qa-card,
+.pulse-card,
+.m-task,
+.habit-card,
+.game-card,
+.school-panel,
+.bottom-nav-link {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion) !important;
+}
+
+.m-home-title,
+.m-page-title,
+.banner-title,
+.logo-text,
+.sidebar-link-label,
+.brain-profile__label {
+  color: var(--text-main) !important;
+  text-shadow: none !important;
+}
+
+.m-home-lead,
+.m-home-date,
+.m-page-lead,
+.banner-subtitle,
+.sidebar-link,
+.brain-profile__domain-label {
+  color: var(--text-muted) !important;
+}
+
+.logo-mark {
+  background: #2383e2 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.progress-track {
+  background: #f1f0ed !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #2383e2, #1a73c7) !important;
+}
+
+.btn-primary,
+.banner-cta {
+  background: #2383e2 !important;
+  border-color: #1a73c7 !important;
+  color: #ffffff !important;
+}
+
+#fx-layer,
+.app-aurora,
+body.mejora-forge::before,
+body.mejora-v3::before {
+  background: none !important;
+  background-image: none !important;
+}
+
+.reduce-motion .card,
+.reduce-motion .htb-card,
+.reduce-motion .habit-card,
+.reduce-motion .ds-panel {
+  transition: none !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .htb-card,
+  .habit-card,
+  .ds-panel {
+    transition: none !important;
+    transform: none !important;
+  }
+}

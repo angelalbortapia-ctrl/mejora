@@ -1,9 +1,10 @@
 /** Toasts, XP y premios del plan del día */
 
-import { SKILLS, addXp, getTotalLevel } from './core.js'
-import { checkNewUnlocks, markUnlockSeen } from './unlocks.js'
-import { celebrate, pulseElement, flashPlanBanner } from './fx.js?v=81'
-import { playTone } from './sounds.js'
+import { SKILLS, addXp, getTotalLevel } from '/js/core.js'
+import { checkNewUnlocks, markUnlockSeen } from '/js/unlocks.js'
+import { celebrate, pulseElement, flashPlanBanner } from '/js/fx.js'
+import { playTone } from '/js/sounds.js'
+import { trackProductEvent, EVENTS } from '/js/product-analytics.js'
 
 function ensureToastContainer() {
   let el = document.getElementById('toast-container')
@@ -13,6 +14,20 @@ function ensureToastContainer() {
     document.body.appendChild(el)
   }
   return el
+}
+
+export function showUpdateToast(onUpdate) {
+  if (document.getElementById('sw-update-toast')) return
+  const container = ensureToastContainer()
+  const el = document.createElement('div')
+  el.id = 'sw-update-toast'
+  el.className = 'xp-toast sw-update-toast'
+  el.innerHTML = `<span class="toast-icon">🔄</span><div><strong>Nueva versión disponible</strong><p class="text-sm opacity-80">Actualiza para ver los últimos cambios</p><button type="button" class="btn-primary text-sm py-1 mt-2 sw-update-btn">Actualizar</button></div>`
+  el.querySelector('.sw-update-btn')?.addEventListener('click', () => {
+    el.remove()
+    onUpdate?.()
+  })
+  container.appendChild(el)
 }
 
 export function showToast(message, xp, skill, levelUp = false) {
@@ -29,6 +44,7 @@ export function showToast(message, xp, skill, levelUp = false) {
 }
 
 export function showUnlockToast(unlock) {
+  trackProductEvent(EVENTS.UNLOCK, { id: unlock.id })
   markUnlockSeen(unlock.id)
   const container = ensureToastContainer()
   const el = document.createElement('div')
@@ -45,6 +61,7 @@ export function awardXp(skill, amount, message) {
   const newLevel = getTotalLevel()
   if (result.levelUp) {
     celebrate('level')
+    trackProductEvent(EVENTS.LEVEL_UP, { level: result.newLevel, skill })
     showToast(result.newLevel, amount, skill, true)
   } else showToast(message, amount, skill)
   checkNewUnlocks(prevLevel, newLevel).forEach(showUnlockToast)
@@ -56,6 +73,7 @@ export function processPlanAwards(awards) {
     if (a.bonus) {
       celebrate()
       flashPlanBanner()
+      trackProductEvent(EVENTS.PLAN_COMPLETE)
       showToast('¡Plan del día completo!', a.result.xp, 'discipline')
     } else if (a.task) {
       showToast(a.task.label, a.result.xp, 'discipline')

@@ -1,0 +1,38 @@
+═══════════════════════════════════════════════
+  ¿Por qué hace falta un servidor?
+═══════════════════════════════════════════════
+
+Mejora NO es una app de la App Store todavía.
+Es una PWA que vive en tu carpeta y necesita un
+"mini-servidor" en tu Mac (puerto 5173) para:
+
+  • Cargar los archivos correctamente
+  • Que funcione la voz de Calma (proxy Fish)
+  • Evitar errores del navegador con archivos locales
+
+Es como encender un motor pequeño en tu Mac;
+el navegador es solo la pantalla.
+
+───────────────────────────────────────────────
+
+¿Tengo que dejar Terminal ABIERTA?
+
+  NO. Después de "ABRE-MEJORA.command":
+  • El servidor queda en SEGUNDO PLANO
+  • Puedes cerrar la ventana negra de Terminal
+  • Usa Mejora en Chrome/Safari con normalidad
+
+  Vuelve a abrir ABRE-MEJORA.command cuando
+  reinicies el Mac o si la página no carga.
+
+───────────────────────────────────────────────
+
+¿Como tu app Finanzas (sin Terminal)?
+
+  SÍ — igual que Finanzas:
+  1. Una vez: instalar-servicio.command
+  2. Siempre: abrir.command (solo abre el navegador)
+
+  Finanzas ya tenía eso; Mejora no lo tenía hasta ahora.
+
+═══════════════════════════════════════════════

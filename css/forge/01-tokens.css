@@ -1,6 +1,168 @@
-/* FORGE — reset y superficie base (variables en 02-forge-vars.css) */
+/* FORGE — tokens unificados (Notion Light Pro v21.5)
+   Fondo blanco · sidebar cálido · bordes arcilla · acento azul Notion */
 
-@import url('02-forge-vars.css');
+:root {
+  /* Notion Light — tokens canónicos */
+  --bg-app: #ffffff;
+  --bg-sidebar: #f7f6f3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbfbfa;
+  --border-color: #e1dfdd;
+  --text-main: #37352f;
+  --text-muted: #9b9a97;
+  --shadow-notion: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-notion-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --transition-smooth: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --surface-card: var(--bg-card);
+  --surface-hover: var(--bg-card-hover);
+  --border-subtle: var(--border-color);
+  --border-highlight: #d3d1cb;
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
+
+  --m-bg: var(--bg-app);
+  --m-bg-2: var(--bg-sidebar);
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --m-surface-3: #f1f0ed;
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-muted-2: #b4b4b0;
+  --m-border: var(--border-color);
+  --m-border-strong: #d3d1cb;
+  --m-accent: #2383e2;
+  --m-accent-hover: #1a73c7;
+  --m-accent-soft: rgba(35, 131, 226, 0.08);
+  --m-accent-glow: rgba(35, 131, 226, 0.15);
+  --m-steel: #9b9a97;
+  --m-danger: #e16259;
+  --m-success: #0f7b6c;
+  --m-success-soft: rgba(15, 123, 108, 0.08);
+  --m-radius: 6px;
+  --m-radius-lg: 8px;
+  --m-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-font-metric: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, monospace;
+  --m-type-body: 0.8125rem;
+  --m-type-leading: 1.5;
+  --m-type-display-tracking: -0.022em;
+  --m-type-ui-tracking: -0.011em;
+  --m-type-label-tracking: 0;
+  --m-ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --m-duration: 0.2s;
+  --m-glass-bg: var(--bg-card);
+  --m-glass-border: var(--border-color);
+  --m-glass-blur: 0px;
+  --m-lab-card-shadow: var(--shadow-notion);
+  --m-linear-ring: none;
+  --m-glass-shadow: var(--shadow-notion);
+  --m-shadow: var(--shadow-notion);
+  --m-shadow-lg: var(--shadow-notion-hover);
+
+  /* RPG palette — cielo zafiro + oro cálido + jade */
+  --rpg-night: #0c1424;
+  --rpg-night-mid: #162238;
+  --rpg-night-light: #243352;
+  --rpg-parchment: #faf8f3;
+  --rpg-parchment-dark: #f0ece4;
+  --rpg-ink: #1c2230;
+  --rpg-ink-muted: #5a6272;
+  --rpg-gold: #f0c75e;
+  --rpg-gold-light: #ffe49a;
+  --rpg-coral: #f07288;
+  --rpg-jade: #5eb8a8;
+  --rpg-mana: #7eb8f0;
+  --rpg-slate: #121c2e;
+  --rpg-slate-light: #1e2d48;
+
+  --on-surface-text: var(--m-text);
+  --on-surface-muted: var(--m-muted);
+  --m-border-card: var(--m-border);
+  --m-border-card-strong: var(--m-border-strong);
+
+  --bg: var(--m-bg);
+  --bg-elevated: var(--m-surface);
+  --bg-card: var(--m-surface);
+  --bg-surface: var(--m-surface-2);
+  --text: var(--m-text);
+  --text-muted: var(--m-muted);
+  --border: var(--m-border);
+  --border-hover: var(--m-border-strong);
+  --primary: var(--m-accent);
+  --primary-hover: var(--m-accent-hover);
+  --primary-soft: var(--m-accent-soft);
+  --primary-glow: var(--m-accent-glow);
+  --neon: var(--m-accent);
+  --btn-text: #ffffff;
+  --secondary-bg: var(--bg-card-hover);
+  --input-bg: var(--bg-card);
+  --header-bg: var(--bg-app);
+  --sidebar-bg: var(--bg-sidebar);
+  --radius: var(--m-radius);
+  --radius-lg: var(--m-radius-lg);
+  --gradient-hero: var(--m-surface);
+  --gradient-card: var(--m-surface);
+  --shadow: var(--m-shadow);
+  --shadow-sm: var(--shadow-notion);
+  --glass-bg: var(--m-glass-bg);
+  --glass-border: var(--m-glass-border);
+  --glass-glow: rgba(94, 106, 210, 0.04);
+  --success: var(--m-success);
+  --danger: var(--m-danger);
+}
+
+html { color-scheme: light; }
+
+/* theme-rpg: mantiene clase legacy pero usa Notion Light */
+body.theme-rpg {
+  --m-bg: var(--bg-app);
+  --m-bg-2: var(--bg-sidebar);
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-border: var(--border-color);
+  --m-border-strong: #d3d1cb;
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --m-surface-3: #f1f0ed;
+  --on-surface-text: var(--text-main);
+  --on-surface-muted: var(--text-muted);
+  --m-border-card: var(--border-color);
+  --m-border-card-strong: #d3d1cb;
+  --m-accent: #2383e2;
+  --m-accent-hover: #1a73c7;
+  --m-accent-soft: rgba(35, 131, 226, 0.08);
+  --m-accent-glow: rgba(35, 131, 226, 0.12);
+  --m-steel: var(--text-muted);
+  --m-danger: #e16259;
+  --m-success: #0f7b6c;
+  --m-radius: 6px;
+  --m-radius-lg: 8px;
+  --m-display: var(--m-font);
+  --m-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --m-type-body: 0.8125rem;
+  --m-type-leading: 1.5;
+  --m-shadow: var(--shadow-notion);
+  --m-shadow-lg: var(--shadow-notion-hover);
+  --bg: var(--bg-app);
+  --bg-card: var(--bg-card);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --border: var(--border-color);
+  --primary: var(--m-accent);
+  --btn-text: #ffffff;
+  --secondary-bg: var(--bg-card-hover);
+  --header-bg: var(--bg-app);
+  --sidebar-bg: var(--bg-sidebar);
+  --gradient-card: var(--bg-card);
+  --glass-bg: var(--bg-card);
+  color-scheme: light;
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -17,22 +179,14 @@ body.mejora-forge {
   overflow-x: hidden;
 }
 
-body::before {
+body.mejora-forge::before,
+body.mejora-v3::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(212, 160, 18, 0.06), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(92, 107, 122, 0.08), transparent 45%),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 47px,
-      rgba(255, 255, 255, 0.015) 47px,
-      rgba(255, 255, 255, 0.015) 48px
-    );
+  background: none;
 }
 
 #app-content,
@@ -43,7 +197,26 @@ body::before {
 
 .font-display {
   font-family: var(--m-display);
-  letter-spacing: 0.02em;
-  font-weight: 700;
-  text-transform: uppercase;
+  letter-spacing: var(--m-type-display-tracking);
+  font-weight: 600;
+}
+
+.font-ui {
+  font-family: var(--m-ui);
+  letter-spacing: var(--m-type-ui-tracking);
+}
+
+.font-metric,
+.banner-metric-value,
+.sidebar-stat,
+.ds-stat-value,
+.school-header-stat-val,
+.med-stat-val,
+.viaje-kpi-val,
+.brain-profile__domain-score,
+.m-task-xp,
+.htb-stat-row li span {
+  font-family: var(--m-font-metric);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }

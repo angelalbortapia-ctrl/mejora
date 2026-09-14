@@ -3,13 +3,14 @@
 import {
   esc, getProgress, saveProgress, getPlanProgress, checkPlanTask, ensureDailyPlan,
   getWeekNumber, isRoutineDoneToday, getHabits, isHabitComplete, getSettings,
-} from '../core.js'
-import { processPlanAwards } from '../awards.js'
-import { sunsetBannerHTML, bundleStatusHTML } from '../apis.js'
-import { getNextBestAction } from '../analytics.js'
-import { getMissionTone, getMissionChip } from '../coaching.js'
-import { pageHero } from '../ui.js'
-import { habitChartHTML } from '../page-helpers.js'
+} from '/js/core.js'
+import { processPlanAwards } from '/js/awards.js'
+import { sunsetBannerHTML, bundleStatusHTML } from '/js/apis.js'
+import { getNextBestAction } from '/js/analytics.js'
+import { getMissionTone, getMissionChip } from '/js/coaching.js'
+import { pageHero } from '/js/ui.js'
+import { habitChartHTML } from '/js/page-helpers.js'
+import { renderAdaptiveMissionCard } from '/js/brain-program.js'
 
 export function renderPlan(dailyApis) {
   processPlanAwards(checkPlanTask('plan_review'))
@@ -110,6 +111,8 @@ export function renderSoloHoy() {
       </div>
     </div>
 
+    ${renderAdaptiveMissionCard()}
+
     <a href="${action.link}" class="ds-list-item next-action no-underline solo-action">
       <span class="ds-list-icon">${action.icon}</span>
       <div class="ds-list-body">
@@ -132,5 +135,19 @@ export function renderSoloHoy() {
       <p class="text-sm text-muted">Buen trabajo. Mañana seguimos.</p>
     </div>`}
     </div>
+    <button type="button" class="panic-anchor-fab" onclick="launchPanicAnchor()" aria-label="Ancla de emergencia — respiración inmediata">
+      <span class="panic-anchor-fab__icon" aria-hidden="true">⚓</span>
+      <span class="panic-anchor-fab__label">Emergencia</span>
+    </button>
   </div>`
+}
+
+export function bindPlanGlobals() {
+  window.launchPanicAnchor = () => {
+    if (typeof window.startMeditation === 'function') {
+      window.startMeditation('panic-anchor')
+      return
+    }
+    window.location.hash = '#/meditacion'
+  }
 }

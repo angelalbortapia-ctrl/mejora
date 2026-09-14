@@ -3,10 +3,10 @@
 import {
   SKILLS, DIFFICULTIES, getToday, getProgress, getLevelInfo, getTotalLevel, getRank,
   MOODS, getMood, getMoodWeek, getMoodInsight, getHabitWeekChart,
-} from './core.js'
-import { isUnlocked } from './unlocks.js'
-import { getActivityCalendar } from './analytics.js'
-import { segmentBar } from './ui.js'
+} from '/js/core.js'
+import { isUnlocked } from '/js/unlocks.js'
+import { getActivityCalendar } from '/js/analytics.js'
+import { segmentBar } from '/js/ui.js'
 
 export function moodPickerHTML(compact = false) {
   const today = getToday()

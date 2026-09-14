@@ -1,9 +1,10 @@
 /** Escuela — shell visual y sub-navegación */
 
-import { subTabBar } from './ui.js?v=81'
+import { subTabBar } from '/js/ui.js'
 
 export const SCHOOL_SECTIONS = [
   { id: 'curriculum', label: 'Currículo', icon: '📅' },
+  { id: 'explore', label: 'Explorar', icon: '🔍' },
   { id: 'apply', label: 'Aplicación', icon: '🌍' },
   { id: 'library', label: 'Biblioteca', icon: '📚' },
   { id: 'cases', label: 'Casos', icon: '🏛️' },
@@ -12,6 +13,7 @@ export const SCHOOL_SECTIONS = [
 
 export function normalizeSchoolSection(section) {
   if (!section || section === 'curriculum') return 'curriculum'
+  if (section === 'academy' || section === 'catalog') return 'explore'
   return SCHOOL_SECTIONS.some(s => s.id === section) ? section : 'curriculum'
 }
 
@@ -36,27 +38,23 @@ export function renderSchoolSubNav(activeSection) {
 
 export function renderSchoolHeader(stats) {
   if (!stats) return ''
-  return `<header class="school-header">
-    <div class="school-header-main">
-      <p class="school-header-kicker">Escuela Mejora</p>
-      <h1 class="school-header-title">Neurociencia aplicada</h1>
-      <p class="school-header-lead">Currículo de 12 semanas · ${stats.total} lecciones · investigación verificada</p>
-    </div>
-    <div class="school-header-metrics">
-      ${progressRing(stats.percent, 68)}
-      <div class="school-header-stat-grid">
-        <div class="school-header-stat">
-          <span class="school-header-stat-val">${stats.done}</span>
-          <span class="school-header-stat-label">leídas</span>
-        </div>
-        <div class="school-header-stat">
-          <span class="school-header-stat-val">${stats.week}/12</span>
-          <span class="school-header-stat-label">semana</span>
-        </div>
-        ${stats.due ? `<div class="school-header-stat school-header-stat--alert">
-          <span class="school-header-stat-val">${stats.due}</span>
-          <span class="school-header-stat-label">repaso</span>
-        </div>` : ''}
+  const dueStat = stats.due
+    ? `<div class="brain-neural-stat brain-neural-stat--alert"><span class="brain-neural-stat__val">${stats.due}</span><span class="brain-neural-stat__lbl">repaso</span></div>`
+    : ''
+  return `<header class="brain-neural-hero brain-neural-hero--compact span-full">
+    <div class="brain-neural-hero__glow" aria-hidden="true"></div>
+    <div class="brain-neural-hero__scan" aria-hidden="true"></div>
+    <div class="brain-neural-hero__head">
+      <div class="brain-neural-hero__copy">
+        <p class="brain-neural-hero__kicker">Escuela Mejora</p>
+        <h1 class="brain-neural-hero__title font-display">Neurociencia aplicada</h1>
+        <p class="brain-neural-hero__sub">Currículo de 12 semanas · ${stats.total} lecciones · investigación verificada</p>
+      </div>
+      <div class="brain-neural-hero__stats">
+        <div class="brain-neural-stat"><span class="brain-neural-stat__val">${stats.percent}%</span><span class="brain-neural-stat__lbl">progreso</span></div>
+        <div class="brain-neural-stat"><span class="brain-neural-stat__val">${stats.done}</span><span class="brain-neural-stat__lbl">leídas</span></div>
+        <div class="brain-neural-stat"><span class="brain-neural-stat__val">${stats.week}/12</span><span class="brain-neural-stat__lbl">semana</span></div>
+        ${dueStat}
       </div>
     </div>
   </header>`

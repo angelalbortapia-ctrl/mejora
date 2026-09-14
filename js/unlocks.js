@@ -1,4 +1,4 @@
-import { getTotalLevel, getItem, setItem } from './core.js'
+import { getTotalLevel, getItem, setItem } from '/js/core.js'
 
 export const UNLOCKS = [
   { id: 'theme_ocean', level: 3, type: 'theme', name: 'Tema Océano', icon: '🌊', desc: 'Turquesa profundo' },
@@ -50,13 +50,7 @@ export function markUnlockSeen(id) {
   }
 }
 
-export function applyTheme(themeId) {
-  const id = themeId || 'default'
-  if (id !== 'default' && !isUnlocked(id)) {
-    document.documentElement.removeAttribute('data-theme')
-    return 'default'
-  }
-  if (id === 'default') document.documentElement.removeAttribute('data-theme')
-  else document.documentElement.setAttribute('data-theme', id.replace('theme_', ''))
-  return id
+export function applyTheme(_themeId) {
+  document.documentElement.removeAttribute('data-theme')
+  return 'default'
 }

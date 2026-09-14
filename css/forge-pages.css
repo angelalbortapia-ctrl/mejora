@@ -125,6 +125,11 @@ body.mejora-forge .tour-overlay {
 }
 
 body.mejora-forge .tour-overlay.active {
+  pointer-events: none;
+}
+
+body.mejora-forge .tour-overlay.active .tour-card,
+body.mejora-forge .tour-overlay.active .tour-backdrop {
   pointer-events: auto;
 }
 

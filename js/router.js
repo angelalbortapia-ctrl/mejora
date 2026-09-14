@@ -10,6 +10,14 @@ export function bindRender(fn) {
   renderImpl = fn
 }
 
+/** Solo tests — resetea debounce entre specs */
+export function resetRouterForTests() {
+  clearTimeout(debounceId)
+  debounceId = null
+  renderImpl = null
+  lastRenderPath = ''
+}
+
 export function getLastRenderPath() {
   return lastRenderPath
 }

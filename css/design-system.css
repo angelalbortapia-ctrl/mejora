@@ -1,14 +1,14 @@
 /* ═══ Mejora Design System — arquitectura UI ═══ */
 
 :root {
-  --ds-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ds-duration: 0.28s;
-  --ds-tabs-bg: rgba(15, 23, 42, 0.04);
-  --ds-panel-bg: var(--glass-bg, var(--bg-card));
-  --ds-panel-border: var(--glass-border, var(--border));
+  --ds-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-duration: 0.2s;
+  --ds-tabs-bg: var(--bg-sidebar, #f7f6f3);
+  --ds-panel-bg: var(--bg-card, #ffffff);
+  --ds-panel-border: var(--border-color, #e1dfdd);
   --ds-radius: var(--radius-lg);
-  --ds-shadow: 0 12px 40px rgba(0, 0, 0, 0.32);
-  --ds-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--primary-soft);
+  --ds-shadow: var(--shadow-notion, 0 1px 3px rgba(0, 0, 0, 0.04));
+  --ds-shadow-hover: var(--shadow-notion-hover, 0 4px 12px rgba(0, 0, 0, 0.08));
 }
 
 /* ── Page frame ── */
@@ -84,10 +84,10 @@
 }
 
 .ds-tab.is-active {
-  color: var(--btn-text);
-  background: var(--gradient-hero);
-  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
-  box-shadow: none;
+  color: var(--text);
+  background: var(--m-surface-2, rgba(255, 255, 255, 0.04));
+  border-color: var(--border-hover);
+  box-shadow: var(--m-linear-ring, 0 0 0 1px rgba(255, 255, 255, 0.06));
 }
 
 .ds-tab:active { transform: scale(0.98); }
@@ -207,7 +207,7 @@
 .ds-section:last-child { margin-bottom: 0; }
 
 .ds-section-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -276,6 +276,18 @@
   color: var(--text);
 }
 
+.ds-setting-steps {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.15rem;
+  line-height: 1.55;
+}
+
+.ds-setting-steps a {
+  color: var(--forge-accent, #6ee7b7);
+}
+
 .ds-setting-hint {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -316,7 +328,7 @@
 }
 
 .ds-toolbar-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text);
@@ -414,7 +426,7 @@
 .ds-stat:hover { transform: translateY(-2px); }
 
 .ds-stat-value {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--m-ui);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--primary);

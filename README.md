@@ -8,13 +8,18 @@ PWA de mejora continua en español: plan del día, hábitos, gimnasia cerebral, 
 
 ## Desarrollo local
 
+**Recomendado** — doble clic en `start-server.command` o **Mejora.app** (incluye proxy Fish Audio para la voz de Calma).
+
 ```bash
-python3 -m http.server 5173
+cd ~/Downloads/Mejora
+./start-server.command
+# o: python3 scripts/mejora-dev-server.py 5173
+# o: npm run serve
 ```
 
-Abre [http://localhost:5173](http://localhost:5173) y haz hard refresh (`Cmd+Shift+R`) si no ves cambios.
+Abre [http://127.0.0.1:5173](http://127.0.0.1:5173) y haz hard refresh (`Cmd+Shift+R`) si no ves cambios.
 
-También puedes hacer doble clic en **Mejora.app** (Escritorio) o `start-server.command`.
+No uses `python3 -m http.server` — la voz guiada de Calma no funcionará.
 
 ## Ciclo PDCA
 
@@ -30,6 +35,16 @@ También puedes hacer doble clic en **Mejora.app** (Escritorio) o `start-server.
 - **Supabase** (opcional) — auth + sync en la nube
 - APIs: Open-Meteo, Wikipedia ES, Open Library, Sunrise-Sunset
 - Contenido curado en español (citas, consejos, trivia local)
+- **i18n** — UI en español/inglés (`js/i18n.js`)
+- **Analytics local** — eventos de producto sin terceros (`docs/ANALYTICS.md`)
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE).
+
+## Contribuir
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md). Docs extra: [docs/I18N.md](docs/I18N.md), [docs/ANALYTICS.md](docs/ANALYTICS.md).
 
 ## Supabase (sync en la nube)
 
@@ -54,6 +69,29 @@ Para GitHub Pages, añade los secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en el
 ## Tests
 
 ```bash
-python3 -m http.server 5173
-# Abre http://localhost:5173/tests/run.html
+npm install
+npm test          # unitarios + smoke (CI)
+npm run typecheck
+npm run lint
 ```
+
+Navegador (opcional):
+
+```bash
+python3 scripts/mejora-dev-server.py 5173
+# Abre http://127.0.0.1:5173/tests/run.html
+```
+
+El deploy a GitHub Pages **solo corre si `npm test` y typecheck pasan**.
+
+## Privacidad y datos
+
+- Política: [`privacy.html`](privacy.html) (también en Ajustes → Cuenta / Datos)
+- **Local:** Ajustes → Datos → *Empezar desde cero*
+- **Nube:** Ajustes → Cuenta → *Borrar datos en la nube* (requiere sesión Supabase)
+
+## Offline
+
+Tras una visita con red, el service worker guarda el shell de la app (HTML, CSS, JS del import map) para uso sin conexión en hábitos y navegación básica.
+
+**No offline:** voz Fish Audio (requiere `mejora-dev-server.py` o clave propia), APIs de clima/Wikipedia en tiempo real, sync Supabase.

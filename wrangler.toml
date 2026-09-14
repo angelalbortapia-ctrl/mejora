@@ -1,0 +1,9 @@
+name = "mejora-fish-proxy"
+main = "workers/fish-audio-proxy.js"
+compatibility_date = "2024-09-01"
+
+# Despliegue: npx wrangler secret put FISH_API_KEY
+# Cliente: Ajustes → Proxy Fish URL = https://mejora-fish-proxy.<tu-subdominio>.workers.dev/api/fish
+
+[vars]
+# URL base expuesta al cliente (sin /tts)

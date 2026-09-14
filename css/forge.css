@@ -1,21 +1,2 @@
-/* ═══════════════════════════════════════════════════════════
-   FORGE Design System v2 — punto de entrada único
-   Tema oscuro · bronce · disciplina
-
-   Capas:
-   1. tokens     — variables y superficie base
-   2. legacy     — layout y páginas (migrar gradualmente)
-   3. theme      — componentes FORGE
-   4. pages      — héroes y secciones
-   5. meditation — Calma, onboarding, nav móvil
-   ═══════════════════════════════════════════════════════════ */
-
-@import url('forge/01-tokens.css');
-@import url('forge/02-forge-vars.css');
-@import url('forge/03-shell.css');
-@import url('forge/04-legacy-pages.css');
-@import url('mejora-redesign.css');
-@import url('forge-pages.css');
-@import url('forge-meditation.css');
-@import url('forge-fx.css');
-@import url('onboarding.css');
+/* FORGE bundle — imports movidos a index.html con ?v= para cache-bust correcto.
+   No uses @import aquí: el navegador cachea los hijos sin query string. */

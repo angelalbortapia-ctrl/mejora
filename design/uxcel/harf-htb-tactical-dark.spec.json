@@ -1,0 +1,182 @@
+{
+  "_meta": {
+    "purpose": "Especificación de diseño táctico Harf (estética Hack The Box) para exportación, evaluación y estructuración en flujos de UI/UX en Uxcel.",
+    "app": "Harf",
+    "version": "6.2-uxcel-export",
+    "target_platform": "Uxcel Design System / Component Architecture",
+    "css_entry": "design/uxcel/harf-htb-tactical.css",
+    "theme_class": "harf-htb"
+  },
+  "uxcel_design_system_spec": {
+    "theme_name": "HTB Tactical Dark",
+    "theme_id": "htb_tactical_dark",
+    "mood": ["terminal", "cyber-ops", "high-contrast", "mission-critical"],
+    "color_tokens": {
+      "background_base": {
+        "value": "#111927",
+        "css_var": "--htb-bg-base",
+        "usage": "App shell, page background"
+      },
+      "background_surface": {
+        "value": "#1a2234",
+        "css_var": "--htb-bg-surface",
+        "usage": "Cards, panels, modals"
+      },
+      "border_subtle": {
+        "value": "#2e3b52",
+        "css_var": "--htb-border-subtle",
+        "usage": "Dividers, card outlines, input borders"
+      },
+      "text_primary": {
+        "value": "#e5e7eb",
+        "css_var": "--htb-text-primary",
+        "usage": "Headings, body, command output"
+      },
+      "text_secondary": {
+        "value": "#9ca3af",
+        "css_var": "--htb-text-secondary",
+        "usage": "Labels, metadata, timestamps"
+      },
+      "accent_terminal": {
+        "value": "#9fe870",
+        "css_var": "--htb-accent-terminal",
+        "usage": "Success states, active prompts, CTA primary"
+      },
+      "accent_cyan": {
+        "value": "#38bdf8",
+        "css_var": "--htb-accent-cyan",
+        "usage": "Links, focus rings, data highlights"
+      },
+      "alert_critical": {
+        "value": "#ef4444",
+        "css_var": "--htb-alert-critical",
+        "usage": "Firewall blocks, errors, destructive actions"
+      }
+    },
+    "typography": {
+      "font_mono": {
+        "stack": "JetBrains Mono, Fira Code, ui-monospace, monospace",
+        "css_var": "--htb-font-mono",
+        "usage": "Terminal output, grid chars, badges, code"
+      },
+      "font_sans": {
+        "stack": "Inter, system-ui, sans-serif",
+        "css_var": "--htb-font-sans",
+        "usage": "UI labels, descriptions, navigation"
+      },
+      "scale": {
+        "label": { "size": "0.6875rem", "weight": 600, "tracking": "0.08em", "transform": "uppercase" },
+        "body": { "size": "0.875rem", "weight": 400, "line_height": 1.55 },
+        "title": { "size": "1.125rem", "weight": 600, "line_height": 1.3 },
+        "hero": { "size": "1.5rem", "weight": 700, "line_height": 1.2, "font": "mono" }
+      }
+    },
+    "elevation": {
+      "glow_terminal": "0 0 0 1px rgba(159, 232, 112, 0.25), 0 0 24px rgba(159, 232, 112, 0.12)",
+      "glow_cyan": "0 0 0 1px rgba(56, 189, 248, 0.3), 0 0 20px rgba(56, 189, 248, 0.15)",
+      "panel": "0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04)"
+    },
+    "spacing": {
+      "card_padding": "20px",
+      "grid_gap": "12px",
+      "section_gap": "24px"
+    },
+    "component_blueprints": [
+      {
+        "component_id": "htb_terminal_card",
+        "uxcel_category": "Containers & Cards",
+        "css_class": "htb-terminal-card",
+        "anatomy": ["header (optional)", "body", "footer (optional)"],
+        "layout": {
+          "display": "flex",
+          "flex_direction": "column",
+          "gap": "12px"
+        },
+        "padding": "20px",
+        "border_radius": "6px",
+        "border": "1px solid var(--htb-border-subtle)",
+        "background": "var(--htb-bg-surface)",
+        "states": {
+          "default": {
+            "box_shadow": "var(--htb-shadow-panel)",
+            "border_color": "var(--htb-border-subtle)"
+          },
+          "hover": {
+            "border_color": "rgba(56, 189, 248, 0.45)",
+            "transform": "translateY(-1px)"
+          },
+          "active": {
+            "border_color": "var(--htb-accent-terminal)",
+            "box_shadow": "var(--htb-glow-terminal)"
+          }
+        },
+        "accessibility": {
+          "focus_visible": "2px solid var(--htb-accent-cyan)",
+          "min_touch_target": "44px"
+        }
+      },
+      {
+        "component_id": "htb_hero_grid_chars",
+        "uxcel_category": "Data Visualizers / Hero Sections",
+        "css_class": "htb-hero-grid",
+        "child_class": "htb-hero-grid__cell",
+        "layout": {
+          "display": "grid",
+          "grid_template_columns": "repeat(4, minmax(0, 1fr))",
+          "gap": "12px"
+        },
+        "cell_spec": {
+          "aspect_ratio": "1",
+          "font": "var(--htb-font-mono)",
+          "font_size": "1.75rem",
+          "text_align": "center",
+          "cursor": "pointer"
+        },
+        "interaction": {
+          "click": "Trigger audio feedback (optional) + toggle .is-active on cell",
+          "focus": "Neon cyan glow via box-shadow",
+          "active": "Terminal green glow + scale(0.98)"
+        },
+        "states": {
+          "default": { "background": "var(--htb-bg-surface)", "color": "var(--htb-text-secondary)" },
+          "hover": { "color": "var(--htb-accent-cyan)", "border_color": "rgba(56, 189, 248, 0.5)" },
+          "active": { "color": "var(--htb-accent-terminal)", "box_shadow": "var(--htb-glow-terminal)" }
+        },
+        "responsive": {
+          "max_640": { "grid_template_columns": "repeat(2, 1fr)" }
+        }
+      },
+      {
+        "component_id": "htb_firewall_alert",
+        "uxcel_category": "Feedback & Interceptors",
+        "css_class": "htb-firewall-alert",
+        "layout": {
+          "display": "flex",
+          "flex_direction": "column",
+          "gap": "8px",
+          "padding": "14px 16px",
+          "border_left": "3px solid var(--htb-alert-critical)"
+        },
+        "background": "rgba(239, 68, 68, 0.08)",
+        "border_radius": "0 6px 6px 0",
+        "typography": {
+          "title": { "font": "mono", "color": "var(--htb-alert-critical)", "weight": 600 },
+          "body": { "font": "sans", "color": "var(--htb-text-primary)", "size": "0.875rem" }
+        },
+        "states": {
+          "default": {},
+          "dismissible": { "action": "Close button top-right, aria-label required" }
+        },
+        "accessibility": {
+          "role": "alert",
+          "live_region": "assertive"
+        }
+      }
+    ],
+    "uxcel_flow_hints": {
+      "onboarding": ["htb_hero_grid_chars as skill picker", "htb_terminal_card for mission brief"],
+      "error_handling": ["htb_firewall_alert for blocked actions"],
+      "success": ["htb_terminal_card with active state + terminal green accent"]
+    }
+  }
+}

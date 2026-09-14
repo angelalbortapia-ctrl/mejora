@@ -3,22 +3,36 @@
 import {
   PREFIX, DIFFICULTIES, esc, getToday, getItem, setItem, getSettings, saveSettings,
   getPlanProgress, resetAllData,
-} from '../core.js'
-import { guardDifficulty } from '../page-helpers.js'
-import { isUnlocked, applyTheme, THEMES, UNLOCKS, getNextUnlock } from '../unlocks.js'
+} from '/js/core.js'
+import { guardDifficulty } from '/js/page-helpers.js'
+import { isUnlocked, applyTheme, THEMES, UNLOCKS, getNextUnlock } from '/js/unlocks.js'
 import {
   canUseNotifications, getNotificationPermission, requestNotificationPermission, startReminderChecker,
-} from '../notifications.js'
+} from '/js/notifications.js'
 import {
   getCloudStatus, signIn, signUp, signOut, pullFromCloud, pushToCloud,
-} from '../cloud-sync.js'
-import { exportMonthlyReportText } from '../backup.js'
-import { restartOnboarding, resetOnboardingCache } from '../onboarding-ui.js'
-import { startTour } from '../tour.js'
-import { listSectionGuides, startSectionGuide, resetSectionGuides } from '../section-guides.js'
-import { tabBar, settingGroup, settingRow, pageLead } from '../ui.js'
-import { applyCompactSidebar } from '../layout.js?v=81'
-import { playSuccess } from '../sounds.js'
+  resolveCloudConflict, deleteCloudData,
+  enableSyncEncryption, disableSyncEncryption, setSyncPassphrase,
+} from '/js/cloud-sync.js'
+import { exportMonthlyReportText } from '/js/backup.js'
+import { restartOnboarding, resetOnboardingCache } from '/js/onboarding-ui.js'
+import { startTour } from '/js/tour.js'
+import { listSectionGuides, startSectionGuide, resetSectionGuides } from '/js/section-guides.js'
+import { tabBar, settingGroup, settingRow, pageLead } from '/js/ui.js'
+import { applyCompactSidebar } from '/js/layout.js'
+import { playSuccess } from '/js/sounds.js'
+import { listGeminiVoiceOptions, setGeminiApiKey, setGeminiVoiceId, hasGeminiTts } from '/js/gemini-tts.js'
+import { hasGeminiContent } from '/js/gemini-meditation-content.js'
+import { listAzureVoiceOptions, setAzureSpeechKey, setAzureSpeechRegion, setAzureVoiceId, hasAzureTts, formatAzureUsagePanel, isAzureQuotaExhausted, AZURE_USAGE_CAP } from '/js/azure-tts.js'
+import { isAzureConfigFilePresent } from '/js/azure-config.js'
+import {
+  listFishVoiceOptions, setFishApiKey, setFishVoiceId, setFishModel, setFishSpeed,
+  hasFishTts, hasFishApiKey, getFishVoiceId, refreshFishVoiceList, FISH_TTS_MODELS,
+} from '/js/fish-audio-tts.js'
+import { ensureFishConfig, isFishConfigFilePresent } from '/js/fish-config.js'
+import { previewMeditationVoice, unlockMeditationAudioOnGesture } from '/js/meditation-voice.js'
+import { t, setLocale, getLocale, getSupportedLocales } from '/js/i18n.js'
+import { formatAnalyticsPanel } from '/js/product-analytics.js'
 
 let settingsTab = 'general'
 
@@ -43,16 +57,50 @@ function renderCloudAccountPanel() {
       `)}`
   }
   if (cloud.signedIn) {
+    const conflictBlock = cloud.pendingConflict ? `
+      <div class="card-static mt-3" style="border-color:var(--m-danger);background:rgba(240,114,136,0.08)">
+        <p class="ds-setting-hint" style="color:var(--on-surface-text,var(--m-text))"><strong>Conflicto de sincronización</strong><br>
+        Hay datos más recientes en la nube y cambios locales sin subir. Elige qué conservar:</p>
+        <div class="flex flex-col gap-2 mt-2">
+          <button type="button" onclick="cloudResolveConflict('remote')" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>⬇️ Usar datos de la nube</button>
+          <button type="button" onclick="cloudResolveConflict('local')" class="btn-primary w-full" ${cloud.syncing ? 'disabled' : ''}>⬆️ Mantener este dispositivo</button>
+        </div>
+      </div>` : ''
+    const errorBlock = cloud.lastError
+      ? `<p class="ds-setting-hint mt-2" style="color:var(--m-danger)">⚠ ${esc(cloud.lastError)}</p>`
+      : ''
+    const encBlock = `
+      <div class="card-static mt-3" style="border-color:var(--forge-accent,#6ee7b7)">
+        <p class="ds-setting-hint"><strong>Cifrado de extremo a extremo</strong> — opcional. Tus datos se cifran en el dispositivo antes de subir (AES-GCM + PBKDF2). La frase no se guarda en el servidor.</p>
+        <p class="ds-setting-hint mt-1">${cloud.encryptionEnabled ? '🔒 Cifrado activo' : '🔓 Sin cifrado'}${cloud.encryptionEnabled && !cloud.passphraseReady ? ' · <span style="color:var(--m-danger)">introduce tu frase abajo</span>' : ''}</p>
+        <input id="cloud-sync-passphrase" type="password" class="input-field mt-2" placeholder="Frase de cifrado (mín. 8 caracteres)" autocomplete="new-password">
+        <div class="flex flex-col gap-2 mt-2">
+          ${cloud.encryptionEnabled
+            ? `<button type="button" onclick="cloudUnlockEncryption()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>🔑 Desbloquear cifrado</button>
+               <button type="button" onclick="cloudDisableEncryption()" class="btn-ghost w-full text-sm" ${cloud.syncing ? 'disabled' : ''}>Desactivar cifrado</button>`
+            : `<button type="button" onclick="cloudEnableEncryption()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>🔒 Activar cifrado</button>`}
+        </div>
+        <p class="ds-setting-hint mt-2">Usa la misma frase en móvil y escritorio. Si la pierdes, no podrás recuperar datos cifrados.</p>
+      </div>`
     return `${pageLead('Tu progreso se guarda en la nube automáticamente.')}
       ${settingGroup('Cuenta', `
         <p class="ds-setting-hint">Conectado como <strong>${esc(cloud.email || '')}</strong></p>
         <p class="ds-setting-hint">Última sync: ${formatCloudTime(cloud.lastSyncedAt)}${cloud.syncing ? ' · sincronizando…' : ''}</p>
+        ${errorBlock}
+        ${conflictBlock}
+        ${encBlock}
         <div class="flex flex-col gap-2 mt-3">
           <button type="button" onclick="cloudSyncNow()" class="btn-primary w-full" ${cloud.syncing ? 'disabled' : ''}>☁️ Sincronizar ahora</button>
           <button type="button" onclick="cloudPullNow()" class="btn-secondary w-full" ${cloud.syncing ? 'disabled' : ''}>⬇️ Traer de la nube</button>
           <button type="button" onclick="cloudSignOut()" class="btn-ghost w-full">Cerrar sesión</button>
         </div>
         <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
+      `)}
+      ${settingGroup('Privacidad', `
+        <p class="ds-setting-hint">Qué guardamos, servicios externos y cómo borrar tus datos.</p>
+        <a href="privacy.html" target="_blank" rel="noopener" class="btn-secondary w-full text-center">📄 Política de privacidad</a>
+        <button type="button" onclick="cloudDeleteRemote()" class="btn-ghost w-full text-sm mt-2" style="color:var(--m-danger)">🗑 Borrar datos en la nube</button>
+        <p class="ds-setting-hint">Elimina el snapshot en Supabase. No borra el progreso local ni cierra la sesión.</p>
       `)}`
   }
   return `${pageLead('Crea una cuenta para no perder tu progreso al cambiar de dispositivo.')}
@@ -65,6 +113,7 @@ function renderCloudAccountPanel() {
       </div>
       <p id="cloud-status-msg" class="text-sm text-muted mt-3 text-center"></p>
       <p class="ds-setting-hint mt-2">Si activas confirmación por correo en Supabase, revisa tu bandeja antes de entrar.</p>
+      <a href="privacy.html" target="_blank" rel="noopener" class="btn-ghost w-full text-sm mt-2">📄 Política de privacidad</a>
     `)}`
 }
 
@@ -85,11 +134,113 @@ export function renderSettings() {
         </select>`
 
   const content = settingsTab === 'general' ? `
-    ${settingGroup('Interfaz', `
+    ${settingGroup('Calma · Voz guía', `
+      <p class="ds-setting-hint"><strong>Fish Audio:</strong> elige una voz de la <strong>biblioteca</strong> (sin grabar), diseña una con texto, o clona desde un audio. <a href="https://fish.audio/discover" target="_blank" rel="noopener">fish.audio/discover</a></p>
+      ${hasFishTts() ? `<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Fish Audio listo${isFishConfigFilePresent() ? ' · key en archivo local' : ''}${s.medVoiceEngine === 'fish' ? ' · motor activo' : ' — elige motor Fish abajo'}</p>` : ''}
+      <p class="ds-setting-hint"><strong>Microsoft Azure:</strong> 500k caracteres/mes gratis (Dalia, Jorge…). <a href="https://azure.microsoft.com/free/" target="_blank" rel="noopener">Cuenta gratis</a> → recurso <em>Speech</em>.</p>
+      ${hasAzureTts() ? `<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Azure detectado${isAzureConfigFilePresent() ? ' · key en archivo local' : ''}${s.medVoiceEngine === 'azure' ? ' · motor activo' : ''}</p>
+      <p class="ds-setting-hint">Uso este mes: <strong>${formatAzureUsagePanel()}</strong></p>
+      <p class="ds-setting-hint">Tope automático en <strong>${Math.round(AZURE_USAGE_CAP / 1000)}k</strong> caracteres. ${isAzureQuotaExhausted() ? 'Azure pausado hasta el próximo mes.' : ''}</p>` : ''}
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Motor de voz</span>
+        <select onchange="setMedVoiceEngine(this.value)" class="input-field">
+          <option value="fish" ${(s.medVoiceEngine || (hasFishTts() ? 'fish' : hasAzureTts() ? 'azure' : 'browser')) === 'fish' ? 'selected' : ''}>Fish Audio (recomendado)</option>
+          <option value="azure" ${s.medVoiceEngine === 'azure' ? 'selected' : ''}>Microsoft Azure Neural</option>
+          <option value="browser" ${s.medVoiceEngine === 'browser' ? 'selected' : ''}>Navegador / Google</option>
+          <option value="gemini" ${s.medVoiceEngine === 'gemini' ? 'selected' : ''}>Gemini TTS (experimental)</option>
+        </select>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Proxy Fish (producción estática)</span>
+        <input type="url" class="input-field" placeholder="https://tu-worker.workers.dev/api/fish"
+          value="${esc(s.fishProxyUrl || '')}" onchange="saveFishProxyUrl(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">Cloudflare Worker con <code>FISH_API_KEY</code> en servidor. Local: <code>start-server.command</code> (:5173).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Fish Audio API key</span>
+        <input type="password" class="input-field" placeholder="Bearer token de fish.audio → API Keys"
+          value="${esc(s.fishApiKey || '')}" onchange="saveFishApiKey(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">Solo si no usas proxy. O en <code>js/fish-config.local.js</code> (no se sube a git).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Fish</span>
+        <select id="fish-voice-select" onchange="saveFishVoiceId(this.value)" class="input-field">
+          ${listFishVoiceOptions(s.fishVoiceId || getFishVoiceId())}
+        </select>
+        <input type="text" class="input-field" placeholder="O pega un ID de fish.audio/discover"
+          value="${esc(s.fishVoiceId || getFishVoiceId() || '')}" onchange="saveFishVoiceId(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">Biblioteca arriba · o ID manual · <a href="https://fish.audio/discover" target="_blank" rel="noopener">discover</a></p>
+        <button type="button" class="btn btn-ghost btn-sm mt-1" onclick="refreshFishVoicesFromSettings()" ${hasFishApiKey() ? '' : 'disabled'}>↻ Cargar mis voces clonadas</button>
+      </div>
+      ${s.medVoiceEngine === 'fish' ? `<div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Modelo Fish</span>
+        <select onchange="setFishModelSetting(this.value)" class="input-field">
+          ${FISH_TTS_MODELS.map(m => `<option value="${m.id}" ${(s.fishModel || 's2.1-pro') === m.id ? 'selected' : ''}>${m.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Velocidad (${Math.round((s.fishSpeed ?? 0.96) * 100)}%)</span>
+        <input type="range" min="85" max="115" step="1" value="${Math.round((s.fishSpeed ?? 0.96) * 100)}"
+          onchange="setFishSpeedSetting(this.value / 100)" class="w-full">
+        <p class="ds-setting-hint">82% suele sonar mejor para meditación.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="previewCalmaVoice()">▶ Vista previa de voz</button>` : ''}
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Azure Speech key</span>
+        <input type="password" class="input-field" placeholder="Key del recurso Speech en portal.azure.com"
+          value="${esc(s.azureSpeechKey || '')}" onchange="saveAzureSpeechKey(this.value)" autocomplete="off">
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Región Azure</span>
+        <select onchange="setAzureSpeechRegionSetting(this.value)" class="input-field">
+          ${['eastus', 'westus2', 'centralus', 'southcentralus', 'westeurope', 'northeurope', 'mexicocentral'].map(r =>
+            `<option value="${r}" ${(s.azureSpeechRegion || 'eastus') === r ? 'selected' : ''}>${r}</option>`
+          ).join('')}
+        </select>
+        <p class="ds-setting-hint">Debe coincidir con la región de tu recurso Speech (ej. eastus).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Microsoft</span>
+        <select onchange="setAzureVoiceSetting(this.value)" class="input-field" ${hasAzureTts() ? '' : 'disabled'}>
+          ${listAzureVoiceOptions(s.azureVoice)}
+        </select>
+        ${!hasAzureTts() ? '<p class="ds-setting-hint">Pega la key de Azure arriba o usa <code>js/azure-config.local.js</code>.</p>' : ''}
+      </div>
+      ${s.medVoiceEngine === 'gemini' ? `<div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Voz Gemini (experimental)</span>
+        <select onchange="setGeminiVoiceSetting(this.value)" class="input-field">
+          ${listGeminiVoiceOptions(s.geminiVoice)}
+        </select>
+      </div>` : ''}
+    `)}
+    ${settingGroup('Calma · Guiones con Gemini', `
+      <p class="ds-setting-hint">Mejora los textos de cada día en <strong>programas guiados</strong>. Solo texto — la voz usa Fish, Azure o navegador.</p>
+      <ol class="ds-setting-steps">
+        <li>Abre <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li>
+        <li>Inicia sesión con Google → <strong>Create API key</strong></li>
+        <li>Copia la key y pégala abajo (o en <code>js/gemini-config.local.js</code>)</li>
+      </ol>
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">API key Gemini</span>
+        <input id="gemini-api-key" type="password" class="input-field" placeholder="AIza…"
+          value="${esc(s.geminiApiKey || '')}" onchange="saveGeminiApiKey(this.value)" autocomplete="off">
+        ${hasGeminiContent() ? '<p class="ds-setting-hint" style="color:var(--forge-accent,#6ee7b7)">✓ Key detectada — programas pueden usar guiones adaptados.</p>' : '<p class="ds-setting-hint">Gratis en AI Studio. Se guarda solo en tu dispositivo.</p>'}
+      </div>
+      ${settingRow('Mejorar guiones en programas', `<input type="checkbox" ${s.medGeminiPrograms !== false ? 'checked' : ''} onchange="toggleMedGeminiPrograms(this.checked)" ${hasGeminiContent() ? '' : 'disabled'}>`, 'Cada día del programa: intro y pasos reescritos para ese día. Requiere API key arriba.')}
+    `)}
+    ${settingGroup(t('settings.interface'), `
+      <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">${t('common.language')}</span>
+        <select onchange="setAppLocale(this.value)" class="input-field">
+          ${getSupportedLocales().map(loc => `<option value="${loc}" ${getLocale() === loc ? 'selected' : ''}>${loc === 'es' ? 'Español' : 'English'}</option>`).join('')}
+        </select>
+        <p class="ds-setting-hint">${t('common.languageHint')}</p>
+      </div>
       ${settingRow('Sidebar compacto', `<input type="checkbox" ${s.compactSidebar ? 'checked' : ''} onchange="toggleCompactSidebar(this.checked)">`)}
       ${settingRow('Sonidos', `<input type="checkbox" ${s.sound ? 'checked' : ''} onchange="toggleSound(this.checked)">`)}
       ${settingRow('Reducir animaciones', `<input type="checkbox" ${s.reducedMotion ? 'checked' : ''} onchange="toggleReducedMotion(this.checked)">`, 'Menos movimiento y efectos visuales.')}
     `)}
+    ${settingGroup(t('analytics.title'), formatAnalyticsPanel(t))}
     ${settingGroup('Notificaciones', `
       <div class="ds-setting-row ds-setting-row--stack">
         <label class="flex justify-between items-center w-full">
@@ -174,14 +325,15 @@ export function renderSettings() {
       <button type="button" onclick="confirmResetAll()" class="btn-ghost w-full text-sm" style="color:var(--m-danger)">↺ Empezar desde cero</button>
     </div>
     <p class="ds-setting-hint text-center">Borra progreso, hábitos, rachas y logros. Exporta antes si quieres conservar una copia.</p>
+    <a href="privacy.html" target="_blank" rel="noopener" class="btn-ghost w-full text-sm mt-2">📄 Política de privacidad</a>
     <p id="import-status" class="text-sm text-muted mt-3 text-center"></p>`
 
   return `<div class="animate-fade-in page-shell page-wide page-settings">
     <div class="ds-page ds-page--full">
       ${tabBar([
-        { id: 'general', label: 'General', icon: '⚙️' },
-        { id: 'account', label: 'Cuenta', icon: '☁️' },
-        { id: 'data', label: 'Datos', icon: '💾' },
+        { id: 'general', label: t('settings.general'), icon: '⚙️' },
+        { id: 'account', label: t('settings.account'), icon: '☁️' },
+        { id: 'data', label: t('settings.data'), icon: '💾' },
       ], settingsTab, 'settingsTab')}
       <div class="ds-panel">${content}</div>
     </div>
@@ -200,7 +352,6 @@ export function bindSettingsGlobals(deps = {}) {
   const { invalidateDailyApis, reloadDailyApis } = deps
   const render = () => window.render?.()
 
-  window.toggleDark = (v) => { const s = getSettings(); s.darkMode = v; saveSettings(s); render() }
   window.toggleCompactSidebar = (v) => {
     const s = getSettings(); s.compactSidebar = v; saveSettings(s); applyCompactSidebar(v); render()
   }
@@ -220,6 +371,11 @@ export function bindSettingsGlobals(deps = {}) {
     render()
   }
   window.toggleAutoBackup = (v) => { const s = getSettings(); s.autoBackupEnabled = v; saveSettings(s) }
+
+  window.setAppLocale = (loc) => {
+    setLocale(loc)
+    render()
+  }
 
   window.cloudSignIn = async function() {
     const email = document.getElementById('cloud-email')?.value?.trim()
@@ -275,12 +431,80 @@ export function bindSettingsGlobals(deps = {}) {
 
   window.cloudPullNow = async function() {
     try {
+      const status = getCloudStatus()
+      if (status.pendingConflict) {
+        setCloudMsg('Hay un conflicto — elige una opción arriba', false)
+        return
+      }
       await pullFromCloud()
+      if (getCloudStatus().pendingConflict) {
+        setCloudMsg('Conflicto detectado — elige qué datos conservar', false)
+        render()
+        return
+      }
       setCloudMsg('✓ Datos descargados')
       playSuccess()
       render(true)
     } catch (e) {
       setCloudMsg(e?.message || 'Error al descargar', false)
+    }
+  }
+
+  window.cloudResolveConflict = async function(choice) {
+    try {
+      await resolveCloudConflict(choice)
+      setCloudMsg(choice === 'remote' ? '✓ Datos de la nube aplicados' : '✓ Datos locales subidos')
+      playSuccess()
+      render(true)
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudo resolver el conflicto', false)
+    }
+  }
+
+  window.cloudDeleteRemote = async function() {
+    if (!confirm('¿Borrar tu progreso guardado en la nube? Los datos de este dispositivo no se tocan.')) return
+    try {
+      await deleteCloudData()
+      setCloudMsg('✓ Datos en la nube eliminados')
+      render()
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudieron borrar los datos', false)
+    }
+  }
+
+  window.cloudEnableEncryption = async function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    try {
+      await enableSyncEncryption(passphrase)
+      setCloudMsg('✓ Cifrado activado y datos subidos')
+      playSuccess()
+      render()
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudo activar el cifrado', false)
+    }
+  }
+
+  window.cloudUnlockEncryption = function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    if (!passphrase || passphrase.length < 8) {
+      setCloudMsg('Frase de cifrado requerida (mín. 8 caracteres)', false)
+      return
+    }
+    setSyncPassphrase(passphrase)
+    setCloudMsg('✓ Frase guardada en esta sesión')
+    render()
+  }
+
+  window.cloudDisableEncryption = async function() {
+    const passphrase = document.getElementById('cloud-sync-passphrase')?.value
+    if (!confirm('¿Desactivar cifrado? Los datos se volverán a subir sin cifrar.')) return
+    try {
+      await disableSyncEncryption(passphrase)
+      setCloudMsg('✓ Cifrado desactivado')
+      playSuccess()
+      render()
+    } catch (e) {
+      setCloudMsg(e?.message || 'No se pudo desactivar el cifrado', false)
     }
   }
 
@@ -322,6 +546,50 @@ export function bindSettingsGlobals(deps = {}) {
     saveSettings(s)
   }
   window.setDefaultDiff = (v) => { const s = getSettings(); s.defaultDifficulty = guardDifficulty(v); saveSettings(s) }
+  window.saveGeminiApiKey = (key) => { setGeminiApiKey(key); render() }
+  window.setMedVoiceEngine = (v) => {
+    const s = getSettings()
+    s.medVoiceEngine = ['browser', 'azure', 'gemini', 'fish'].includes(v) ? v : 'browser'
+    saveSettings(s)
+    render()
+  }
+  window.saveFishApiKey = (key) => { setFishApiKey(key); render() }
+  window.saveFishProxyUrl = async (url) => {
+    const { setFishProxyUrl } = await import('/js/fish-audio-tts.js')
+    setFishProxyUrl(url)
+    render()
+  }
+  window.saveFishVoiceId = (id) => { setFishVoiceId(id); render() }
+  window.setFishModelSetting = (id) => { setFishModel(id); render() }
+  window.setFishSpeedSetting = (n) => { setFishSpeed(n); render() }
+  window.refreshFishVoicesFromSettings = async () => {
+    await refreshFishVoiceList()
+    render()
+  }
+  window.previewCalmaVoice = async () => {
+    unlockMeditationAudioOnGesture()
+    try {
+      await previewMeditationVoice()
+    } catch (e) {
+      alert(e.message || 'Error al reproducir vista previa')
+    }
+    const { getLastFishError } = await import('/js/fish-audio-tts.js')
+    if (getLastFishError()) alert(getLastFishError())
+  }
+  ensureFishConfig().then(() => {
+    if (hasFishApiKey()) refreshFishVoiceList().catch(() => {})
+    render()
+  }).catch(() => {})
+  window.saveAzureSpeechKey = (key) => { setAzureSpeechKey(key); render() }
+  window.setAzureSpeechRegionSetting = (r) => { setAzureSpeechRegion(r); render() }
+  window.setAzureVoiceSetting = (id) => { setAzureVoiceId(id); render() }
+  window.setGeminiVoiceSetting = (id) => { setGeminiVoiceId(id); render() }
+  window.toggleMedGeminiPrograms = (on) => {
+    const s = getSettings()
+    s.medGeminiPrograms = !!on
+    saveSettings(s)
+    render()
+  }
   window.setTheme = (id) => {
     if (id !== 'default' && !isUnlocked(id)) return
     const s = getSettings()
@@ -331,7 +599,7 @@ export function bindSettingsGlobals(deps = {}) {
     render()
   }
   window.requestLocationRefresh = async function() {
-    const { requestUserLocation } = await import('../apis.js')
+    const { requestUserLocation } = await import('/js/apis.js')
     const geo = await requestUserLocation()
     const s = getSettings()
     if (geo) {

@@ -1,0 +1,49 @@
+═══════════════════════════════════════════════
+  MEJORA — CÓMO ABRIR (sin saber de terminal)
+═══════════════════════════════════════════════
+
+SOLO HAZ ESTO:
+
+  1. Busca la carpeta "Mejora" en tu Mac
+     (suele estar en Descargas / Downloads)
+
+  2. Dentro de la carpeta, busca el archivo:
+
+        ABRE-MEJORA.command
+
+  3. (Una sola vez) Clic derecho en instalar-servicio.command
+     → Abrir → Abrir. Así Mejora corre en segundo plano
+     como tu app Finanzas — sin Terminal abierta.
+
+  4. Después usa abrir.command o ABRE-MEJORA.command
+     (solo abre el navegador).
+
+     Si Mac bloquea: SI-MAC-BLOQUEA.txt (clic derecho → Abrir).
+
+  4. Se abrirá una ventana negra (Terminal) unos segundos
+     y luego el navegador con Mejora.
+
+  5. Si la pantalla se ve OSCURA todavía:
+     en el navegador pulsa al mismo tiempo:
+        Cmd  +  Shift  +  R
+     (en Mac)
+
+───────────────────────────────────────────────
+
+⚠️  NO uses "mejora-main.zip" de GitHub (rama main, v81, OSCURO).
+
+  Usa "mejora-LISTO.zip" (v194, tema claro).
+
+Si al hacer doble clic dice que el archivo no existe
+o no abre nada:
+
+  → Descomprime mejora-LISTO.zip en Descargas y entra
+    en esa carpeta (no en mejora-main).
+
+───────────────────────────────────────────────
+
+Link directo (solo funciona DESPUÉS del paso 3):
+
+  http://127.0.0.1:5173/?reset=1&v=194#/
+
+═══════════════════════════════════════════════

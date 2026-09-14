@@ -1,0 +1,434 @@
+/* ==========================================================================
+   HARF — NOTION LIGHT PRO (v21.5-notion-animated-light)
+   Superficies claras · jerarquía minimal · micro-animaciones en harf-interactive.css
+   Scope: body.harf-linear (#/clase)
+   ========================================================================== */
+
+.harf-linear,
+.harf-linear-page {
+  /* Notion Light Pro tokens */
+  --notion-bg: #ffffff;
+  --notion-sidebar: #f7f6f3;
+  --notion-border: #e1dfdd;
+  --notion-card-hover: #fbfbfa;
+  --notion-text: #37352f;
+  --notion-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --notion-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --transition-smooth: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  --harf-bg-canvas: var(--notion-bg);
+  --harf-bg-surface: var(--notion-bg);
+  --harf-bg-elevated: var(--notion-card-hover);
+  --harf-border-subtle: var(--notion-border);
+  --harf-text-primary: var(--notion-text);
+  --harf-text-secondary: #787774;
+  --harf-accent-indigo: #2383e2;
+  --harf-accent-violet: #9065b0;
+  --harf-success-green: #0f7b6c;
+  --harf-font-sans: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  --harf-font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --harf-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --harf-duration: 0.2s;
+  --harf-radius: 6px;
+  --harf-radius-btn: 6px;
+  --harf-radius-pill: 4px;
+  --harf-space-section: 48px;
+  --harf-space-card: 24px;
+  --harf-shadow-card: var(--notion-shadow);
+  --harf-shadow-glass: var(--notion-shadow-hover);
+  --harf-glow-indigo: 0 0 0 1px rgba(35, 131, 226, 0.12);
+
+  color: var(--harf-text-primary);
+  font-family: var(--harf-font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Lock light appearance — Notion Light Pro */
+html:has(body.harf-linear) {
+  color-scheme: light only;
+  background-color: var(--harf-bg-canvas);
+}
+
+/* Canvas */
+body.harf-linear {
+  background-color: var(--harf-bg-canvas) !important;
+  color: var(--harf-text-primary);
+  font-family: var(--harf-font-sans);
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+  color-scheme: light only;
+}
+
+body.harf-linear .app-main,
+body.harf-linear #app-content {
+  background: var(--harf-bg-canvas);
+}
+
+body.harf-linear.theme-rpg::before,
+body.harf-linear.theme-rpg::after {
+  display: none !important;
+}
+
+/* Solid banner — no macOS vibrancy / backdrop shifts */
+body.harf-linear .app-banner {
+  background: var(--harf-bg-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid var(--harf-border-subtle);
+}
+
+/* ── Layout ── */
+.harf-linear-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--harf-space-section) clamp(1.25rem, 4vw, 2.5rem) 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--harf-space-section);
+}
+
+.harf-linear-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 42rem;
+}
+
+.harf-linear-hero__display {
+  margin: 0;
+  color: var(--harf-text-primary);
+  font-size: clamp(2rem, 4.5vw, 2.625rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.harf-linear-hero__lead {
+  margin: 0;
+  color: var(--harf-text-secondary);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  max-width: 36rem;
+}
+
+.harf-linear-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.harf-linear-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .harf-linear-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.harf-linear-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.harf-linear-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── .htb-card (Height surface) ── */
+body.harf-linear .htb-card,
+body.harf-linear .card,
+body.harf-linear .lesson-container,
+body.harf-linear .panel-content,
+body.harf-linear .ds-panel {
+  background: var(--harf-bg-surface) !important;
+  border: 1px solid var(--harf-border-subtle) !important;
+  border-radius: var(--harf-radius) !important;
+  padding: var(--harf-space-card) !important;
+  box-shadow: var(--harf-shadow-card) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.harf-linear .htb-card.is-active {
+  border-color: #d3d1cb !important;
+  background: var(--notion-card-hover) !important;
+  box-shadow: var(--notion-shadow-hover) !important;
+}
+
+body.harf-linear .htb-card--link {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+body.harf-linear .htb-card__footer {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+/* ── .htb-title ── */
+body.harf-linear h1,
+body.harf-linear h2,
+body.harf-linear h3,
+body.harf-linear .htb-title,
+body.harf-linear .title-main,
+body.harf-linear .harf-linear-hero__display {
+  color: var(--harf-text-primary) !important;
+  font-weight: 600 !important;
+  font-family: var(--harf-font-sans) !important;
+}
+
+body.harf-linear .htb-title {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+body.harf-linear .htb-title--lg {
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+
+/* ── .htb-meta-tag (violet pill) ── */
+body.harf-linear .htb-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  font-family: var(--harf-font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500;
+  color: var(--harf-accent-violet) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+  background: rgba(144, 101, 176, 0.08);
+  padding: 4px 8px;
+  border-radius: var(--harf-radius-pill);
+  border: 1px solid rgba(144, 101, 176, 0.15);
+}
+
+body.harf-linear .htb-meta-tag--success {
+  color: var(--harf-success-green) !important;
+  background: rgba(15, 123, 108, 0.08);
+  border-color: rgba(15, 123, 108, 0.18);
+}
+
+body.harf-linear .htb-meta-tag--indigo {
+  color: var(--harf-accent-indigo) !important;
+  background: rgba(35, 131, 226, 0.08);
+  border-color: rgba(35, 131, 226, 0.18);
+}
+
+body.harf-linear .htb-meta-tag--muted {
+  color: var(--harf-text-secondary) !important;
+  background: rgba(55, 53, 47, 0.04);
+  border-color: var(--harf-border-subtle);
+}
+
+body.harf-linear code,
+body.harf-linear pre {
+  font-family: var(--harf-font-mono) !important;
+  font-size: 0.8125rem;
+  color: var(--harf-accent-violet);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* ── .htb-tactical-btn (Height button) ── */
+body.harf-linear button,
+body.harf-linear .htb-tactical-btn,
+body.harf-linear .btn-primary,
+body.harf-linear .btn-secondary {
+  background: var(--harf-bg-elevated) !important;
+  border: 1px solid var(--harf-border-subtle) !important;
+  color: var(--harf-text-primary) !important;
+  font-family: var(--harf-font-sans) !important;
+  font-weight: 500 !important;
+  padding: 10px 20px !important;
+  border-radius: var(--harf-radius-btn) !important;
+  transition: all var(--harf-duration) var(--harf-ease) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+body.harf-linear button:hover,
+body.harf-linear .htb-tactical-btn:hover,
+body.harf-linear .btn-primary:hover,
+body.harf-linear .btn-secondary:hover {
+  background: var(--notion-card-hover) !important;
+  border-color: #d3d1cb !important;
+  color: var(--harf-text-primary) !important;
+  box-shadow: var(--notion-shadow) !important;
+}
+
+body.harf-linear .htb-tactical-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+body.harf-linear .htb-tactical-btn:focus-visible,
+body.harf-linear button:focus-visible {
+  outline: 2px solid var(--harf-accent-indigo);
+  outline-offset: 2px;
+}
+
+body.harf-linear .htb-tactical-btn:active,
+body.harf-linear button:active {
+  transform: scale(0.98);
+}
+
+body.harf-linear .htb-tactical-btn--primary {
+  background: var(--harf-accent-indigo) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  color: #ffffff !important;
+}
+
+body.harf-linear .htb-tactical-btn--primary:hover {
+  background: #1a73c7 !important;
+  border-color: var(--harf-accent-indigo) !important;
+  box-shadow: var(--notion-shadow-hover) !important;
+}
+
+body.harf-linear .htb-tactical-btn--ghost,
+body.harf-linear .btn-ghost {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--harf-text-secondary) !important;
+}
+
+body.harf-linear .htb-tactical-btn--ghost:hover,
+body.harf-linear .btn-ghost:hover {
+  background: var(--notion-card-hover) !important;
+  border-color: var(--harf-border-subtle) !important;
+  color: var(--harf-text-primary) !important;
+  box-shadow: none !important;
+}
+
+/* ── Body & stats ── */
+body.harf-linear .htb-body {
+  margin: 0;
+  color: var(--harf-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+body.harf-linear .htb-body strong {
+  color: var(--harf-text-primary);
+  font-weight: 600;
+}
+
+body.harf-linear .htb-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.harf-linear .htb-stat-row li {
+  font-size: 0.75rem;
+  color: var(--harf-text-secondary);
+}
+
+body.harf-linear .htb-stat-row li span {
+  display: block;
+  color: var(--harf-text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Module list ── */
+body.harf-linear .htb-module-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.harf-linear .htb-module-list__item,
+body.harf-linear .module-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--harf-border-subtle);
+  border-radius: var(--harf-radius-btn);
+  background: var(--harf-bg-canvas);
+  font-size: 0.875rem;
+  color: var(--harf-text-secondary);
+}
+
+body.harf-linear .htb-module-list__item.is-done,
+body.harf-linear .module-item.is-done {
+  border-color: rgba(15, 123, 108, 0.28);
+  color: var(--harf-success-green);
+  background: rgba(15, 123, 108, 0.05);
+}
+
+body.harf-linear .htb-module-list__item.is-current,
+body.harf-linear .module-item.is-current {
+  border-color: rgba(35, 131, 226, 0.35);
+  color: var(--harf-text-primary);
+  background: rgba(35, 131, 226, 0.05);
+  box-shadow: var(--notion-shadow);
+}
+
+body.harf-linear .metric-box {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--notion-border);
+  border-radius: 6px;
+  background-color: var(--notion-bg);
+  box-shadow: var(--notion-shadow);
+}
+
+/* Legacy HTB components */
+body.harf-linear .htb-terminal-card,
+body.harf-linear .htb-firewall-alert {
+  background: var(--harf-bg-surface) !important;
+  border-color: var(--harf-border-subtle) !important;
+}
+
+body.harf-linear.reduce-motion .htb-tactical-btn,
+body.harf-linear.reduce-motion button {
+  transition: none !important;
+}
+
+@media (max-width: 640px) {
+  body.harf-linear .harf-linear-page {
+    padding-top: 32px;
+    gap: 32px;
+  }
+
+  body.harf-linear .htb-card,
+  body.harf-linear .card {
+    padding: 22px !important;
+  }
+}

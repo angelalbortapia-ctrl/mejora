@@ -1,9 +1,15 @@
 /** Academia Mejora — neurociencia aplicada: lecciones, regiones cerebrales, laboratorio */
 
-import { getItem, setItem, getWeekNumber } from './core.js'
-import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from './school-lessons.js?v=81'
-import { APPLY_LESSONS } from './school-apply-lessons.js?v=81'
-import { isCurriculumLessonUnlocked } from './school-curriculum.js?v=81'
+import { getItem, setItem, getWeekNumber } from '/js/core.js'
+import { forgeSparkAt, haptic } from '/js/fx.js'
+import {
+  applyDynamicLesson, bindLessonInteractions, renderLessonBlocks,
+  LESSON_BLOCK_PRE, LESSON_BLOCK_POST, initLessonEngagement,
+  renderLessonEngagementHud, renderLessonMasteryRecap, renderLessonFxLayers, getLessonBonusXp,
+} from '/js/lesson-dynamic.js'
+import { SCHOOL_LESSONS, SCHOOL_LESSON_META, EXTRA_LEGENDARY_HALL } from '/js/school-lessons.js'
+import { APPLY_LESSONS } from '/js/school-apply-lessons.js'
+import { isCurriculumLessonUnlocked } from '/js/school-curriculum.js'
 
 const ACADEMY_START_KEY = 'academyStart'
 
@@ -288,17 +294,57 @@ export const LESSONS = [
     id: 'neurotransmitters',
     category: 'systems',
     title: 'Neurotransmisores: el lenguaje químico del cerebro',
-    readMin: 5,
+    readMin: 8,
     region: 'Sinapsis · vesículas sinápticas · receptores',
-    hook: 'Tus pensamientos son patrones de liberación química entre neuronas.',
-    sections: [
-      { h: 'Glutamato y GABA', p: 'Glutamato: principal excitatorio (aprendizaje, plasticidad). GABA: principal inhibitorio (calma, sueño). El balance excitación/inhibición define si una red está activa o suprimida.' },
-      { h: 'Moduladores', p: 'Dopamina (motivación, aprendizaje), serotonina (ánimo, impulsividad), noradrenalina (alerta, estrés), acetilcolina (atención, memoria). No son “emociones en una molécula” — modulan circuitos completos.' },
-      { h: 'Sinapsis y plasticidad', p: 'Hebb (1949): “neurons that fire together, wire together”. La repetición fortalece sinapsis (LTP). Cada hábito, lección y ejercicio es química sináptica repetida.' },
+    hook: 'No pienses en “química feliz” — piensa en señales que modulan redes enteras según contexto.',
+    lead: 'Cada pensamiento, hábito y emoción es un patrón de disparo neuronal sostenido por moléculas en la hendidura sináptica. Entender excitación, inhibición y modulación te evita mitos tipo “dopamina = motivación” y te da un mapa útil para entrenar conducta.',
+    keyTerms: [
+      { term: 'Sinapsis', def: 'Unión funcional donde una neurona influye en otra vía neurotransmisor + receptor.' },
+      { term: 'Excitación / inhibición', def: 'Balance que define si una red se activa o se frena (glutamato vs GABA).' },
+      { term: 'Modulación', def: 'Ajuste fino del tono de circuitos (dopamina, serotonina, ACh, noradrenalina).' },
+      { term: 'LTP', def: 'Potenciación a largo plazo — sinapsis que se fortalecen con uso repetido (Hebb).' },
     ],
-    takeaway: 'Conducta = patrones sinápticos. Repetición cambia química cerebral.',
-    apply: 'Elige una conducta para repetir 7 días. Cada repetición es una sinapsis más fuerte.',
-    reflect: '¿Qué circuito químico refuerzas más con tus acciones diarias?',
+    sections: [
+      {
+        h: 'La sinapsis: de la señal eléctrica al mensaje químico',
+        p: 'La neurona presináptica no “toca” la postsináptica: libera neurotransmisores en la hendidura. Estos se unen a receptores y cambian la probabilidad de que la siguiente neurona dispare. Ese cambio puede ser inmediato (ionotrópico) o más lento y duradero (metabotrópico).',
+        bullets: [
+          'Un solo neurotransmisor puede tener efectos distintos según el receptor y la región.',
+          'La reuptake y degradación limitan cuánto dura el mensaje — ahí actúan muchos fármacos.',
+          'Plasticidad sináptica = el cerebro reescribe la “ganancia” del volumen químico con la experiencia.',
+        ],
+      },
+      {
+        h: 'Glutamato y GABA: el acelerador y el freno',
+        p: 'Glutamato es el principal excitatorio del SNC: aprendizaje, memoria, plasticidad. GABA es el principal inhibitorio: calma redes hiperactivas, sueño, control de impulsos. El balance E/I (excitación/inhibición) es el termostato de casi todo circuito cognitivo.',
+        bullets: [
+          'Demasiada excitación sin inhibición → epilepsia, ansiedad, rumiación.',
+          'Demasiada inhibición global → sedación, lentitud cognitiva.',
+          'Meditación y respiración lenta modulan GABA y tono parasimpático de forma medible.',
+        ],
+      },
+      {
+        h: 'Moduladores: dopamina, serotonina, noradrenalina, acetilcolina',
+        p: 'No son “emociones embotelladas”. Son moduladores que ajustan ganancia, alerta y plasticidad en circuitos distribuidos. La dopamina marca predicción de recompensa y error; la serotonina regula impulsividad y estado de ánimo en contexto; la noradrenalina sube alerta bajo estrés; la acetilcolina afina atención y codificación de memoria.',
+        bullets: [
+          'Dopamina ≠ placer: se dispara con anticipación y sorpresa, no solo con consumo.',
+          'ISRS (ej. fluoxetina) tardan semanas porque remodelan receptores, no “llenan serotonina”.',
+          'Cafeína bloquea adenosina → indirectamente sube noradrenalina y alerta.',
+        ],
+      },
+      {
+        h: 'Hebb, Kandel y el hábito como química repetida',
+        p: '“Neurons that fire together, wire together” (Hebb, 1949). Kandel demostró en Aplysia que el aprendizaje es cambio sináptico medible. Cada repetición de un hábito, cada sesión de estudio, cada protocolo de laboratorio en Mejora es la misma lógica: patrones que se refuerzan o debilitan.',
+        bullets: [
+          'LTP fortalece sinapsis usadas; LTD debilita las ignoradas (podado sináptico).',
+          'El contexto importa: la misma molécula en distinta red ≠ mismo efecto conductual.',
+          'Por eso la repetición con intención importa más que “leer una vez y ya”.',
+        ],
+      },
+    ],
+    takeaway: 'Conducta = patrones sinápticos en contexto. Repetición con intención remodela química y conectividad.',
+    apply: 'Elige una conducta de 2 minutos para repetir 7 días (misma hora, mismo contexto). Eso es entrenamiento sináptico real.',
+    reflect: '¿Qué conducta refuerzas a diario sin darte cuenta — y qué circuito químico podría estar consolidando?',
   },
   {
     id: 'prefrontal-decisions',
@@ -691,11 +737,17 @@ const LESSON_META = {
     caseStudy: 'H.M. participó en 100+ estudios durante 55 años sin recordar haberlos hecho.',
     myth: 'Mito: “la memoria es un archivo”. Realidad: sin hipocampo no hay índice de episodios nuevos.',
     cite: 'Scoville & Milner (1957) · Corkin (2002)',
+    intensity: 'brutal',
+    quote: '“Cada día es solo para él el primero de su vida.” — Corkin sobre H.M.',
+    deepCut: 'H.M. firmaba consentimientos sin recordar haberlos firmado minutos antes.',
   },
   'phineas-gage': {
     caseStudy: 'Gage vivió 12 años más; su cráneo y la barra están en el Warren Museum de Harvard.',
     myth: 'Mito: “la inteligencia está en el IQ”. Realidad: PFC es juicio, planificación y carácter.',
     cite: 'Harlow (1848) · Damasio (1994)',
+    intensity: 'brutal',
+    quote: '“Gage ya no era Gage.” — Dr. Harlow, 1868',
+    deepCut: 'La barra pesaba 6 kg y salió por la parte superior del cráneo. Caminó solo.',
   },
   'predictive-brain': {
     caseStudy: 'La ilusión de adelantamiento visual: tu cerebro “rellena” frames que no llegaron a tiempo.',
@@ -718,16 +770,6 @@ const LESSON_META = {
     cite: 'Weiskrantz et al. (1974) · de Gelder (2010)',
     intensity: 'brutal',
     quote: '“La conciencia es el último en enterarse.” — Weiskrantz',
-  },
-  'patient-hm': {
-    intensity: 'brutal',
-    quote: '“Cada día es solo para él el primero de su vida.” — Corkin sobre H.M.',
-    deepCut: 'H.M. firmaba consentimientos sin recordar haberlos firmado minutos antes.',
-  },
-  'phineas-gage': {
-    intensity: 'brutal',
-    quote: '“Gage ya no era Gage.” — Dr. Harlow, 1868',
-    deepCut: 'La barra pesaba 6 kg y salió por la parte superior del cráneo. Caminó solo.',
   },
   'split-brain': {
     caseStudy: 'Paciente W.J.: la mano izquierda peleaba por el control del volante mientras la derecha corregía.',
@@ -812,7 +854,8 @@ export const NEURO_PUNCH = [
 
 function enrichLesson(lesson) {
   const meta = LESSON_META[lesson.id]
-  return meta ? { ...lesson, ...meta } : lesson
+  const merged = meta ? { ...lesson, ...meta } : lesson
+  return applyDynamicLesson(merged)
 }
 
 export function getDailyNeuroPunch(date = new Date()) {
@@ -867,6 +910,10 @@ function intensityBadge(intensity) {
 }
 
 export const EXERCISE_REAL_WORLD = {
+  dualnback: 'Doble canal WM: seguir conversación mientras actualizas datos en pantalla — el estándar Jaeggi.',
+  revspan: 'Manipular información en orden inverso: instrucciones al revés, debugging mental, números al revés.',
+  cpt: 'Vigilancia sostenida: detectar el evento raro en monitoreo, emails, control de calidad.',
+  pasat: 'Suma bajo ritmo: presupuestos en cadena, estimaciones rápidas encadenadas sin calculadora.',
   nback: 'CPFDL actualizando información: reuniones con specs, cocinar con receta, código con requisitos en mente.',
   corsi: 'Hipocampo espacial: recordar dónde dejaste cosas, rutas, layouts de interfaz, mapas mentales.',
   stroop: 'Cíngulo anterior en conflicto: inhibir respuesta automática en chats, emails, compras impulsivas.',
@@ -879,16 +926,43 @@ export const EXERCISE_REAL_WORLD = {
   memory: 'Hipocampo + PFC: retener secuencias visuales — listas, pasos, instrucciones en orden.',
   simon: 'Bucle fronto-parietal: span de dígitos — números de teléfono, códigos, datos en cadena.',
   sequence: 'Corteza prefrontal: detectar patrones — tendencias, errores recurrentes, reglas ocultas.',
+  reaction: 'Velocidad motora: tiempo de reacción en deporte, conducción, decisiones bajo presión.',
+  anagram: 'Flexibilidad léxica: encontrar la palabra correcta cuando el contexto está mezclado.',
+  oddout: 'Categorización rápida: detectar el dato que no encaja en un reporte o lista.',
 }
 
 export const LAB_EXERCISE_IDS = [
-  'nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic',
-  'math', 'memory', 'simon', 'sequence',
+  'dualnback', 'nback', 'visnback', 'corsi', 'revspan', 'stroop', 'gonogo', 'flanker', 'switching',
+  'cpt', 'pasat', 'ant', 'trail', 'wisconsin', 'symbols', 'reaction', 'logic',
+  'math', 'anagram', 'oddout',
 ]
 
 export const LAB_EXERCISE_GROUPS = [
-  { id: 'protocols', label: 'Protocolos de laboratorio', ids: ['nback', 'corsi', 'stroop', 'gonogo', 'flanker', 'switching', 'symbols', 'logic'] },
-  { id: 'training', label: 'Entrenamiento cognitivo', ids: ['math', 'memory', 'simon', 'sequence'] },
+  {
+    id: 'wm',
+    label: 'Memoria de trabajo',
+    ids: ['dualnback', 'nback', 'visnback', 'corsi', 'revspan'],
+  },
+  {
+    id: 'executive',
+    label: 'Control ejecutivo',
+    ids: ['stroop', 'gonogo', 'flanker', 'switching', 'wisconsin', 'trail'],
+  },
+  {
+    id: 'attention',
+    label: 'Atención sostenida',
+    ids: ['cpt', 'pasat', 'ant'],
+  },
+  {
+    id: 'speed',
+    label: 'Velocidad y razonamiento',
+    ids: ['symbols', 'reaction', 'logic'],
+  },
+  {
+    id: 'casual',
+    label: 'Entrenamiento casual',
+    ids: ['math', 'anagram', 'oddout'],
+  },
 ]
 
 export function getLessonExercise(lessonId) {
@@ -953,7 +1027,7 @@ export function renderHomeNeuroCard() {
   return `<section class="m-neuro span-full">
     <div class="m-neuro-head">
       <p class="m-neuro-label">Neuro hoy</p>
-      <a href="#/gimnasia" class="m-neuro-more no-underline" onclick="brainState.brainView='school';setTimeout(render,0)">Escuela →</a>
+      <a href="#/gimnasia" class="m-neuro-more no-underline" onclick="event.preventDefault();goLearn('curriculum')">Escuela →</a>
     </div>
     <p class="m-neuro-punch">${punch}</p>
     <div class="m-neuro-actions">
@@ -1128,7 +1202,7 @@ export function markLessonComplete(id) {
   if (!done.includes(id)) {
     done.push(id)
     setItem('lessons_done', done)
-    import('./school.js').then(m => m.scheduleLessonReview(id)).catch(() => {})
+    import('/js/school.js').then(m => m.scheduleLessonReview(id)).catch(() => {})
   }
   return done
 }
@@ -1162,51 +1236,326 @@ export function renderLessonCard(lesson, opts = {}) {
   </article>`
 }
 
+function renderLessonSection(s, i, total, lessonId) {
+  const bullets = s.bullets?.length
+    ? `<ul class="lesson-bullets">${s.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`
+    : ''
+  const blocks = s.blocks || []
+  const pre = renderLessonBlocks(blocks.filter(b => LESSON_BLOCK_PRE.has(b.type)), `${lessonId}-s${i}-pre`)
+  const post = renderLessonBlocks(blocks.filter(b => LESSON_BLOCK_POST.has(b.type)), `${lessonId}-s${i}-post`)
+  const num = String(i + 1).padStart(2, '0')
+  return `<section class="academy-section lesson-section-card" id="lesson-sec-${i}" data-section="${i}">
+    <span class="lesson-section-watermark" aria-hidden="true">${num}</span>
+    <div class="lesson-section-inner">
+      <div class="lesson-section-head">
+        <span class="academy-section-num">${num} <span class="lesson-section-of">/ ${String(total).padStart(2, '0')}</span></span>
+        <h2 class="academy-section-title">${s.h}</h2>
+      </div>
+      ${pre}
+      <p class="academy-section-text">${s.p}</p>
+      ${bullets}
+      ${post}
+    </div>
+  </section>`
+}
+
+function lessonSectionTop(vp, el) {
+  return el.getBoundingClientRect().top - vp.getBoundingClientRect().top + vp.scrollTop
+}
+
+function lessonReducedMotion() {
+  return document.documentElement.classList.contains('reduce-motion')
+}
+
+function teardownLessonFX(vp) {
+  if (vp._lessonRaf) cancelAnimationFrame(vp._lessonRaf)
+  vp._lessonObserver?.disconnect()
+  vp._lessonRevealObs?.disconnect()
+  vp._lessonBlockObs?.disconnect()
+  vp._lessonStatObs?.disconnect()
+}
+
+function initLessonParticles(vp, hero) {
+  const canvas = hero?.querySelector('.lesson-fx-canvas')
+  if (!canvas || lessonReducedMotion()) return
+
+  const accent = getComputedStyle(hero).getPropertyValue('--lesson-accent').trim() || '#d4a012'
+  const ctx = canvas.getContext('2d')
+  const pts = []
+  const count = 42
+
+  const resize = () => {
+    canvas.width = hero.offsetWidth
+    canvas.height = hero.offsetHeight
+    if (!pts.length) {
+      for (let i = 0; i < count; i++) {
+        pts.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          r: 1 + Math.random() * 1.8,
+          pulse: Math.random() * Math.PI * 2,
+        })
+      }
+    }
+  }
+  resize()
+
+  const draw = () => {
+    const w = canvas.width
+    const h = canvas.height
+    ctx.clearRect(0, 0, w, h)
+
+    for (const p of pts) {
+      p.x += p.vx
+      p.y += p.vy
+      p.pulse += 0.02
+      if (p.x < 0 || p.x > w) p.vx *= -1
+      if (p.y < 0 || p.y > h) p.vy *= -1
+    }
+
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x
+        const dy = pts[i].y - pts[j].y
+        const d = Math.hypot(dx, dy)
+        if (d < 110) {
+          ctx.beginPath()
+          ctx.strokeStyle = `rgba(212, 160, 18, ${(1 - d / 110) * 0.14})`
+          ctx.lineWidth = 0.6
+          ctx.moveTo(pts[i].x, pts[i].y)
+          ctx.lineTo(pts[j].x, pts[j].y)
+          ctx.stroke()
+        }
+      }
+    }
+
+    for (const p of pts) {
+      const glow = 0.55 + Math.sin(p.pulse) * 0.25
+      ctx.beginPath()
+      ctx.fillStyle = accent.includes('rgb') ? accent : `rgba(212, 160, 18, ${glow})`
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.shadowColor = accent
+      ctx.shadowBlur = 8
+    }
+    ctx.shadowBlur = 0
+
+    const scrollPast = vp.scrollTop > hero.offsetHeight * 0.85
+    if (!scrollPast) vp._lessonRaf = requestAnimationFrame(draw)
+  }
+  vp._lessonRaf = requestAnimationFrame(draw)
+  window.addEventListener('resize', resize, { passive: true })
+}
+
+export function initLessonReaderScroll() {
+  const vp = document.querySelector('.lesson-reader-viewport')
+  const hero = document.querySelector('.lesson-reader-hero')
+  const heroGlow = hero?.querySelector('.lesson-reader-hero-glow')
+  const heroMesh = hero?.querySelector('.lesson-reader-hero-mesh')
+  const fill = document.querySelector('.lesson-reader-progress-fill')
+  const topFill = document.querySelector('.lesson-reader-progress-top-fill')
+  const footer = document.querySelector('.lesson-reader-footer')
+  const sections = [...document.querySelectorAll('.lesson-section-card')]
+  const navItems = [...document.querySelectorAll('.lesson-sec-nav-item')]
+  const rail = document.querySelector('.lesson-rail-glass')
+  if (!vp) return
+
+  teardownLessonFX(vp)
+
+  requestAnimationFrame(() => {
+    vp.classList.add('is-mounted')
+    const title = hero?.querySelector('.lesson-hero-title')
+    if (title && !lessonReducedMotion()) {
+      setTimeout(() => forgeSparkAt(title, 14), 400)
+    }
+  })
+
+  const heroH = () => hero?.offsetHeight || 400
+  initLessonParticles(vp, hero)
+
+  navItems.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault()
+      haptic(8)
+      forgeSparkAt(link, 6)
+      const id = link.getAttribute('href')?.slice(1)
+      const el = id ? document.getElementById(id) : null
+      if (el) vp.scrollTo({ top: lessonSectionTop(vp, el) - 72, behavior: 'smooth' })
+    })
+  })
+
+  let footerShown = false
+  const update = () => {
+    const max = vp.scrollHeight - vp.clientHeight
+    const pct = max > 0 ? (vp.scrollTop / max) * 100 : 0
+    if (fill) fill.style.width = `${pct}%`
+    if (topFill) topFill.style.width = `${pct}%`
+    vp.dataset.scroll = vp.scrollTop > 80 ? '1' : '0'
+
+    const parallax = Math.min(vp.scrollTop / heroH(), 1)
+    if (heroGlow) heroGlow.style.transform = `translateY(${vp.scrollTop * 0.28}px) scale(${1 + parallax * 0.08})`
+    if (heroMesh) heroMesh.style.transform = `translateY(${vp.scrollTop * 0.12}px)`
+
+    let active = 0
+    const marker = vp.scrollTop + vp.clientHeight * 0.38
+    sections.forEach((sec, i) => {
+      if (lessonSectionTop(vp, sec) <= marker) active = i
+      sec.classList.toggle('is-active', i === active)
+    })
+    navItems.forEach((item, i) => item.classList.toggle('is-current', i === active))
+
+    if (footer) {
+      const nearEnd = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 140
+      footer.classList.toggle('is-visible', nearEnd)
+      if (nearEnd && !footerShown) {
+        footerShown = true
+        const cta = footer.querySelector('.lesson-footer-cta')
+        if (cta) forgeSparkAt(cta, 10)
+      }
+    }
+  }
+
+  vp.removeEventListener('scroll', vp._lessonScroll)
+  vp._lessonScroll = update
+  vp.addEventListener('scroll', update, { passive: true })
+
+  if (!lessonReducedMotion()) {
+    vp._lessonRevealObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('is-revealed')
+      })
+    }, { root: vp, threshold: 0.12, rootMargin: '0px 0px -8% 0px' })
+
+    sections.forEach((sec, i) => {
+      sec.style.setProperty('--reveal-delay', `${i * 0.08}s`)
+      vp._lessonRevealObs.observe(sec)
+    })
+    if (rail) vp._lessonRevealObs.observe(rail)
+    const reflect = document.querySelector('.lesson-reflect-panel')
+    if (reflect) vp._lessonRevealObs.observe(reflect)
+  } else {
+    sections.forEach(sec => sec.classList.add('is-revealed', 'is-active'))
+    rail?.classList.add('is-revealed')
+  }
+
+  bindLessonInteractions(vp)
+  initLessonEngagement(vp, vp.dataset.lessonId || '')
+  update()
+}
+
+export { getLessonBonusXp }
+
 export function renderLessonFull(lesson) {
   const L = enrichLesson(lesson)
   const cat = LESSON_CATEGORIES[L.category] || LESSON_CATEGORIES.systems
   const done = getCompletedLessons().includes(L.id)
+  const sectionCount = L.sections?.length || 1
   const exId = L.relatedExercise
-  const exBtn = exId
-    ? `<button type="button" onclick="closeLesson();brainState.brainView='lab';startBrain('${exId}')" class="btn-secondary w-full mt-3">🔬 Practicar en laboratorio →</button>`
+  const backLabel = 'Aprender'
+  const keyTerms = L.keyTerms?.length
+    ? `<dl class="lesson-keyterms">
+        <p class="lesson-keyterms-title">Conceptos clave</p>
+        ${L.keyTerms.map(k => `<div class="lesson-keyterm"><dt>${k.term}</dt><dd>${k.def}</dd></div>`).join('')}
+      </dl>`
     : ''
-  return `<div class="academy-lesson-full animate-fade-in">
-    <button type="button" onclick="closeLesson()" class="btn-ghost mb-4">← Volver a ${typeof brainState !== 'undefined' && brainState.brainView === 'school' ? 'Escuela' : 'Catálogo'}</button>
-    <header class="academy-lesson-header">
-      <span class="academy-lesson-cat" style="--cat-color:${cat.color}">${cat.icon} ${cat.label}</span>
-      <h1 class="academy-lesson-full-title">${L.title} ${intensityBadge(L.intensity)}</h1>
-      <p class="academy-lesson-full-hook">${L.hook}</p>
-      ${L.quote ? `<blockquote class="academy-quote">${L.quote}</blockquote>` : ''}
-      ${L.region ? `<p class="text-sm text-muted mt-2">📍 ${L.region}</p>` : ''}
-      <span class="academy-lesson-time">${L.readMin} min de lectura</span>
+  const regionTags = L.region
+    ? L.region.split('·').map(t => t.trim()).filter(Boolean)
+        .map(t => `<span class="lesson-tag">${t}</span>`).join('')
+    : ''
+  const railCards = [
+    keyTerms,
+    L.caseStudy ? `<aside class="academy-case lesson-rail-card"><p class="academy-case-label">Caso clínico</p><p class="academy-case-text">${L.caseStudy}</p></aside>` : '',
+    L.myth ? `<aside class="academy-myth lesson-rail-card"><p class="academy-myth-label">Corrección</p><p class="academy-myth-text">${L.myth}</p></aside>` : '',
+    L.deepCut ? `<aside class="academy-deep lesson-rail-card"><p class="academy-deep-label">Profundidad</p><p class="academy-deep-text">${L.deepCut}</p></aside>` : '',
+    `<aside class="academy-takeaway lesson-rail-card lesson-rail-card--accent"><p class="academy-takeaway-label">Síntesis</p><p class="academy-takeaway-text">${L.takeaway}</p></aside>`,
+    `<aside class="academy-apply lesson-rail-card"><p class="academy-apply-label">Práctica</p><p class="academy-apply-text">${L.apply}</p></aside>`,
+  ].filter(Boolean).join('')
+  const sectionNav = (L.sections || []).map((s, i) =>
+    `<a href="#lesson-sec-${i}" class="lesson-sec-nav-item" data-sec="${i}">${String(i + 1).padStart(2, '0')}</a>`
+  ).join('')
+
+  return `<div class="lesson-reader-viewport animate-fade-in" data-lesson-id="${L.id}">
+    ${renderLessonFxLayers()}
+    <div class="lesson-reader-progress-top" aria-hidden="true"><div class="lesson-reader-progress-top-fill"></div></div>
+
+    <header class="lesson-reader-chrome">
+      <button type="button" onclick="closeLesson()" class="lesson-reader-back btn-ghost">← ${backLabel}</button>
+      <div class="lesson-reader-chrome-title" aria-hidden="true">${L.title}</div>
+      <div class="lesson-reader-progress" aria-hidden="true"><div class="lesson-reader-progress-fill"></div></div>
+      <nav class="lesson-sec-nav" aria-label="Secciones">${sectionNav}</nav>
+      ${renderLessonEngagementHud()}
     </header>
-    ${L.caseStudy ? `<aside class="academy-case card-static"><p class="academy-case-label">🧪 Caso clínico</p><p class="academy-case-text">${L.caseStudy}</p></aside>` : ''}
-    <div class="academy-lesson-body">
-      ${L.sections.map(s => `
-        <section class="academy-section">
-          <h2 class="academy-section-title">${s.h}</h2>
-          <p class="academy-section-text">${s.p}</p>
-        </section>`).join('')}
+
+    <div class="lesson-reader-hero" style="--lesson-accent:${cat.color}">
+      <canvas class="lesson-fx-canvas" aria-hidden="true"></canvas>
+      <div class="lesson-fx-orbs" aria-hidden="true">
+        <span class="lesson-orb lesson-orb--1"></span>
+        <span class="lesson-orb lesson-orb--2"></span>
+        <span class="lesson-orb lesson-orb--3"></span>
+      </div>
+      <svg class="lesson-fx-neural" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <path class="lesson-neural-line" d="M40,200 Q200,80 400,200 T760,200"/>
+        <path class="lesson-neural-line lesson-neural-line--b" d="M0,280 Q250,120 500,260 T800,180"/>
+        <path class="lesson-neural-line lesson-neural-line--c" d="M80,120 Q300,320 520,140 T780,300"/>
+      </svg>
+      <div class="lesson-reader-hero-mesh" aria-hidden="true"></div>
+      <div class="lesson-reader-hero-glow" aria-hidden="true"></div>
+      <div class="lesson-reader-hero-inner lesson-hero-stagger">
+        <div class="lesson-hero-top">
+          <span class="academy-lesson-cat lesson-hero-cat" style="--cat-color:${cat.color}">${cat.icon} ${cat.label}</span>
+          <div class="lesson-hero-stats">
+            <span class="lesson-stat-pill">${L.readMin} min</span>
+            <span class="lesson-stat-pill">${sectionCount} secciones</span>
+            ${intensityBadge(L.intensity)}
+          </div>
+        </div>
+        <h1 class="academy-lesson-full-title lesson-hero-title">${L.title}</h1>
+        <p class="academy-lesson-full-hook lesson-hero-hook">${L.hook}</p>
+        ${regionTags ? `<div class="lesson-hero-tags">${regionTags}</div>` : ''}
+        ${L.lead ? `<p class="lesson-hero-lead">${L.lead}</p>` : ''}
+        ${L.quote ? `<blockquote class="academy-quote lesson-hero-quote">${L.quote}</blockquote>` : ''}
+      </div>
+      <div class="lesson-hero-fade" aria-hidden="true"></div>
     </div>
-    ${L.myth ? `<aside class="academy-myth card-static"><p class="academy-myth-label">🚫 Mito vs realidad</p><p class="academy-myth-text">${L.myth}</p></aside>` : ''}
-    ${L.deepCut ? `<aside class="academy-deep card-static"><p class="academy-deep-label">🔪 Deep cut</p><p class="academy-deep-text">${L.deepCut}</p></aside>` : ''}
-    <aside class="academy-takeaway card-static">
-      <p class="academy-takeaway-label">💎 En una frase</p>
-      <p class="academy-takeaway-text">${L.takeaway}</p>
-    </aside>
-    <aside class="academy-apply card-static">
-      <p class="academy-apply-label">⚡ Aplica hoy</p>
-      <p class="academy-apply-text">${L.apply}</p>
-    </aside>
-    ${L.cite ? `<p class="academy-cite">📚 ${L.cite}</p>` : ''}
-    ${exBtn}
-    <div class="academy-reflect">
-      <p class="academy-reflect-label">Reflexión</p>
-      <p class="academy-reflect-prompt">"${L.reflect}"</p>
-      <textarea id="lesson-reflect-text" class="input-field min-h-20 resize-none mt-2" placeholder="Opcional: escribe tu reflexión…"></textarea>
+
+    <div class="lesson-reader-body">
+      <div class="lesson-reader-grid">
+        <main class="lesson-reader-main academy-lesson-full lesson-reader">
+          <div class="academy-lesson-body lesson-sections-flow">
+            ${(L.sections || []).map((s, i) => renderLessonSection(s, i, sectionCount, L.id)).join('')}
+          </div>
+          ${L.cite ? `<p class="academy-cite"><span class="academy-cite-label">Referencias</span>${L.cite}</p>` : ''}
+          ${renderLessonMasteryRecap()}
+          <div class="academy-reflect lesson-reflect-panel">
+            <p class="academy-reflect-label">Reflexión</p>
+            <p class="academy-reflect-prompt">${L.reflect}</p>
+            <textarea id="lesson-reflect-text" class="input-field min-h-28 resize-y w-full" placeholder="Opcional: escribe tu reflexión antes del quiz…"></textarea>
+          </div>
+          <div class="lesson-reader-actions">
+            ${exId ? `<button type="button" onclick="closeLesson();goTrain('lab');startBrain('${exId}')" class="btn-secondary w-full">Practicar en laboratorio →</button>` : ''}
+            <p class="lesson-complete-hint text-xs text-muted text-center mb-2">Interactúa con la lección para subir dominio</p>
+            <button type="button" onclick="completeLesson('${L.id}')" class="btn-primary w-full lesson-complete-btn lesson-btn-glow">
+              ${done ? 'Continuar al quiz' : 'Completar lectura → quiz (+30 XP)'}
+            </button>
+          </div>
+        </main>
+        <aside class="lesson-reader-rail" aria-label="Resumen y conceptos">
+          <div class="lesson-rail-sticky">
+            <div class="lesson-rail-glass">${railCards}</div>
+          </div>
+        </aside>
+      </div>
     </div>
-    <button type="button" onclick="completeLesson('${L.id}')" class="btn-primary w-full py-4 mt-4">
-      ${done ? 'Continuar → quiz y práctica' : 'Completar lección → quiz (+30 XP)'}
-    </button>
+
+    <footer class="lesson-reader-footer">
+      <div class="lesson-reader-footer-inner">
+        <span class="lesson-footer-hint lesson-complete-hint">+30 XP · dominio bonus disponible</span>
+        <button type="button" onclick="completeLesson('${L.id}')" class="btn-primary lesson-footer-cta">
+          ${done ? 'Continuar al quiz →' : 'Completar lectura →'}
+        </button>
+      </div>
+    </footer>
   </div>`
 }
