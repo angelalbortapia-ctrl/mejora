@@ -220,10 +220,10 @@ body.mejora-forge {
 
 /* ── Bottom nav ── */
 .bottom-nav {
-  background: rgba(10, 12, 16, 0.96) !important;
-  border-top: 1px solid var(--m-border) !important;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px);
+  background: var(--bg-app, #ffffff) !important;
+  border-top: 1px solid var(--border-color, #e1dfdd) !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
 }
 
 .bottom-nav-link {
@@ -1051,7 +1051,7 @@ body.mejora-forge .onboarding-shell {
 }
 
 body.mejora-forge .onboarding-overlay {
-  background: rgba(10, 12, 16, 0.92) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* ── Hábitos v3 (alineado con Inicio) ── */

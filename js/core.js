@@ -277,10 +277,14 @@ export function saveSettings(s) {
 /** Migración única — Notion Light: ignora darkMode legacy en localStorage */
 export function migrateNotionLight() {
   const s = getSettings()
-  if (!s.darkMode && !document.documentElement.classList.contains('dark')) return
+  const needsThemeReset = s.theme && s.theme !== 'default'
+  if (!s.darkMode && !needsThemeReset && !document.documentElement.classList.contains('dark')
+      && !document.documentElement.hasAttribute('data-theme')) return
   s.darkMode = false
+  if (needsThemeReset) s.theme = 'default'
   appStore.saveSettings(s)
   document.documentElement.classList.remove('dark')
+  document.documentElement.removeAttribute('data-theme')
 }
 
 const DEFAULT_HABITS = [

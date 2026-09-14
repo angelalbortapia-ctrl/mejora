@@ -7,20 +7,27 @@
   <meta name="description" content="Mejora — tu campaña de hábitos, gimnasia cerebral y calma." />
   <script>
     try {
+      document.documentElement.classList.remove('dark')
+      document.documentElement.removeAttribute('data-theme')
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
-      if (s && s.reducedMotion) document.documentElement.classList.add('reduce-motion')
+      if (s) {
+        if (s.darkMode) s.darkMode = false
+        if (s.theme && s.theme !== 'default') s.theme = 'default'
+        if (s.reducedMotion) document.documentElement.classList.add('reduce-motion')
+        localStorage.setItem('mejora_settings', JSON.stringify(s))
+      }
     } catch (_) {}
   </script>
   <title>Mejora — Disciplina y rendimiento</title>
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/utilities.css?v=188" />
-  <link rel="stylesheet" href="css/design-system.css?v=188" />
-  <link rel="stylesheet" href="css/forge.css?v=188" />
-  <link rel="stylesheet" href="css/school.css?v=188" />
-  <link rel="stylesheet" href="css/harf-linear.css?v=188" />
-  <link rel="stylesheet" href="css/harf-interactive.css?v=188" />
+  <link rel="stylesheet" href="css/utilities.css?v=189" />
+  <link rel="stylesheet" href="css/design-system.css?v=189" />
+  <link rel="stylesheet" href="css/forge.css?v=189" />
+  <link rel="stylesheet" href="css/school.css?v=189" />
+  <link rel="stylesheet" href="css/harf-linear.css?v=189" />
+  <link rel="stylesheet" href="css/harf-interactive.css?v=189" />
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -135,7 +142,7 @@
       document.body.appendChild(box)
     })
   </script>
-    <script type="importmap" src="/js/import-map.json?v=188"></script>
-  <script type="module" src="/js/app.js?v=188"></script>
+    <script type="importmap" src="/js/import-map.json?v=189"></script>
+  <script type="module" src="/js/app.js?v=189"></script>
 </body>
 </html>

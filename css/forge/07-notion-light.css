@@ -1,6 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   FORGE — Notion Light UI (v21.5-notion-light-mode)
-   Sistema de diseño claro minimalista · superficies y hover
+   FORGE — Notion Light UI (v21.5) — CAPA FINAL (máxima prioridad)
    ═══════════════════════════════════════════════════════════ */
 
 :root {
@@ -17,6 +16,22 @@
     box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
     background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --bg: var(--bg-app);
+  --text: var(--text-main);
+  --text-muted: var(--text-muted);
+  --border: var(--border-color);
+  --m-bg: var(--bg-app);
+  --m-text: var(--text-main);
+  --m-muted: var(--text-muted);
+  --m-surface: var(--bg-card);
+  --m-surface-2: var(--bg-card-hover);
+  --sidebar-bg: var(--bg-sidebar);
+}
+
+html,
+html[data-theme],
+html.dark {
+  color-scheme: light !important;
 }
 
 html,
@@ -25,32 +40,53 @@ body,
 body.mejora-forge,
 body.mejora-v3 {
   background-color: var(--bg-app) !important;
+  background-image: none !important;
   color: var(--text-main) !important;
-}
-
-.page-home,
-.page-home--v3,
-.page-home .m-home {
-  color: var(--text-main) !important;
-  background: transparent !important;
-}
-
-.page-home .text-main,
-.page-home .m-home-title {
-  color: var(--text-main) !important;
-}
-
-.page-home .text-muted,
-.page-home .m-home-lead,
-.page-home .m-home-date {
-  color: var(--text-muted) !important;
 }
 
 aside,
 .sidebar,
+.sidebar-nav,
+.app-banner,
+.app-main,
+#app-content,
+.app-content {
+  background-color: var(--bg-app) !important;
+  background-image: none !important;
+}
+
+.sidebar,
 .sidebar-nav {
   background-color: var(--bg-sidebar) !important;
   border-right: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-link {
+  color: var(--text-muted) !important;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: var(--bg-card-hover) !important;
+  color: var(--text-main) !important;
+  box-shadow: none !important;
+}
+
+.sidebar-stats {
+  background: var(--bg-card-hover) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.sidebar-stats-caption,
+.sidebar-stat {
+  color: var(--text-muted) !important;
+}
+
+.bottom-nav {
+  background: var(--bg-app) !important;
+  border-top: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
 }
 
 .card,
@@ -64,7 +100,8 @@ aside,
 .habit-card,
 .m-section,
 .m-now,
-.game-card {
+.game-card,
+.m-shortcut {
   background-color: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: 6px !important;
@@ -79,97 +116,89 @@ aside,
 .kanban-card:hover,
 .habit-card:hover,
 .ds-panel:hover,
-.game-card:hover {
+.game-card:hover,
+.m-shortcut:hover {
   transform: translateY(-1px) !important;
   background-color: var(--bg-card-hover) !important;
   box-shadow: var(--shadow-notion-hover) !important;
   border-color: #d3d1cb !important;
 }
 
-.app-banner {
-  background: var(--bg-app) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+.page-home,
+.page-home--v3,
+.page-home .m-home {
+  color: var(--text-main) !important;
+  background: transparent !important;
 }
 
-.app-main,
-#app-content,
-.app-content {
-  background: var(--bg-app) !important;
-}
-
-html { color-scheme: light; }
-
-html.dark {
-  color-scheme: light;
-}
-
-html.dark body,
-html.dark .app-main,
-html.dark #app-content,
-html.dark .app-content {
-  background-color: var(--bg-app) !important;
-  background-image: none !important;
+.page-home .text-main,
+.page-home .m-home-title,
+.m-home-title,
+.banner-title,
+.text-main {
   color: var(--text-main) !important;
 }
 
-/* theme-rpg legacy — forzar Notion si la clase persiste */
+.page-home .text-muted,
+.page-home .m-home-lead,
+.m-home-lead,
+.m-home-date,
+.banner-subtitle,
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.btn-primary {
+  background: #2383e2 !important;
+  border: 1px solid #1a73c7 !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-notion) !important;
+}
+
+.btn-secondary {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.onboarding-overlay {
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.xp-toast {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion-hover) !important;
+}
+
+/* theme-rpg legacy */
 body.theme-rpg {
   background: var(--bg-app) !important;
   color: var(--text-main) !important;
 }
 
-body.theme-rpg .sidebar {
+body.theme-rpg .sidebar,
+body.theme-rpg .app-banner,
+body.theme-rpg .bottom-nav {
   background: var(--bg-sidebar) !important;
-  border-right: 1px solid var(--border-color) !important;
   box-shadow: none !important;
 }
 
-body.theme-rpg .sidebar-link {
-  color: var(--text-muted) !important;
-}
-
-body.theme-rpg .sidebar-link:hover,
-body.theme-rpg .sidebar-link.active {
-  background: var(--bg-card-hover) !important;
-  color: var(--text-main) !important;
-  box-shadow: none !important;
-  border-color: var(--border-color) !important;
-}
-
-body.theme-rpg .sidebar-stats {
-  background: var(--bg-card-hover) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-body.theme-rpg .sidebar-stats-caption,
-body.theme-rpg .sidebar-stat {
-  color: var(--text-muted) !important;
-}
-
-body.theme-rpg .app-banner {
-  background: var(--bg-app) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-  box-shadow: none !important;
-}
-
-body.theme-rpg .banner-title,
-body.theme-rpg .logo-text {
-  color: var(--text-main) !important;
-  -webkit-text-fill-color: var(--text-main) !important;
-  text-shadow: none !important;
-}
-
+body.theme-rpg .sidebar-link,
 body.theme-rpg .banner-subtitle,
 body.theme-rpg .banner-crumb {
   color: var(--text-muted) !important;
 }
 
+body.theme-rpg .banner-title,
+body.theme-rpg .logo-text,
+body.theme-rpg .m-home-title {
+  color: var(--text-main) !important;
+  text-shadow: none !important;
+}
+
 .reduce-motion .card,
 .reduce-motion .htb-card,
-.reduce-motion .module-item,
-.reduce-motion .kanban-card,
 .reduce-motion .habit-card,
 .reduce-motion .ds-panel {
   transition: none !important;
@@ -179,8 +208,6 @@ body.theme-rpg .banner-crumb {
 @media (prefers-reduced-motion: reduce) {
   .card,
   .htb-card,
-  .module-item,
-  .kanban-card,
   .habit-card,
   .ds-panel {
     transition: none !important;

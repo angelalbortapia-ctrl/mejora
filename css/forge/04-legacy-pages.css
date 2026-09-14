@@ -83,16 +83,12 @@ html[data-theme="ocean"] {
   --gradient-hero: linear-gradient(135deg, #00f5d4, #00e8ff, #0096c7);
 }
 html[data-theme="sunset"] {
-  --bg: #120a08; --text: #ffe8e0; --text-muted: #c9a090;
-  --primary: #ff6b35; --neon: #ff8c42; --btn-text: #1a0800;
-  --border: rgba(255, 107, 53, 0.2); --primary-glow: rgba(255, 107, 53, 0.4);
-  --gradient-hero: linear-gradient(135deg, #ff6b35, #ff8c42, #ffb347);
-  --gradient-card: linear-gradient(160deg, rgba(30, 14, 10, 0.9), rgba(18, 8, 6, 0.95));
+  --primary: #e16259; --neon: #e16259;
+  --gradient-hero: var(--bg-app, #ffffff);
 }
 html[data-theme="midnight"] {
-  --bg: #050510; --primary: #a78bfa; --neon: #c4b5fd;
-  --gradient-hero: linear-gradient(135deg, #7c3aed, #a78bfa, #c4b5fd);
-  --primary-glow: rgba(167, 139, 250, 0.4); --btn-text: #0f0520;
+  --primary: #2383e2; --neon: #2383e2;
+  --gradient-hero: var(--bg-app, #ffffff);
 }
 html[data-theme="forest"] {
   --primary: #00f5d4; --neon: #2dd4bf;
@@ -105,12 +101,10 @@ body {
   font-family: var(--m-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 98, 58, 0.06), transparent 55%),
-    linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 100%);
-  color: var(--text);
-  transition: background 0.4s, color 0.4s;
+  background-color: var(--bg-app, #ffffff);
+  background-image: none;
+  color: var(--text-main, #37352f);
+  transition: background 0.2s, color 0.2s;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;

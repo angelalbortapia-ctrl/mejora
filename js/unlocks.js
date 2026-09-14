@@ -50,17 +50,7 @@ export function markUnlockSeen(id) {
   }
 }
 
-export function applyTheme(themeId) {
-  if (document.body.classList.contains('theme-rpg')) {
-    document.documentElement.removeAttribute('data-theme')
-    return 'default'
-  }
-  const id = themeId || 'default'
-  if (id !== 'default' && !isUnlocked(id)) {
-    document.documentElement.removeAttribute('data-theme')
-    return 'default'
-  }
-  if (id === 'default') document.documentElement.removeAttribute('data-theme')
-  else document.documentElement.setAttribute('data-theme', id.replace('theme_', ''))
-  return id
+export function applyTheme(_themeId) {
+  document.documentElement.removeAttribute('data-theme')
+  return 'default'
 }

@@ -17,7 +17,6 @@
 @import url('forge/04-legacy-pages.css');
 @import url('forge/05-premium-ui.css');
 @import url('forge/06-linear-ui.css');
-@import url('forge/07-notion-light.css');
 @import url('mejora-redesign.css');
 @import url('forge-pages.css');
 @import url('forge-meditation.css');
@@ -28,3 +27,4 @@
 @import url('rpg-theme.css');
 @import url('rpg-type.css');
 @import url('rpg-fx.css');
+@import url('forge/07-notion-light.css');
