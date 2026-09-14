@@ -23,12 +23,15 @@ SOLO HAZ ESTO:
 
 ───────────────────────────────────────────────
 
+⚠️  NO uses "mejora-main.zip" de GitHub (rama main, v81, OSCURO).
+
+  Usa "mejora-LISTO.zip" (v194, tema claro).
+
 Si al hacer doble clic dice que el archivo no existe
 o no abre nada:
 
-  → Tu carpeta está vieja. Necesitas la carpeta nueva
-    del proyecto (pídela a quien te la compartió o
-    descárgala de GitHub).
+  → Descomprime mejora-LISTO.zip en Descargas y entra
+    en esa carpeta (no en mejora-main).
 
 ───────────────────────────────────────────────
 
