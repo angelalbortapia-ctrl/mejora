@@ -499,6 +499,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:' && !isLocalDev
     if (document.visibilityState === 'visible') checkForNewAssetVersion()
   })
   checkForNewAssetVersion()
+} else if (isLocalDev && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) =>
+    Promise.all(regs.map((reg) => reg.unregister()))
+  ).catch(() => {})
 }
 
 function showWrongServerBanner() {

@@ -12,6 +12,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FISH_API = 'https://api.fish.audio'
 
+RESET_CACHE_HTML = """<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Mejora — reset</title></head>
+<body><p id="s">Limpiando caché…</p><script>
+(async()=>{try{
+if('caches'in window){const k=await caches.keys();await Promise.all(k.map(c=>caches.delete(c)))}
+if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();
+await Promise.all(r.map(x=>x.unregister()))}
+localStorage.removeItem('mejora_asset_v');
+location.replace('/?reset=1&v=194#/');
+}catch(e){document.getElementById('s').textContent=e.message}})();
+</script></body></html>"""
+
 
 def load_fish_key():
     local = ROOT / 'js' / 'fish-config.local.js'
@@ -47,6 +59,16 @@ class MejoraHandler(http.server.SimpleHTTPRequestHandler):
         self.send_error(404)
 
     def do_GET(self):
+        path = self.path.split('?', 1)[0]
+        if path in ('/reset-cache.html', '/reset-cache'):
+            payload = RESET_CACHE_HTML.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(payload)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         if self.path.startswith('/api/fish/model'):
             self._proxy_fish_models()
             return

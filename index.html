@@ -38,14 +38,23 @@
         if (s.reducedMotion) root.classList.add('reduce-motion')
         localStorage.setItem('mejora_settings', JSON.stringify(s))
       }
-      localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
-      if ('caches' in window) {
-        caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-      }
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then((regs) =>
-          Promise.all(regs.map((reg) => reg.unregister()))
-        )
+      const forceReset = /(?:^|[?&])reset=1(?:&|$)/.test(location.search)
+        || location.pathname.includes('reset-cache')
+      if (forceReset || localStorage.getItem('mejora_asset_v') !== String(MEJORA_ASSET_V)) {
+        localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
+        if ('caches' in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) =>
+            Promise.all(regs.map((reg) => reg.unregister()))
+          )
+        }
+        if (forceReset && location.search.includes('reset=1')) {
+          const clean = new URL(location.href)
+          clean.searchParams.delete('reset')
+          history.replaceState(null, '', clean.pathname + clean.search + clean.hash)
+        }
       }
     } catch (_) {}
   </script>
