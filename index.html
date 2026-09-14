@@ -38,13 +38,11 @@
         if (s.reducedMotion) root.classList.add('reduce-motion')
         localStorage.setItem('mejora_settings', JSON.stringify(s))
       }
-      const prevV = localStorage.getItem('mejora_asset_v')
-      const purge = !prevV || prevV !== String(MEJORA_ASSET_V)
       localStorage.setItem('mejora_asset_v', String(MEJORA_ASSET_V))
-      if (purge && 'caches' in window) {
+      if ('caches' in window) {
         caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
       }
-      if (purge && 'serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then((regs) =>
           Promise.all(regs.map((reg) => reg.unregister()))
         )
