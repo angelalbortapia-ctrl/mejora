@@ -91,7 +91,7 @@ body.mejora-forge .m-adaptive-mission__cta:hover,
 body.mejora-v3 .m-adaptive-mission__cta:hover {
   border-color: var(--m-border-strong) !important;
   background: var(--m-surface-2) !important;
-  box-shadow: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.32) !important;
+  box-shadow: var(--shadow-notion-hover, 0 4px 12px rgba(0, 0, 0, 0.08)) !important;
   transform: none !important;
 }
 

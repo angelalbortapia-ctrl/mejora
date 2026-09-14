@@ -4228,13 +4228,15 @@ html.reduce-motion .brain-ant-cue {
   max-width: none;
   margin: 0;
   padding: 0;
-  --home-surface: #141312;
-  --home-glass: rgba(22, 21, 19, 0.88);
-  --home-glass-border: rgba(255, 255, 255, 0.06);
-  --home-text: #ece8e3;
-  --home-muted: #8a8480;
-  --home-neon: #c4a484;
-  --home-cyan: #8aa3b8;
+  --home-surface: var(--bg-app, #ffffff);
+  --home-glass: var(--bg-card, #ffffff);
+  --home-glass-border: var(--border-color, #e1dfdd);
+  --home-text: var(--text-main, #37352f);
+  --home-muted: var(--text-muted, #9b9a97);
+  --home-neon: var(--m-accent, #2383e2);
+  --home-cyan: var(--m-success, #0f7b6c);
+  color: var(--text-main, #37352f);
+  background: transparent;
 }
 
 .page-home .home-dashboard {
@@ -4253,7 +4255,7 @@ html.reduce-motion .brain-ant-cue {
   gap: 0.65rem;
   margin-top: 0.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color, #e1dfdd);
   font-family: var(--m-ui);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -4267,12 +4269,13 @@ html.reduce-motion .brain-ant-cue {
   background: var(--home-glass);
   border: 1px solid var(--home-glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.2s;
+  box-shadow: var(--shadow-notion, 0 1px 3px rgba(0, 0, 0, 0.04));
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .page-home .home-glass:hover {
-  border-color: rgba(255, 255, 255, 0.09);
+  border-color: #d3d1cb;
+  box-shadow: var(--shadow-notion-hover, 0 4px 12px rgba(0, 0, 0, 0.08));
 }
 
 .page-home .home-panel {
@@ -4299,9 +4302,9 @@ html.reduce-motion .brain-ant-cue {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--home-glass-border);
   background: var(--home-glass);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-notion, 0 1px 3px rgba(0, 0, 0, 0.04));
 }
 
 .home-mega-grid {

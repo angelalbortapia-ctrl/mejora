@@ -19,11 +19,31 @@
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html,
+html body,
 body,
 body.mejora-forge,
 body.mejora-v3 {
   background-color: var(--bg-app) !important;
   color: var(--text-main) !important;
+}
+
+.page-home,
+.page-home--v3,
+.page-home .m-home {
+  color: var(--text-main) !important;
+  background: transparent !important;
+}
+
+.page-home .text-main,
+.page-home .m-home-title {
+  color: var(--text-main) !important;
+}
+
+.page-home .text-muted,
+.page-home .m-home-lead,
+.page-home .m-home-date {
+  color: var(--text-muted) !important;
 }
 
 aside,

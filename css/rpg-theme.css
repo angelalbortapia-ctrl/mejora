@@ -365,7 +365,7 @@ body.theme-rpg .page-brain-neural .brain-next-step__num {
 /* Calma — santuario de mana */
 body.theme-rpg.calma-mode .calma-viewport,
 body.theme-rpg .page-meditation .calma-viewport {
-  background: linear-gradient(180deg, var(--rpg-night-light) 0%, var(--rpg-night) 60%, #080e1a 100%);
+  background: var(--bg-app, #ffffff);
 }
 
 body.theme-rpg.calma-mode .calma-topbar {

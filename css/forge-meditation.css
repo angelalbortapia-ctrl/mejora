@@ -1983,7 +1983,7 @@ body.mejora-forge .calma-viewport .school-panel {
 }
 
 .calma-viewport--session {
-  background: radial-gradient(ellipse 120% 80% at 50% 30%, color-mix(in srgb, var(--calma-accent, #6ee7b7) 6%, #080809), #080809);
+  background: radial-gradient(ellipse 120% 80% at 50% 30%, color-mix(in srgb, var(--calma-accent, #6ee7b7) 6%, #ffffff), #ffffff);
 }
 
 .calma-viewport.is-mounted .calma-body,
