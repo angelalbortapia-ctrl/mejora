@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════
+  ¿Por qué hace falta un servidor?
+═══════════════════════════════════════════════
+
+Mejora NO es una app de la App Store todavía.
+Es una PWA que vive en tu carpeta y necesita un
+"mini-servidor" en tu Mac (puerto 5173) para:
+
+  • Cargar los archivos correctamente
+  • Que funcione la voz de Calma (proxy Fish)
+  • Evitar errores del navegador con archivos locales
+
+Es como encender un motor pequeño en tu Mac;
+el navegador es solo la pantalla.
+
+───────────────────────────────────────────────
+
+¿Tengo que dejar Terminal ABIERTA?
+
+  NO. Después de "ABRE-MEJORA.command":
+  • El servidor queda en SEGUNDO PLANO
+  • Puedes cerrar la ventana negra de Terminal
+  • Usa Mejora en Chrome/Safari con normalidad
+
+  Vuelve a abrir ABRE-MEJORA.command cuando
+  reinicies el Mac o si la página no carga.
+
+───────────────────────────────────────────────
+
+¿App de verdad sin Terminal?
+
+  En el futuro: Mejora.app instalable.
+  Por ahora: instala como PWA desde el navegador
+  (banner "Instalar Mejora") — pero el servidor
+  local sigue haciendo falta en desarrollo.
+
+═══════════════════════════════════════════════

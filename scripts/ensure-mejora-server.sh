@@ -34,6 +34,8 @@ kill_port() {
 
 start_server() {
   nohup "$PYTHON" "$SERVER" "$PORT" >>"$LOG" 2>&1 &
+  SERVER_PID=$!
+  disown "$SERVER_PID" 2>/dev/null || true
   for _ in $(seq 1 50); do
     port_up && return 0
     sleep 0.2
@@ -82,9 +84,18 @@ say "Abriendo el navegador…"
 echo "$URL"
 open "$URL" 2>/dev/null || xdg-open "$URL" 2>/dev/null || true
 
-alert "Mejora abierta en el navegador. Si la pantalla sigue oscura, en Safari/Chrome pulsa Cmd+Shift+R. Link: ${URL}"
+alert "Mejora está corriendo en segundo plano. Puedes cerrar Terminal. Para volver a abrir: doble clic en ABRE-MEJORA.command o usa ${URL}"
 
 echo ""
-echo "✓ Listo. Puedes cerrar esta ventana."
-echo "  (El servidor sigue en segundo plano. Para pararlo: cierra Terminal o reinicia el Mac.)"
-sleep 3
+echo "✓ Servidor en segundo plano (puerto ${PORT})."
+echo "  Puedes CERRAR esta ventana de Terminal — Mejora sigue en el navegador."
+echo "  Para apagar el servidor: reinicia el Mac o ejecuta:"
+echo "  lsof -ti:5173 | xargs kill"
+sleep 2
+# Cierra sola la ventana de Terminal (opcional, solo si se abrió desde .command)
+if [[ "${TERM_PROGRAM:-}" == "Apple_Terminal" ]]; then
+  osascript -e 'tell application "Terminal" to close (every window whose name contains "ABRE-MEJORA") saving no' 2>/dev/null \
+    || osascript -e 'tell application "Terminal" to close front window saving no' 2>/dev/null \
+    || true
+fi
+exit 0
