@@ -512,12 +512,13 @@ async function applyVoiceConfigDefaults() {
   const { hasAzureTts } = await import('/js/azure-tts.js')
   const { hasFishTts, probeFishProxy } = await import('/js/fish-audio-tts.js')
   const proxyOk = await probeFishProxy()
-  if (!proxyOk && (location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
-    showWrongServerBanner()
-  }
+  const onLocal = location.hostname === '127.0.0.1' || location.hostname === 'localhost'
+  if (!proxyOk && onLocal) showWrongServerBanner()
+  else document.getElementById('mejora-server-banner')?.remove()
   const s = getSettings()
-  if (s.medVoiceEngine === 'fish' && !hasFishTts()) {
-    s.medVoiceEngine = 'browser'
+  // No bajar a browser por fallo temporal del proxy — getActiveMedVoiceEngine ya hace fallback.
+  if (proxyOk && s.medVoiceEngine === 'browser' && hasFishTts()) {
+    s.medVoiceEngine = 'fish'
     saveSettings(s)
   }
   if (FISH_VOICE_ID && !s.fishVoiceId) {
@@ -550,6 +551,9 @@ applyVoiceConfigDefaults()
 window.addEventListener('mejora:gemini-ready', () => scheduleRender())
 window.addEventListener('mejora:azure-ready', () => applyVoiceConfigDefaults())
 window.addEventListener('mejora:fish-ready', () => applyVoiceConfigDefaults())
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') applyVoiceConfigDefaults()
+})
 
 migrateOnboardingFlag()
 initI18n()
