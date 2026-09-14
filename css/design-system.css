@@ -84,10 +84,10 @@
 }
 
 .ds-tab.is-active {
-  color: #e9d5ff;
-  background: rgba(139, 92, 246, 0.16);
-  border-color: rgba(139, 92, 246, 0.32);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+  color: var(--text);
+  background: var(--m-surface-2, rgba(255, 255, 255, 0.04));
+  border-color: var(--border-hover);
+  box-shadow: var(--m-linear-ring, 0 0 0 1px rgba(255, 255, 255, 0.06));
 }
 
 .ds-tab:active { transform: scale(0.98); }

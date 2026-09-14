@@ -3,7 +3,11 @@
 set -euo pipefail
 PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${PORT:-5173}"
-ASSET_V="${MEJORA_ASSET_V:-138}"
+VERSION_FILE="$PROJECT/js/version.js"
+if [[ -f "$VERSION_FILE" ]]; then
+  ASSET_V="$(grep -Eo 'ASSET_VERSION = [0-9]+' "$VERSION_FILE" | grep -Eo '[0-9]+' | head -1)"
+fi
+ASSET_V="${MEJORA_ASSET_V:-${ASSET_V:-180}}"
 URL="http://127.0.0.1:${PORT}/?v=${ASSET_V}"
 LOG="${TMPDIR:-/tmp}/mejora-server.log"
 PYTHON="${PYTHON:-/usr/bin/python3}"

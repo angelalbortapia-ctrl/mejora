@@ -486,12 +486,23 @@ function showWrongServerBanner() {
   if (document.getElementById('mejora-server-banner')) return
   const port = location.port || (location.protocol === 'https:' ? '443' : '80')
   const correctUrl = `http://127.0.0.1:5173/?v=${ASSET_VERSION}`
+  const onDevPort = port === '5173'
+  const hint = onDevPort
+    ? 'En :5173 hace falta <strong>mejora-dev-server.py</strong> (no <code>python -m http.server</code>). Cierra el servidor actual y vuelve a ejecutar <strong>start-server.command</strong>. Revisa <code>js/fish-config.local.js</code>.'
+    : `Abre <a href="${correctUrl}" style="color:#ffd4d4;text-decoration:underline">127.0.0.1:5173</a> o ejecuta <strong>start-server.command</strong> / <strong>Mejora.app</strong>.`
   const box = document.createElement('div')
   box.id = 'mejora-server-banner'
   box.setAttribute('role', 'alert')
   box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;padding:0.85rem 1rem;background:#3a1518;border-bottom:1px solid #c45c5c;color:#f5d6d6;font:500 0.92rem/1.45 system-ui,sans-serif;text-align:center'
-  box.innerHTML = `La voz de Calma no funciona en el puerto <strong>${port}</strong>. <a href="${correctUrl}" style="color:#ffd4d4;text-decoration:underline">Abrir en :5173</a> o ejecuta <strong>start-server.command</strong> / abre <strong>Mejora.app</strong>.`
+  box.innerHTML = `La voz de Calma no está disponible (puerto <strong>${port}</strong>). ${hint} <button type="button" id="mejora-server-retry" style="margin-left:0.5rem;padding:0.2rem 0.55rem;border:1px solid #c45c5c;border-radius:6px;background:transparent;color:#ffd4d4;cursor:pointer">Reintentar</button>`
   document.body.prepend(box)
+  document.getElementById('mejora-server-retry')?.addEventListener('click', async () => {
+    const { probeFishProxy } = await import('/js/fish-audio-tts.js')
+    if (await probeFishProxy()) {
+      box.remove()
+      applyVoiceConfigDefaults()
+    }
+  })
 }
 
 // Init

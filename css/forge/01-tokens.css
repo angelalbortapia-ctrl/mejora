@@ -1,45 +1,47 @@
-/* FORGE — tokens unificados (premium dark + RPG opcional)
-   Premium: zinc-950 #09090b · violeta #8b5cf6 · esmeralda #10b981
+/* FORGE — tokens unificados (Linear dark + RPG opcional)
+   Linear: #08090a · #8A8F98 muted · #5E6AD2 accent
    RPG (theme-rpg): paleta campaña — evitar hex sueltos fuera de --m-* / --rpg-* */
 
 :root {
-  /* Premium zinc-950 palette */
-  --m-bg: #09090b;
-  --m-bg-2: #0a0a0c;
-  --m-surface: rgba(24, 24, 27, 0.72);
-  --m-surface-2: rgba(39, 39, 42, 0.65);
-  --m-surface-3: #27272a;
-  --m-text: #fafafa;
-  --m-muted: #a1a1aa;
-  --m-border: rgba(255, 255, 255, 0.08);
-  --m-border-strong: rgba(255, 255, 255, 0.14);
-  --m-accent: #8b5cf6;
-  --m-accent-hover: #a78bfa;
-  --m-accent-soft: rgba(139, 92, 246, 0.12);
-  --m-accent-glow: rgba(139, 92, 246, 0.28);
+  /* Linear-inspired base palette */
+  --m-bg: #08090a;
+  --m-bg-2: #0a0b0c;
+  --m-surface: #121314;
+  --m-surface-2: #18181b;
+  --m-surface-3: #1f2023;
+  --m-text: #eeeff1;
+  --m-muted: #8a8f98;
+  --m-muted-2: #5c5f66;
+  --m-border: rgba(255, 255, 255, 0.06);
+  --m-border-strong: rgba(255, 255, 255, 0.1);
+  --m-accent: #5e6ad2;
+  --m-accent-hover: #6b77e0;
+  --m-accent-soft: rgba(94, 106, 210, 0.12);
+  --m-accent-glow: rgba(94, 106, 210, 0.18);
   --m-steel: #71717a;
   --m-danger: #f87171;
-  --m-success: #10b981;
-  --m-success-soft: rgba(16, 185, 129, 0.12);
-  --m-radius: 8px;
-  --m-radius-lg: 12px;
+  --m-success: #4da384;
+  --m-success-soft: rgba(77, 163, 132, 0.1);
+  --m-radius: 6px;
+  --m-radius-lg: 8px;
   --m-font: 'Inter', system-ui, -apple-system, sans-serif;
-  --m-display: 'Cinzel', 'Inter', system-ui, serif;
+  --m-display: 'Inter', system-ui, -apple-system, sans-serif;
   --m-ui: 'Inter', system-ui, -apple-system, sans-serif;
   --m-font-metric: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, monospace;
-  --m-type-body: 0.9375rem;
+  --m-type-body: 0.8125rem;
   --m-type-leading: 1.5;
-  --m-type-display-tracking: 0.02em;
-  --m-type-ui-tracking: -0.01em;
-  --m-type-label-tracking: 0.08em;
+  --m-type-display-tracking: -0.022em;
+  --m-type-ui-tracking: -0.011em;
+  --m-type-label-tracking: 0;
   --m-ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
-  --m-duration: 0.2s;
-  --m-glass-bg: rgba(24, 24, 27, 0.55);
-  --m-glass-border: rgba(255, 255, 255, 0.08);
-  --m-glass-blur: 12px;
-  --m-glass-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
-  --m-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, var(--m-glass-shadow);
-  --m-shadow-lg: 0 8px 40px -4px rgba(0, 0, 0, 0.65);
+  --m-duration: 0.15s;
+  --m-glass-bg: #121314;
+  --m-glass-border: rgba(255, 255, 255, 0.06);
+  --m-glass-blur: 0px;
+  --m-linear-ring: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --m-glass-shadow: var(--m-linear-ring), 0 2px 6px rgba(0, 0, 0, 0.28), 0 12px 32px rgba(0, 0, 0, 0.22);
+  --m-shadow: var(--m-glass-shadow);
+  --m-shadow-lg: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.32);
 
   /* RPG palette — cielo zafiro + oro cálido + jade */
   --rpg-night: #0c1424;
@@ -78,17 +80,17 @@
   --btn-text: #0a0c10;
   --secondary-bg: var(--m-surface-2);
   --input-bg: var(--m-surface-2);
-  --header-bg: rgba(9, 9, 11, 0.85);
-  --sidebar-bg: #09090b;
+  --header-bg: rgba(8, 9, 10, 0.92);
+  --sidebar-bg: #08090a;
   --radius: var(--m-radius);
   --radius-lg: var(--m-radius-lg);
-  --gradient-hero: linear-gradient(135deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.95) 50%, #09090b 100%);
-  --gradient-card: linear-gradient(165deg, rgba(39, 39, 42, 0.65) 0%, rgba(24, 24, 27, 0.8) 100%);
+  --gradient-hero: var(--m-surface);
+  --gradient-card: var(--m-surface);
   --shadow: var(--m-shadow);
   --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.06);
   --glass-bg: var(--m-glass-bg);
   --glass-border: var(--m-glass-border);
-  --glass-glow: rgba(139, 92, 246, 0.06);
+  --glass-glow: rgba(94, 106, 210, 0.04);
   --success: var(--m-success);
   --danger: var(--m-danger);
 }
@@ -155,16 +157,14 @@ body.mejora-forge {
   overflow-x: hidden;
 }
 
-body::before {
+body.mejora-forge::before,
+body.mejora-v3::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(139, 92, 246, 0.07), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(16, 185, 129, 0.04), transparent 45%),
-    radial-gradient(ellipse 40% 30% at 50% 0%, rgba(255, 255, 255, 0.02), transparent 40%);
+  background: none;
 }
 
 #app-content,

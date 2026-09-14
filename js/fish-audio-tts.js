@@ -29,23 +29,30 @@ const MODELS_URL = 'https://api.fish.audio/model'
 const TTS_PROXY = '/api/fish/tts'
 const MODELS_PROXY = '/api/fish/model'
 
+function isLocalDevHost() {
+  const h = window.location?.hostname || ''
+  return h === 'localhost' || h === '127.0.0.1'
+}
+
 function getCloudFishProxyBase() {
   return (getSettings().fishProxyUrl || '').trim().replace(/\/$/, '')
 }
 
 function useFishProxy() {
-  const h = window.location?.hostname || ''
-  if (h === 'localhost' || h === '127.0.0.1') return true
+  if (isLocalDevHost()) return true
   return Boolean(getCloudFishProxyBase())
 }
 
+/** En local siempre usa /api/fish del dev server; fishProxyUrl es solo para producción. */
 function fishTtsUrl() {
+  if (isLocalDevHost()) return TTS_PROXY
   const cloud = getCloudFishProxyBase()
   if (cloud) return `${cloud}/tts`
   return useFishProxy() ? TTS_PROXY : TTS_URL
 }
 
 function fishModelsUrl(query = '') {
+  if (isLocalDevHost()) return query ? `${MODELS_PROXY}?${query}` : MODELS_PROXY
   const cloud = getCloudFishProxyBase()
   const base = cloud ? `${cloud}/model` : (useFishProxy() ? MODELS_PROXY : MODELS_URL)
   return query ? `${base}?${query}` : base
@@ -165,11 +172,12 @@ export function getLastFishError() {
   return lastFishError
 }
 
-/** Comprueba si el proxy local de Fish está activo (start-server.command). */
+/** Comprueba si el proxy Fish está activo (local: start-server.command). */
 export async function probeFishProxy() {
   if (!useFishProxy()) return Boolean(getApiKey())
+  const url = isLocalDevHost() ? TTS_PROXY : fishTtsUrl()
   try {
-    const res = await fetch(fishTtsUrl(), { method: 'OPTIONS' })
+    const res = await fetch(url, { method: 'OPTIONS', cache: 'no-store' })
     const ok = res.status === 204 || res.status === 200
     fishProxyUnavailable = !ok
     return ok

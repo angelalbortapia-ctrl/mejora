@@ -11,7 +11,10 @@ APP="${BUILD_DIR}/${APP_NAME}.app"
 rm -rf "$BUILD_DIR"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp "$ROOT/scripts/macos-launch.sh" "$APP/Contents/MacOS/Mejora"
+cat > "$APP/Contents/MacOS/Mejora" <<EOF
+#!/bin/bash
+exec "$ROOT/scripts/ensure-mejora-server.sh"
+EOF
 chmod +x "$APP/Contents/MacOS/Mejora"
 
 cat > "$APP/Contents/Info.plist" <<EOF
