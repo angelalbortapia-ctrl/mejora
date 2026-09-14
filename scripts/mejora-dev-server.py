@@ -60,6 +60,14 @@ class MejoraHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?', 1)[0]
+        if path == '/health':
+            payload = json_bytes({'ok': True, 'service': 'mejora'})
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         if path in ('/reset-cache.html', '/reset-cache'):
             payload = RESET_CACHE_HTML.encode('utf-8')
             self.send_response(200)

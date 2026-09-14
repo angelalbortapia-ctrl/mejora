@@ -11,11 +11,14 @@ SOLO HAZ ESTO:
 
         ABRE-MEJORA.command
 
-  3. NO uses doble clic si Mac dice "desarrollador no
-     identificado". Lee el archivo: SI-MAC-BLOQUEA.txt
+  3. (Una sola vez) Clic derecho en instalar-servicio.command
+     → Abrir → Abrir. Así Mejora corre en segundo plano
+     como tu app Finanzas — sin Terminal abierta.
 
-     Resumen: CLIC DERECHO en ABRE-MEJORA.command → Abrir
-     → Abrir otra vez en el aviso.
+  4. Después usa abrir.command o ABRE-MEJORA.command
+     (solo abre el navegador).
+
+     Si Mac bloquea: SI-MAC-BLOQUEA.txt (clic derecho → Abrir).
 
   4. Se abrirá una ventana negra (Terminal) unos segundos
      y luego el navegador con Mejora.
