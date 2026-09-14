@@ -27,11 +27,12 @@ el navegador es solo la pantalla.
 
 ───────────────────────────────────────────────
 
-¿App de verdad sin Terminal?
+¿Como tu app Finanzas (sin Terminal)?
 
-  En el futuro: Mejora.app instalable.
-  Por ahora: instala como PWA desde el navegador
-  (banner "Instalar Mejora") — pero el servidor
-  local sigue haciendo falta en desarrollo.
+  SÍ — igual que Finanzas:
+  1. Una vez: instalar-servicio.command
+  2. Siempre: abrir.command (solo abre el navegador)
+
+  Finanzas ya tenía eso; Mejora no lo tenía hasta ahora.
 
 ═══════════════════════════════════════════════
