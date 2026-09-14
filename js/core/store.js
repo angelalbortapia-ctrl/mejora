@@ -61,6 +61,13 @@ const DEFAULT_SETTINGS = {
   locale: 'es',
 }
 
+let persistHook = null
+
+/** Registra callback post-persistencia (p.ej. cloud sync) sin import circular */
+export function setStorePersistHook(fn) {
+  persistHook = fn
+}
+
 export class Store {
   constructor(prefix = STORE_PREFIX) {
     this.prefix = prefix
@@ -84,9 +91,7 @@ export class Store {
   set(key, value) {
     localStorage.setItem(this._storageKey(key), JSON.stringify(value))
     this._emit(key, value)
-    if (typeof window !== 'undefined') {
-      import('/js/cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
-    }
+    try { persistHook?.(key, value) } catch { /* ignore */ }
     return value
   }
 

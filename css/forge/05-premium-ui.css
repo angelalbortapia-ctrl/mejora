@@ -6,7 +6,7 @@
 /* Reafirma tokens premium tras capa legacy (04-legacy-pages redefine :root) */
 body.mejora-forge,
 body.mejora-v3 {
-  --bg: #09090b;
+  --bg: var(--bg-app);
   --bg-elevated: rgba(24, 24, 27, 0.72);
   --bg-card: rgba(24, 24, 27, 0.55);
   --bg-surface: rgba(39, 39, 42, 0.65);

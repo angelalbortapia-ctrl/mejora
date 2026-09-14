@@ -79,6 +79,14 @@ describe('brain-clinical — OOP protocols', () => {
     assert.equal(p.id, 'stroop')
     assert.equal(p.clinical, true)
   })
+
+  it('FlankerProtocol extiende BaseProtocol', async () => {
+    const { BaseProtocol } = await import('../js/pages/brain-gym/base-protocol.js')
+    const { FlankerProtocol } = await import('../js/pages/brain-gym/protocols/flanker.js')
+    const p = new FlankerProtocol()
+    assert.ok(p instanceof BaseProtocol)
+    assert.equal(p.id, 'flanker')
+  })
 })
 
 describe('brain-clinical — briefing visto', () => {

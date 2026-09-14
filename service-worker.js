@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 182
+const ASSET_V = 183
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -45,6 +45,7 @@ const SHELL_CSS = [
   '/css/onboarding.css',
   '/css/school.css',
   '/css/forge-lessons.css',
+  '/css/harf-linear.css',
 ]
 
 const SHELL_HTML = ['/', '/index.html', '/privacy.html']

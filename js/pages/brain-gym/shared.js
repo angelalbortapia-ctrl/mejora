@@ -121,6 +121,7 @@ export function brainHud(current, total, label = '') {
 
 export function clearTrialDeadline() {
   if (trialDeadlineTimer) {
+    clearTimeout(trialDeadlineTimer)
     clearInterval(trialDeadlineTimer)
     trialDeadlineTimer = null
   }
@@ -133,18 +134,20 @@ export function startTrialDeadline(ms, onExpire) {
   if (!ms || ms <= 0) return
   brainState.trialDeadlineMs = ms
   brainState.trialTimeLeft = ms
-  const start = Date.now()
-  trialDeadlineTimer = setInterval(() => {
-    const left = ms - (Date.now() - start)
+  const start = performance.now()
+  const tick = () => {
+    const left = ms - (performance.now() - start)
     brainState.trialTimeLeft = left
     if (left <= 0) {
       clearTrialDeadline()
       onExpire()
-    } else {
-      patchTrialHudFn()
-      syncChromeFn()
+      return
     }
-  }, 50)
+    patchTrialHudFn()
+    syncChromeFn()
+    trialDeadlineTimer = setTimeout(tick, Math.min(50, left))
+  }
+  trialDeadlineTimer = setTimeout(tick, 0)
 }
 
 export function brainDelay(fn, ms) {

@@ -2,7 +2,7 @@
 
 import { hasProtocol, registerProtocols } from '/js/pages/brain-gym/registry.js'
 import { createStroopProtocol } from '/js/pages/brain-gym/protocols/stroop.js'
-import { createFlankerProtocol } from '/js/pages/brain-gym/protocolos/flanker.js'
+import { createFlankerProtocol } from '/js/pages/brain-gym/protocols/flanker.js'
 import { createNBackProtocol } from '/js/pages/brain-gym/protocols/nback.js'
 import { createCPTProtocol } from '/js/pages/brain-gym/protocolos/cpt.js'
 import { createGoNoGoProtocol } from '/js/pages/brain-gym/protocolos/gonogo.js'

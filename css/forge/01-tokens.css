@@ -193,7 +193,16 @@ body.mejora-v3::before {
   letter-spacing: var(--m-type-ui-tracking);
 }
 
-.font-metric {
+.font-metric,
+.banner-metric-value,
+.sidebar-stat,
+.ds-stat-value,
+.school-header-stat-val,
+.med-stat-val,
+.viaje-kpi-val,
+.brain-profile__domain-score,
+.m-task-xp,
+.htb-stat-row li span {
   font-family: var(--m-font-metric);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;

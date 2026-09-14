@@ -1,8 +1,14 @@
 import { enrichMission } from '/js/coaching.js'
-import { appStore, STORE_PREFIX } from '/js/core/store.js'
+import { appStore, STORE_PREFIX, setStorePersistHook } from '/js/core/store.js'
 
 export const PREFIX = STORE_PREFIX
-export { appStore } from '/js/core/store.js'
+export { appStore, setStorePersistHook } from '/js/core/store.js'
+
+if (typeof window !== 'undefined') {
+  setStorePersistHook(() => {
+    import('/js/cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
+  })
+}
 export const SKILLS = {
   mental: { name: 'Neurociencia', icon: '🧠', color: '#00d4ff' },
   mindfulness: { name: 'Calma', icon: '🧘', color: '#a78bfa' },

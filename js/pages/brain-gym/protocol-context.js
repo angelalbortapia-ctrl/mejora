@@ -38,11 +38,24 @@ export function advanceTimedTrial(patchFn, onDone) {
   const { brainState, render, syncBrainLabChrome } = getProtocolContext()
   if (brainState._trialBusy) return
   brainState._trialBusy = true
-  onDone()
-  brainState._trialBusy = false
-  if (!brainState.exercise) return
-  const s = brainState[brainState.exercise]
-  if (s?.finished) { render(true); return }
-  if (patchFn && patchFn()) syncBrainLabChrome()
-  else render(true)
+  try {
+    onDone()
+  } finally {
+    const finish = () => {
+      brainState._trialBusy = false
+      if (!brainState.exercise) return
+      const s = brainState[brainState.exercise]
+      if (s?.finished) { render(true); return }
+      if (patchFn && patchFn()) syncBrainLabChrome()
+      else render(true)
+    }
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(finish)
+    else setTimeout(finish, 0)
+  }
+}
+
+/** Arma trial del ejercicio activo (atajo para monolito legacy) */
+export function armCurrentTrial() {
+  const { brainState } = getProtocolContext()
+  if (brainState.exercise) queueArmTrial(brainState.exercise)
 }

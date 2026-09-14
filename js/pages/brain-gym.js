@@ -45,7 +45,9 @@ import {
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats, getBrainRegionProgress,
 } from '/js/school.js'
 import { renderExercise, hasProtocol, destroyActiveProtocol, setActiveProtocol } from '/js/pages/brain-gym/registry.js'
-import { initProtocolContext } from '/js/pages/brain-gym/protocol-context.js'
+import {
+  initProtocolContext, registerTimedHandler, advanceTimedTrial, armCurrentTrial,
+} from '/js/pages/brain-gym/protocol-context.js'
 import { buildClinicalProtocolRegistry, registerFreeLabProtocols } from '/js/pages/brain-gym/protocolos/index.js'
 import { patchStroopUI } from '/js/pages/brain-gym/protocolos/stroop.js'
 import { patchFlankerUI } from '/js/pages/brain-gym/protocolos/flanker.js'
@@ -89,25 +91,12 @@ function patchTrialHudDOM() {
   return true
 }
 
-const TIMED_TRIAL_HANDLERS = {
-  switching: () => window.switchAnswer('__timeout__'),
-  logic: () => window.logicAnswer(-1),
-  sequence: () => window.seqAnswer(-999999),
-  anagram: () => window.anagramPick(-1),
-  oddout: () => window.oddoutPick(-1),
-}
-
-function queueArmTrial() {
-  const id = brainState.exercise
-  const handler = TIMED_TRIAL_HANDLERS[id]
-  if (!handler) return
-  brainTimers.push(setTimeout(() => {
-    if (brainState.exercise !== id) return
-    const ms = getIntensity(brainState.difficulty).timeLimit
-    if (!ms) return
-    brainState.trialStart = Date.now()
-    startTrialDeadline(ms, handler)
-  }, 80))
+function registerLegacyTimedHandlers() {
+  registerTimedHandler('switching', () => window.switchAnswer('__timeout__'))
+  registerTimedHandler('logic', () => window.logicAnswer(-1))
+  registerTimedHandler('sequence', () => window.seqAnswer(-999999))
+  registerTimedHandler('anagram', () => window.anagramPick(-1))
+  registerTimedHandler('oddout', () => window.oddoutPick(-1))
 }
 
 function getExerciseLiveStatus() {
@@ -337,7 +326,7 @@ function renderBrainExercise() {
   return legacyRenderBrainExercise(id)
 }
 
-const BRAIN_TAB_EPHEMERAL_RESET = 'if(brainState.session){brainState.mode=\'hub\';brainState.session=null;}brainState.exercise=null;brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.activePaper=null;'
+const BRAIN_TAB_EPHEMERAL_RESET = 'if(typeof clearEphemeralBrainState===\'function\')clearEphemeralBrainState();else{if(brainState.session){brainState.mode=\'hub\';brainState.session=null;}brainState.exercise=null;brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.activePaper=null;}'
 const BRAIN_TAB_HASH = { home: '/gimnasia/inicio', learn: '/gimnasia/aprender', train: '/gimnasia/entrenar', body: '/gimnasia/cuerpo' }
 
 function brainTabDefs() {
@@ -820,7 +809,7 @@ function startBrain(id, fromSession = false) {
   setActiveProtocol(hasProtocol(id) ? id : null)
   if (document.getElementById('brain-exercise-stage')) render(true)
   else if (typeof window.render === 'function') window.render(true)
-  if (!brainState.protocolBrief && TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
+  if (!brainState.protocolBrief) armCurrentTrial()
 }
 
 window.showProtocolBrief = function(id) {
@@ -845,7 +834,7 @@ window.clearProtocolBrief = function() {
   const stage = document.getElementById('brain-exercise-stage')
   if (stage) flushExerciseRender()
   else if (typeof window.render === 'function') window.render(true)
-  if (TIMED_TRIAL_HANDLERS[id]) queueArmTrial()
+  armCurrentTrial()
 }
 
 function finishBrain(score = 0) {
@@ -1153,7 +1142,7 @@ window.switchAnswer = function(ans) {
   advanceTimedTrial(patchSwitchingUI, () => {
     s.index++
     if (s.index >= s.total) s.finished = true
-    else queueArmTrial()
+    else armCurrentTrial()
   })
 }
 
@@ -1345,18 +1334,6 @@ function patchBrainExerciseUI() {
   return false
 }
 
-function advanceTimedTrial(patchFn, onDone) {
-  if (brainState._trialBusy) return
-  brainState._trialBusy = true
-  onDone()
-  brainState._trialBusy = false
-  if (!brainState.exercise) return
-  const s = brainState[brainState.exercise]
-  if (s?.finished) { render(true); return }
-  if (patchFn && patchFn()) syncBrainLabChrome()
-  else render(true)
-}
-
 function renderSequenceGame() {
   const s = brainState.sequence
   if (s.finished) return brainWrapper(`<div class="text-center">
@@ -1382,7 +1359,7 @@ window.seqAnswer = function(n) {
   if (s.round >= s.total) s.finished = true
   else {
     s.current = pickSequence(s.difficulty)
-    queueArmTrial()
+    armCurrentTrial()
   }
   render()
 }
@@ -1531,7 +1508,7 @@ window.anagramPick = function(choiceIdx) {
     else {
       const next = a.puzzles[a.index]
       a.choices = buildAnagramChoices(next, a.puzzles)
-      queueArmTrial()
+      armCurrentTrial()
     }
     render()
   }, ok ? 450 : 700))
@@ -1573,7 +1550,7 @@ window.oddoutPick = function(wordIdx) {
     o.lastPick = null
     o.index++
     if (o.index >= o.total) o.finished = true
-    else queueArmTrial()
+    else armCurrentTrial()
     render()
   }, ok ? 500 : 850))
 }
@@ -1623,7 +1600,7 @@ window.logicNext = function() {
   l.selected = null
   l.index++
   if (l.index >= l.puzzles.length) l.finished = true
-  else queueArmTrial()
+  else armCurrentTrial()
   render()
 }
 
@@ -2036,6 +2013,7 @@ window.exportBrainReportPdf = function(exerciseId) {
 
 export function bindBrainGymGlobals() {
   window.brainState = brainState
+  window.clearEphemeralBrainState = clearEphemeralBrainState
   window.startBrain = startBrain
   window.finishBrain = finishBrain
   window.endExerciseBlock = endExerciseBlock
@@ -2047,6 +2025,8 @@ export function bindBrainGymGlobals() {
     goTrain(brainState.trainSection === 'lab' ? 'lab' : 'program')
   }
 }
+
+registerLegacyTimedHandlers()
 
 initProtocolContext({
   brainState,

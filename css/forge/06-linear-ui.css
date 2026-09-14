@@ -5,59 +5,11 @@
 
 body.mejora-forge,
 body.mejora-v3 {
-  /* Paleta Linear */
-  --m-bg: #08090a;
-  --m-bg-2: #0a0b0c;
-  --m-surface: #121314;
-  --m-surface-2: #18181b;
-  --m-surface-3: #1f2023;
-  --m-text: #eeeff1;
-  --m-muted: #8a8f98;
-  --m-muted-2: #5c5f66;
-  --m-border: rgba(255, 255, 255, 0.06);
-  --m-border-strong: rgba(255, 255, 255, 0.1);
-  --m-accent: #5e6ad2;
-  --m-accent-hover: #6b77e0;
-  --m-accent-soft: rgba(94, 106, 210, 0.12);
-  --m-accent-glow: rgba(94, 106, 210, 0.18);
-  --m-success: #4da384;
-  --m-success-soft: rgba(77, 163, 132, 0.1);
-  --m-danger: #eb5757;
-  --m-radius: 6px;
-  --m-radius-lg: 8px;
+  /* Tipografía Linear — tokens Raycast vienen de 01-tokens + 05-premium-ui */
   --m-display: var(--m-font);
   --m-type-body: 0.8125rem;
   --m-type-ui-tracking: -0.011em;
   --m-type-label-tracking: 0;
-  --m-glass-bg: #121314;
-  --m-glass-border: rgba(255, 255, 255, 0.06);
-  --m-glass-blur: 0px;
-  --m-linear-ring: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --m-linear-shadow: var(--m-linear-ring), 0 2px 6px rgba(0, 0, 0, 0.28), 0 12px 32px rgba(0, 0, 0, 0.22);
-  --m-glass-shadow: var(--m-linear-shadow);
-  --m-shadow: var(--m-linear-shadow);
-  --bg: var(--m-bg);
-  --bg-elevated: var(--m-surface);
-  --bg-card: var(--m-surface);
-  --bg-surface: var(--m-surface-2);
-  --text: var(--m-text);
-  --text-muted: var(--m-muted);
-  --border: var(--m-border);
-  --border-hover: var(--m-border-strong);
-  --primary: var(--m-accent);
-  --primary-hover: var(--m-accent-hover);
-  --primary-soft: var(--m-accent-soft);
-  --glass-bg: var(--m-surface);
-  --glass-border: var(--m-border);
-  --secondary-bg: var(--m-surface-2);
-  --input-bg: var(--m-surface);
-  --header-bg: rgba(8, 9, 10, 0.92);
-  --sidebar-bg: #08090a;
-  --gradient-hero: var(--m-surface);
-  --gradient-card: var(--m-surface);
-  --ds-tabs-bg: var(--m-surface);
-  --ds-shadow: var(--m-linear-shadow);
-  --ds-shadow-hover: var(--m-linear-ring), 0 4px 12px rgba(0, 0, 0, 0.32);
   font-size: var(--m-type-body);
   letter-spacing: var(--m-type-ui-tracking);
   font-feature-settings: "cv01", "cv02", "cv03", "cv04", "cv11";
@@ -127,40 +79,7 @@ body.mejora-v3 .m-now-desc {
   color: var(--m-muted) !important;
 }
 
-/* ── Superficies: planas, borde + sombra oscura (sin blur) ── */
-body.mejora-forge .ds-glass,
-body.mejora-v3 .ds-glass,
-body.mejora-forge .m-section,
-body.mejora-v3 .m-section,
-body.mejora-forge .m-now,
-body.mejora-v3 .m-now,
-body.mejora-forge .m-adaptive-mission,
-body.mejora-v3 .m-adaptive-mission,
-body.mejora-forge .m-shortcut,
-body.mejora-v3 .m-shortcut,
-body.mejora-forge .brain-neural-card,
-body.mejora-v3 .brain-neural-card,
-body.mejora-forge .brain-neural-hero,
-body.mejora-v3 .brain-neural-hero,
-body.mejora-forge .game-card--lab,
-body.mejora-v3 .game-card--lab,
-body.mejora-forge .brain-clinical-report,
-body.mejora-v3 .brain-clinical-report,
-body.mejora-forge .brain-lab-header,
-body.mejora-v3 .brain-lab-header,
-body.mejora-forge .brain-lab-stage,
-body.mejora-v3 .brain-lab-stage,
-body.mejora-forge .brain-profile,
-body.mejora-v3 .brain-profile,
-body.mejora-forge .m-neuro,
-body.mejora-v3 .m-neuro {
-  background: var(--m-surface) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: 1px solid var(--m-border) !important;
-  border-radius: var(--m-radius-lg) !important;
-  box-shadow: var(--m-linear-shadow) !important;
-}
+/* Superficies glass — hereda Raycast de 05-premium-ui (no anular blur) */
 
 body.mejora-forge .m-section:hover,
 body.mejora-v3 .m-section:hover,
