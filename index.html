@@ -4,16 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#ffffff" />
+  <meta name="color-scheme" content="light" />
   <meta name="description" content="Mejora — tu campaña de hábitos, gimnasia cerebral y calma." />
   <script>
     try {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.removeAttribute('data-theme')
+      const root = document.documentElement
+      root.classList.remove('dark')
+      root.removeAttribute('data-theme')
+      root.style.colorScheme = 'light'
+      root.style.backgroundColor = '#ffffff'
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.style.backgroundColor = '#ffffff'
+        document.body.style.color = '#37352f'
+        document.body.classList.remove('theme-rpg')
+      })
       const s = JSON.parse(localStorage.getItem('mejora_settings') || 'null')
       if (s) {
         if (s.darkMode) s.darkMode = false
         if (s.theme && s.theme !== 'default') s.theme = 'default'
-        if (s.reducedMotion) document.documentElement.classList.add('reduce-motion')
+        if (s.reducedMotion) root.classList.add('reduce-motion')
         localStorage.setItem('mejora_settings', JSON.stringify(s))
       }
     } catch (_) {}
@@ -22,12 +31,13 @@
   <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
   <link rel="apple-touch-icon" href="public/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/utilities.css?v=189" />
-  <link rel="stylesheet" href="css/design-system.css?v=189" />
-  <link rel="stylesheet" href="css/forge.css?v=189" />
-  <link rel="stylesheet" href="css/school.css?v=189" />
-  <link rel="stylesheet" href="css/harf-linear.css?v=189" />
-  <link rel="stylesheet" href="css/harf-interactive.css?v=189" />
+  <link rel="stylesheet" href="css/utilities.css?v=190" />
+  <link rel="stylesheet" href="css/design-system.css?v=190" />
+  <link rel="stylesheet" href="css/forge.css?v=190" />
+  <link rel="stylesheet" href="css/school.css?v=190" />
+  <link rel="stylesheet" href="css/harf-linear.css?v=190" />
+  <link rel="stylesheet" href="css/harf-interactive.css?v=190" />
+  <link rel="stylesheet" href="css/forge/07-notion-light.css?v=190" />
 </head>
 <body class="mejora-forge">
   <div id="fx-layer" aria-hidden="true"></div>
@@ -142,7 +152,7 @@
       document.body.appendChild(box)
     })
   </script>
-    <script type="importmap" src="/js/import-map.json?v=189"></script>
-  <script type="module" src="/js/app.js?v=189"></script>
+    <script type="importmap" src="/js/import-map.json?v=190"></script>
+  <script type="module" src="/js/app.js?v=190"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(10, 12, 16, 0.94);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -41,10 +41,10 @@ body.onboarding-open:has(.onboarding-overlay.is-active) .onboarding-overlay {
   max-height: min(92vh, 720px);
   overflow-y: auto;
   border-radius: 1.5rem;
-  border: 1px solid var(--m-border, #2a3340);
-  background: linear-gradient(160deg, var(--m-surface, #12161c), var(--m-surface-2, #1a2029));
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212, 160, 18, 0.1) inset;
-  color: var(--m-text, #eceff4);
+  border: 1px solid var(--m-border, #e1dfdd);
+  background: linear-gradient(160deg, var(--m-surface, #ffffff), var(--m-surface-2, #fbfbfa));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: var(--m-text, #37352f);
 }
 
 .onboarding-overlay.is-active .onboarding-shell {

@@ -93,6 +93,7 @@ function patchOtherFiles() {
     let text = readFileSync(file, 'utf8')
     let next = text
       .replace(/\?v=\d+/g, `?v=${V}`)
+      .replace(/const ASSET_V = \d+/g, `const ASSET_V = ${V}`)
       .replace(/const CACHE = 'mejora-v\d+'/g, `const CACHE = 'mejora-v${V}'`)
     if (file.endsWith('index.html')) {
       next = next.replace(

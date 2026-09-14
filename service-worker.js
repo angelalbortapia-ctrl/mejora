@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 184
+const ASSET_V = 190
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -47,6 +47,7 @@ const SHELL_CSS = [
   '/css/forge-lessons.css',
   '/css/harf-linear.css',
   '/css/harf-interactive.css',
+  '/css/forge/07-notion-light.css',
 ]
 
 const SHELL_HTML = ['/', '/index.html', '/privacy.html']
@@ -150,6 +151,30 @@ self.addEventListener('notificationclick', (e) => {
   )
 })
 
+function isHtmlOrCss(url) {
+  const rel = relPath(url)
+  if (SHELL_HTML.includes(rel)) return true
+  if (rel.endsWith('.css') || rel.includes('.css?')) return true
+  return SHELL_CSS.some(p => rel === p || rel.startsWith(p + '?'))
+}
+
+async function networkFirst(request, fallbackUrl) {
+  const cache = await caches.open(CACHE)
+  try {
+    const res = await fetch(request)
+    if (res.ok) cache.put(request, res.clone())
+    return res
+  } catch {
+    const cached = await cache.match(request)
+    if (cached) return cached
+    if (fallbackUrl) {
+      const fb = await caches.match(fallbackUrl)
+      if (fb) return fb
+    }
+    throw new Error('offline')
+  }
+}
+
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE)
   const cached = await cache.match(request)
@@ -179,7 +204,12 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  if (isShellAsset(url) || SHELL_HTML.includes(rel)) {
+  if (isHtmlOrCss(url)) {
+    e.respondWith(networkFirst(e.request, abs('/index.html')))
+    return
+  }
+
+  if (isShellAsset(url)) {
     e.respondWith(staleWhileRevalidate(e.request))
     return
   }

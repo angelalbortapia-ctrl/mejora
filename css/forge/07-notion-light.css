@@ -44,15 +44,22 @@ body.mejora-v3 {
   color: var(--text-main) !important;
 }
 
+.app-shell,
+#fx-layer,
 aside,
 .sidebar,
 .sidebar-nav,
 .app-banner,
 .app-main,
 #app-content,
-.app-content {
+.app-content,
+.bottom-nav {
   background-color: var(--bg-app) !important;
   background-image: none !important;
+}
+
+.app-shell {
+  background-color: var(--bg-app) !important;
 }
 
 .sidebar,
@@ -163,6 +170,13 @@ aside,
 
 .onboarding-overlay {
   background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.onboarding-shell {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+  box-shadow: var(--shadow-notion-hover) !important;
 }
 
 .xp-toast {
