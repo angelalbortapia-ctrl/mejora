@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 193
+const ASSET_V = 194
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [
@@ -29,22 +29,24 @@ const AMBIENT_AUDIO = [
 const SHELL_CSS = [
   '/css/utilities.css',
   '/css/design-system.css',
-  '/css/forge.css',
+  '/css/fonts-local.css',
   '/css/forge/01-tokens.css',
-  '/css/forge/02-forge-vars.css',
+  '/css/forge/02-open-props-scale.css',
   '/css/forge/03-shell.css',
   '/css/forge/04-legacy-pages.css',
+  '/css/forge/05-premium-ui.css',
+  '/css/forge/06-linear-ui.css',
   '/css/mejora-redesign.css',
-  '/css/brain-wellness.css',
   '/css/forge-pages.css',
   '/css/forge-meditation.css',
   '/css/forge-fx.css',
   '/css/onboarding.css',
-  '/css/school.css',
   '/css/forge-lessons.css',
+  '/css/brain-wellness.css',
+  '/css/forge/07-notion-light.css',
+  '/css/school.css',
   '/css/harf-linear.css',
   '/css/harf-interactive.css',
-  '/css/forge/07-notion-light.css',
   '/css/notion-light-force.css',
 ]
 

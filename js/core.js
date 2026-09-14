@@ -298,7 +298,7 @@ function parseBgLuminance(bg) {
 }
 
 /** Si el body sigue oscuro (caché legacy), inyecta notion-light-force.css */
-export function enforceNotionLightRuntime(assetVersion = 193) {
+export function enforceNotionLightRuntime(assetVersion = 194) {
   const body = document.body
   if (!body) return
   const lum = parseBgLuminance(getComputedStyle(body).backgroundColor)

@@ -432,7 +432,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }
 })
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+const isLocalDev = location.hostname === '127.0.0.1' || location.hostname === 'localhost'
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !isLocalDev) {
   let waitingWorker = null
   let swReloadPending = false
 
