@@ -606,8 +606,13 @@ async function speakApiMeditation(text, { interrupt = true, pauseMs } = {}) {
   if (voiceDepth === 0) beginVoicePlayback()
   let ok = false
   try {
-    if (useFishTts()) ok = await speakFishMeditation(text, { interrupt, pauseMs })
-    else if (useAzureTts()) {
+    if (useFishTts()) {
+      ok = await speakFishMeditation(text, { interrupt, pauseMs })
+      if (!ok && useAzureTts()) {
+        await speakAzureMeditation(text, { interrupt, pauseMs })
+        ok = true
+      }
+    } else if (useAzureTts()) {
       await speakAzureMeditation(text, { interrupt, pauseMs })
       ok = true
     } else if (useGeminiTts()) {
@@ -670,12 +675,25 @@ export async function speakGuidedMeditationOpen(intro, firstStepText) {
   const parts = [intro, firstStepText].filter(Boolean)
   if (useFishTts()) {
     if (voiceDepth === 0) beginVoicePlayback()
+    let fishOk = false
     try {
       await speakFishSequence(parts)
+      fishOk = !getLastFishError()
+    } catch {
+      fishOk = false
     } finally {
       if (!isFishSpeaking() && voiceDepth > 0) endVoicePlayback()
     }
-    return
+    if (fishOk) return
+    if (hasAzureTtsQuota()) {
+      if (voiceDepth === 0) beginVoicePlayback()
+      try {
+        await speakAzureSequence(parts)
+      } finally {
+        if (!isAzureSpeaking() && voiceDepth > 0) endVoicePlayback()
+      }
+      return
+    }
   }
   if (useAzureTts()) {
     if (voiceDepth === 0) beginVoicePlayback()

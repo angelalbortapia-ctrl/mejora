@@ -5,6 +5,24 @@ import { EXERCISES } from '/js/brain-program.js'
 
 export const PRACTICE_TRIALS = 3
 const HISTORY_KEY = 'brainProtocolHistory'
+
+/** Glosario clínico accesible (tooltips) */
+export const METRIC_GLOSSARY = {
+  "Precisión global": "Porcentaje de respuestas correctas en el bloque evaluado.",
+  "Precisión": "Aciertos sobre el total de trials.",
+  "Coste Stroop": "Milisegundos extra que tardas en conflictos (palabra ≠ color). Mide interferencia.",
+  "Coste Flanker": "Diferencia de RT entre trials congruentes e incongruentes.",
+  "d′ (d-prime)": "Sensibilidad: separa aciertos reales de respuestas al azar. >1 es bueno; >2 excelente.",
+  "Omisiones": "Estímulos objetivo que no respondiste — atención o fatiga.",
+  "Falsas alarmas": "Respondiste cuando no debías — impulsividad o ansiedad por responder.",
+  "RT congruentes": "Tiempo de reacción cuando palabra y color coinciden (más automático).",
+  "RT incongruentes": "Tiempo cuando hay conflicto cognitivo.",
+  "Categorías": "Reglas descubiertas en Wisconsin (meta: 3).",
+  "Errores perseveración": "Seguir la regla anterior tras un cambio — rigidez cognitiva.",
+  "Tiempo": "Segundos totales en Trail Making — velocidad + flexibilidad.",
+  "Hits": "Respuestas correctas a objetivos.",
+  "Misses": "Objetivos no detectados.",
+}
 const SEEN_BRIEF_KEY = 'brainProtocolsSeen'
 const MAX_HISTORY = 10
 
@@ -272,7 +290,49 @@ export function saveProtocolResult(exerciseId, metrics) {
   hist[exerciseId].unshift(entry)
   hist[exerciseId] = hist[exerciseId].slice(0, MAX_HISTORY)
   setItem(HISTORY_KEY, hist)
+  import('/js/storage-repository.js').then(m => {
+    m.enqueueSyncEvent?.({ type: 'clinical_metrics', exerciseId, metrics, ts: entry.ts })
+  }).catch(() => {})
   return entry
+}
+
+/** Micro-feedback en lenguaje natural según variación vs historial */
+export function generateMicroFeedback(exerciseId, metrics, history = []) {
+  const lines = []
+  const past = history.slice(1, 8)
+  const prev = past[0]?.metrics
+  if (!prev) {
+    lines.push('Primera sesión registrada — establece tu línea base.')
+    return lines.join(' ')
+  }
+
+  const accDelta = (metrics?.accuracy ?? 0) - (prev?.accuracy ?? 0)
+  if (accDelta >= 10) lines.push('Salto notable en precisión respecto a tu última sesión.')
+  else if (accDelta >= 4) lines.push('Mejoras consistentes — el entrenamiento está consolidando.')
+  else if (accDelta <= -10) lines.push('Caída marcada: puede ser fatiga, distracción o exceso de velocidad.')
+  else if (accDelta <= -4) lines.push('Ligera baja — normal si entrenas varios protocolos el mismo día.')
+
+  const conflict = metrics?.conflictCost ?? metrics?.rows?.find(r => r.label?.includes('Coste'))?.value
+  const prevConflict = prev?.conflictCost
+  if (typeof conflict === 'number' && typeof prevConflict === 'number') {
+    if (conflict < prevConflict - 30) lines.push('Tu coste de interferencia bajó: inhibes mejor el impulso prepotente.')
+    else if (conflict > prevConflict + 40) lines.push('Más interferencia hoy — ve más lento en trials de conflicto.')
+  }
+
+  const dPrime = metrics?.dPrime ?? metrics?.rows?.find(r => r.label?.includes("d′"))?.value
+  if (typeof dPrime === 'number' && dPrime >= 1.5) lines.push('Sensibilidad d′ sólida: distinguís señal de ruido con eficiencia.')
+  if (metrics?.falseAlarms > 0 && prev?.falseAlarms === 0) {
+    lines.push('Aparecieron falsas alarmas — prioriza precisión sobre velocidad.')
+  }
+
+  if (!lines.length) lines.push('Sesión estable. La consistencia semanal importa más que un solo día.')
+  return lines.join(' ')
+}
+
+function metricTooltip(label) {
+  const tip = METRIC_GLOSSARY[label] || METRIC_GLOSSARY[label.replace(/ \(.*\)/, '')]
+  if (!tip) return esc(label)
+  return `<span class="brain-metric-label">${esc(label)}<button type="button" class="brain-metric-tip" title="${esc(tip)}" aria-label="Qué es ${esc(label)}">?</button></span>`
 }
 
 export function getProtocolHistory(exerciseId) {
@@ -347,21 +407,23 @@ export function renderClinicalReport(exerciseId, metrics, finishBtnHtml, history
     ).join('')}</div>`
     : '<p class="brain-report-trend-empty">Primera sesión registrada — sigue entrenando para ver tendencia.</p>'
   const interp = interpretVsHistory(metrics, history)
+  const micro = generateMicroFeedback(exerciseId, metrics, history)
 
   return `<div class="brain-clinical-report">
     <header class="brain-clinical-report__head">
-      <p class="brain-clinical-report__kicker">Informe de protocolo</p>
+      <p class="brain-clinical-report__kicker">Informe de protocolo · <span class="brain-clinical-badge">Clínico</span></p>
       <p class="brain-clinical-report__score">${metrics.accuracy}%</p>
       ${interp.avg != null
         ? `<p class="brain-clinical-report__interp">${esc(interp.text)}</p>`
         : `<p class="brain-clinical-report__interp brain-clinical-report__interp--new">${esc(interp.text)}</p>`}
+      <p class="brain-clinical-report__micro">${esc(micro)}</p>
       ${best && best.metrics?.accuracy > metrics.accuracy
         ? `<p class="brain-clinical-report__record">Récord: ${best.metrics.accuracy}% (${best.date})</p>`
         : best ? '<p class="brain-clinical-report__record">¡Nuevo récord personal!</p>' : ''}
     </header>
     <table class="brain-clinical-report__table">
       <tbody>${(metrics.rows || []).map(r => `<tr>
-        <th>${esc(r.label)}</th>
+        <th>${metricTooltip(r.label)}</th>
         <td><strong>${esc(r.value)}</strong>${r.hint ? `<span class="brain-clinical-report__hint">${esc(r.hint)}</span>` : ''}</td>
       </tr>`).join('')}</tbody>
     </table>

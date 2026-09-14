@@ -44,6 +44,11 @@ import {
   renderSchoolHub, completeLessonReview,
   renderReviewQuizFlow, getReviewQuiz, getSchoolStats, getBrainRegionProgress,
 } from '/js/school.js'
+import { renderExercise, hasProtocol } from '/js/pages/brain-gym/registry.js'
+import { initProtocolContext } from '/js/pages/brain-gym/protocol-context.js'
+import { buildClinicalProtocolRegistry, registerFreeLabProtocols } from '/js/pages/brain-gym/protocolos/index.js'
+import { patchStroopUI } from '/js/pages/brain-gym/protocolos/stroop.js'
+import { patchFlankerUI } from '/js/pages/brain-gym/protocolos/flanker.js'
 import { patchCatalogUI } from '/js/school-catalog.js'
 import { wrapSchoolPage } from '/js/school-shell.js'
 import { renderPaperDetail, getPaper, fetchPaperLiveMeta, searchPubMed } from '/js/school-library.js'
@@ -85,8 +90,6 @@ function patchTrialHudDOM() {
 }
 
 const TIMED_TRIAL_HANDLERS = {
-  stroop: () => stroopAnswer('__timeout__'),
-  flanker: () => flankerAnswer('__timeout__'),
   switching: () => switchAnswer('__timeout__'),
   logic: () => logicAnswer(-1),
   sequence: () => seqAnswer(-999999),
@@ -298,6 +301,24 @@ const BRIEF_FIRST_EXERCISES = new Set([
   'visnback', 'trail', 'wisconsin', 'ant',
 ])
 
+function legacyRenderBrainExercise(id) {
+  if (id === 'dualnback') return renderDualNBackGame()
+  if (id === 'revspan') return renderRevSpanGame()
+  if (id === 'pasat') return renderPasatGame()
+  if (id === 'switching') return renderSwitchingGame()
+  if (id === 'corsi') return renderCorsiGame()
+  if (id === 'symbols') return renderSymbolsGame()
+  if (id === 'logic') return renderLogicGame()
+  if (id === 'math') return renderMathGame()
+  if (id === 'memory') return renderMemoryGame()
+  if (id === 'simon') return renderSimonGame()
+  if (id === 'sequence') return renderSequenceGame()
+  if (id === 'reaction') return renderReactionGame()
+  if (id === 'anagram') return renderAnagramGame()
+  if (id === 'oddout') return renderOddOutGame()
+  return ''
+}
+
 function renderBrainExercise() {
   const id = brainState.exercise
   if (brainState.protocolBrief === id && getExerciseGuide(id)) {
@@ -309,30 +330,11 @@ function renderBrainExercise() {
       <p class="text-muted mb-4">Ejercicio no disponible en el laboratorio.</p>
       <button onclick="exitExercise()" class="btn-primary">Volver</button></div></div>`
   }
-  if (id === 'dualnback') return renderDualNBackGame()
-  if (id === 'cpt') return renderCPTGame()
-  if (id === 'revspan') return renderRevSpanGame()
-  if (id === 'pasat') return renderPasatGame()
-  if (id === 'nback') return renderNBackGame()
-  if (id === 'stroop') return renderStroopGame()
-  if (id === 'flanker') return renderFlankerGame()
-  if (id === 'switching') return renderSwitchingGame()
-  if (id === 'gonogo') return renderGoNoGoGame()
-  if (id === 'corsi') return renderCorsiGame()
-  if (id === 'symbols') return renderSymbolsGame()
-  if (id === 'logic') return renderLogicGame()
-  if (id === 'math') return renderMathGame()
-  if (id === 'memory') return renderMemoryGame()
-  if (id === 'simon') return renderSimonGame()
-  if (id === 'sequence') return renderSequenceGame()
-  if (id === 'reaction') return renderReactionGame()
-  if (id === 'anagram') return renderAnagramGame()
-  if (id === 'oddout') return renderOddOutGame()
-  if (id === 'visnback') return ensureClinicalLab().renderVisNBackGame()
-  if (id === 'trail') return ensureClinicalLab().renderTrailGame()
-  if (id === 'wisconsin') return ensureClinicalLab().renderWisconsinGame()
-  if (id === 'ant') return ensureClinicalLab().renderANTGame()
-  return ''
+  if (hasProtocol(id)) {
+    const html = renderExercise(id, legacyRenderBrainExercise)
+    if (html) return html
+  }
+  return legacyRenderBrainExercise(id)
 }
 
 const BRAIN_TAB_EPHEMERAL_RESET = 'if(brainState.session){brainState.mode=\'hub\';brainState.session=null;}brainState.exercise=null;brainState.activeLesson=null;brainState.schoolFaculty=null;brainState.activePaper=null;'
@@ -426,14 +428,36 @@ function renderTrainHub() {
       ],
   })
   if (section === 'lab') {
-    const labSections = LAB_EXERCISE_GROUPS.map(g => {
+    const labTab = brainState.labTab === 'free' ? 'free' : 'clinical'
+    const labSubTabs = subTabBar(
+      [
+        { id: 'clinical', label: 'Laboratorio Clínico', icon: '🔬' },
+        { id: 'free', label: 'Entrenamiento Libre', icon: '🎯' },
+      ],
+      labTab,
+      'brainState.labTab',
+      'render();',
+    )
+    const groups = labTab === 'free'
+      ? LAB_EXERCISE_GROUPS.filter(g => g.id === 'casual')
+      : LAB_EXERCISE_GROUPS.filter(g => g.id !== 'casual')
+    const labSections = groups.map(g => {
       const items = g.ids.map(id => EXERCISES[id]).filter(Boolean)
+      const badge = labTab === 'clinical'
+        ? '<span class="brain-lab-section-badge brain-lab-section-badge--clinical">Métricas formales · d′ · coste de interferencia</span>'
+        : '<span class="brain-lab-section-badge brain-lab-section-badge--free">Sin informe clínico · práctica flexible</span>'
       return `<div class="span-full brain-lab-group">
-        <h3 class="ds-section-title">${g.label}</h3>
+        <div class="brain-lab-group__head">
+          <h3 class="ds-section-title">${g.label}</h3>
+          ${badge}
+        </div>
         <div class="brain-games-grid">${items.map(renderLabGameCard).join('')}</div>
       </div>`
     }).join('')
-    return `${hero}${tabs}${difficultyPicker(diff, 'setBrainDiff')}${labSections}`
+    const labIntro = labTab === 'clinical'
+      ? '<p class="brain-lab-intro span-full">Protocolos con práctica guiada, bloque evaluado e informe con métricas clínicas.</p>'
+      : '<p class="brain-lab-intro span-full">Ejercicios casuales para calentar o practicar sin rigor de laboratorio.</p>'
+    return `${hero}${tabs}${labSubTabs}${labIntro}${difficultyPicker(diff, 'setBrainDiff')}${labSections}`
   }
   return `${hero}${tabs}
     <div class="brain-neural-card brain-neural-card--primary program-hero span-full">
@@ -842,114 +866,6 @@ function finishBrain(score = 0) {
 }
 
 // --- Paradigmas neurociencia ---
-function renderNBackGame() {
-  const s = brainState.nback
-  const lab = ensureClinicalLab()
-  if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="text-2xl mb-2">🔁</p><p class="font-semibold mb-2">${s.n}-Back completado</p>
-    ${lab.finishBlock('nback', s, s.score, s.trials || 1, 'nback')}</div>`)
-  if (s.phase === 'ready') return renderProtocolIntro('nback', 'nbackStart()',
-    `<p class="brain-protocol-brief__note">Nivel ${s.n} · ~${Math.round(s.paceMs / 100) / 10}s por letra · ${PRACTICE_TRIALS} trials de práctica</p>`)
-  const nIdx = isPractice(s) ? (s.practiceIdx || 0) : s.index
-  const letter = s.stream[nIdx]
-  const hudCur = nIdx + 1
-  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total + s.n
-  return brainWrapper(`<div class="text-center brain-arena">
-    ${renderPracticeBanner(s)}
-    ${brainHud(hudCur, hudTot, `${s.n}-Back`)}
-    <div class="brain-nback-ring-wrap">
-      ${renderPaceRing(s.pacePct ?? 100)}
-      <p class="brain-stimulus brain-stimulus--letter">${letter}</p>
-    </div>
-    <div class="brain-action-row">
-      <button onclick="nbackRespond(false)" class="btn-secondary flex-1">Pasar</button>
-      <button onclick="nbackRespond(true)" class="btn-primary flex-1 brain-btn-pulse">¡Coincide!</button>
-    </div>
-    ${renderTrialFlash(s)}
-    ${s.feedback ? `<p class="brain-feedback brain-feedback--${s.feedback === 'ok' ? 'ok' : 'bad'}">${s.feedback === 'ok' ? '✓ Precisión' : '✗ Error'}</p>` : ''}
-  </div>`, { arena: true })
-}
-
-function clearNbackPaceTick(s) {
-  if (s._paceTick == null) return
-  clearInterval(s._paceTick)
-  const i = brainTimers.indexOf(s._paceTick)
-  if (i >= 0) brainTimers.splice(i, 1)
-  s._paceTick = null
-}
-
-function nbackScheduleTick() {
-  const s = brainState.nback
-  if (s.phase !== 'play' || s.finished) return
-  clearNbackPaceTick(s)
-  const start = Date.now()
-  const tick = setInterval(() => {
-    const elapsed = Date.now() - start
-    s.pacePct = Math.max(0, 100 - (elapsed / s.paceMs) * 100)
-    if (brainState.exercise === 'nback') render()
-    if (elapsed >= s.paceMs) {
-      clearNbackPaceTick(s)
-      if (s.phase === 'play' && !s.responded && brainState.exercise === 'nback') nbackRespond(false)
-    }
-  }, 40)
-  s._paceTick = tick
-  brainTimers.push(tick)
-}
-
-window.nbackStart = function() {
-  const s = brainState.nback
-  ensureClinicalLab().prepareClinicalState(s)
-  s.phase = 'play'
-  s.index = 0
-  s.practiceIdx = 0
-  render()
-  nbackScheduleTick()
-}
-
-window.nbackRespond = function(saidMatch) {
-  const s = brainState.nback
-  if (s.phase !== 'play' || s.responded) return
-  clearNbackPaceTick(s)
-  const idx = isPractice(s) ? (s.practiceIdx || 0) : s.index
-  const isMatch = idx >= s.n && s.stream[idx] === s.stream[idx - s.n]
-  const correct = saidMatch === isMatch
-  let type = 'cr'
-  if (isMatch && saidMatch) type = 'hit'
-  else if (isMatch && !saidMatch) type = 'miss'
-  else if (!isMatch && saidMatch) type = 'fa'
-  logTrial(s.trialLog, { correct, type }, isPractice(s))
-  if (correct) s.score++
-  markTrial(correct)
-  s.flash = correct ? 'ok' : 'bad'
-  if (correct) { s.feedback = 'ok'; playTone(523) } else { s.feedback = 'bad'; playTone(200) }
-  s.trials++; s.responded = true
-  render()
-  brainTimers.push(setTimeout(() => {
-    s.feedback = null; s.flash = null; s.responded = false
-    if (isPractice(s)) {
-      s.practiceIdx = (s.practiceIdx || 0) + 1
-      if (s.practiceIdx >= PRACTICE_TRIALS) {
-        const fresh = initNBack(getExerciseLevel('nback'), s.total, brainState.difficulty)
-        beginScoredBlock(s)
-        s.stream = fresh.stream
-        s.n = fresh.n
-        s.index = 0
-        s.practiceIdx = 0
-      }
-      render()
-      nbackScheduleTick()
-      return
-    }
-    s.index++
-    if (s.index >= s.total + s.n) {
-      ensureClinicalLab().completeClinicalReport('nback', s)
-      return
-    }
-    render()
-    nbackScheduleTick()
-  }, correct ? 280 : 420))
-}
-
 function dualNbackGrid(pos, activePos) {
   return `<div class="brain-dual-grid" role="presentation">
     ${Array.from({ length: 9 }, (_, i) =>
@@ -1032,95 +948,6 @@ function dualNbackCommit() {
     render()
     dualNbackScheduleTick()
   }, ok ? 260 : 400))
-}
-
-function renderCPTGame() {
-  const s = brainState.cpt
-  const lab = ensureClinicalLab()
-  if (s.finished) {
-    const totalTargets = s.trials.filter(t => t.isTarget).length
-    return brainWrapper(`<div class="text-center">
-      <p class="font-display text-xl font-semibold mb-2">CPT-X completado</p>
-      <p class="text-sm text-muted mb-2">Aciertos ${s.hits}/${totalTargets} · Omisiones ${s.misses} · Falsas alarmas ${s.falseAlarms}</p>
-      ${lab.finishBlock('cpt', s, s.hits, totalTargets || 1, 'cpt')}</div>`)
-  }
-  if (s.phase === 'ready') {
-    return renderProtocolIntro('cpt', 'cptStart()',
-      `<p class="brain-protocol-brief__note">${s.total} estímulos · ~${Math.round(s.isi / 100) / 10}s cada uno · objetivo: <span class="brain-cpt-target">X</span></p>`)
-  }
-  const t = s.trials[s.index]
-  const hudCur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
-  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total
-  return brainWrapper(`<div class="text-center brain-arena">
-    ${renderPracticeBanner(s)}
-    ${brainHud(hudCur, hudTot, 'CPT-X')}
-    <p class="brain-cpt-letter is-enter ${t.isTarget ? 'is-target' : ''}" key="cpt-${s.index}">${t.letter}</p>
-    <button type="button" onclick="cptRespond()" class="btn-primary w-full py-4">Responder (solo X)</button>
-    ${renderTrialFlash(s)}
-  </div>`, { arena: true })
-}
-
-function cptScheduleTick() {
-  const s = brainState.cpt
-  if (s.phase !== 'play' || s.finished) return
-  brainTimers.push(setTimeout(() => {
-    if (brainState.exercise !== 'cpt' || s.phase !== 'play') return
-    const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
-    if (!s.responded && t?.isTarget) {
-      s.misses++
-      logTrial(s.trialLog, { correct: false, type: 'miss', isTarget: true }, isPractice(s))
-      s.flash = 'bad'
-    }
-    s.responded = false
-    if (isPractice(s)) {
-      s.practiceIdx = (s.practiceIdx || 0) + 1
-      if (s.practiceIdx >= PRACTICE_TRIALS) {
-        beginScoredBlock(s)
-        s.practiceIdx = 0
-        s.index = 0
-        s.hits = 0
-        s.misses = 0
-        s.falseAlarms = 0
-        render()
-        cptScheduleTick()
-        return
-      }
-      render()
-      cptScheduleTick()
-      return
-    }
-    s.index++
-    if (s.index >= s.total) {
-      ensureClinicalLab().completeClinicalReport('cpt', s)
-      return
-    }
-    render()
-    cptScheduleTick()
-  }, s.isi))
-}
-
-window.cptStart = function() {
-  const s = brainState.cpt
-  ensureClinicalLab().prepareClinicalState(s)
-  s.practiceTrials = initCPT(PRACTICE_TRIALS, s.difficulty || brainState.difficulty).trials
-  s.phase = 'play'
-  s.index = 0
-  s.practiceIdx = 0
-  render()
-  cptScheduleTick()
-}
-
-window.cptRespond = function() {
-  const s = brainState.cpt
-  if (s.phase !== 'play' || s.responded) return
-  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
-  s.responded = true
-  const ok = t.isTarget
-  logTrial(s.trialLog, { correct: ok, type: ok ? 'hit' : 'fa', isTarget: t.isTarget }, isPractice(s))
-  s.flash = ok ? 'ok' : 'bad'
-  if (t.isTarget) { s.hits++; playTone(523) }
-  else { s.falseAlarms++; playTone(200) }
-  render()
 }
 
 function renderRevSpanGame() {
@@ -1292,121 +1119,6 @@ window.pasatSubmit = function(e, target) {
   render()
 }
 
-function renderStroopGame() {
-  const s = brainState.stroop
-  const lab = ensureClinicalLab()
-  if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-2">Stroop completado</p>
-    ${lab.finishBlock('stroop', s, s.score, s.total, 'stroop')}</div>`)
-  const t = stroopTrialMeta(s)
-  if (!t) return brainWrapper('<p class="text-muted">Cargando…</p>')
-  const conflict = t.congruent ? 'Congruente' : 'Conflicto'
-  return brainWrapper(`<div class="text-center brain-arena" id="brain-stroop-root">
-    ${renderPracticeBanner(s)}
-    ${brainHud(stroopHudIndex(s), stroopHudTotal(s), 'Stroop')}
-    <p class="brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}">${conflict}</p>
-    <p class="brain-stroop-word" style="--stroop-ink:${t.ink}">${t.word}</p>
-    <p class="brain-hint">Tinta, no palabra</p>
-    ${renderStroopSwatches('stroopAnswer')}
-    ${renderTrialFlash(s)}
-  </div>`, { arena: true })
-}
-
-window.stroopAnswer = function(name) {
-  if (brainState._trialBusy) return
-  clearTrialDeadline()
-  const s = brainState.stroop
-  if (s.finished) return
-  const t = stroopTrialMeta(s)
-  if (!t) return
-  const rt = brainState.trialStart ? Date.now() - brainState.trialStart : null
-  const ok = name !== '__timeout__' && name === t.correct
-  logTrial(s.trialLog, { correct: ok, congruent: t.congruent, rt }, isPractice(s))
-  s.flash = ok ? 'ok' : 'bad'
-  if (ok) { s.score++; playTone(523) } else playTone(200)
-  markTrial(ok, rt)
-  brainState.trialStart = null
-  advanceTimedTrial(patchStroopUI, () => {
-    if (isPractice(s)) {
-      s.practiceIdx = (s.practiceIdx || 0) + 1
-      if (s.practiceIdx >= PRACTICE_TRIALS) {
-        beginScoredBlock(s)
-        s.practiceIdx = 0
-        s.index = 0
-        queueArmTrial()
-        return
-      }
-      queueArmTrial()
-      return
-    }
-    s.index++
-    if (s.index >= s.total) {
-      ensureClinicalLab().completeClinicalReport('stroop', s)
-      return
-    }
-    queueArmTrial()
-  })
-}
-
-function renderFlankerGame() {
-  const s = brainState.flanker
-  const lab = ensureClinicalLab()
-  if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-2">Flanker completado</p>
-    ${lab.finishBlock('flanker', s, s.score, s.total, 'flanker')}</div>`)
-  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
-  const arrows = flankerArrows(t)
-  const hudCur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
-  const hudTot = isPractice(s) ? PRACTICE_TRIALS : s.total
-  return brainWrapper(`<div class="text-center brain-arena" id="brain-flanker-root">
-    ${renderPracticeBanner(s)}
-    ${brainHud(hudCur, hudTot, 'Flanker')}
-    <p class="brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}">${t.congruent ? 'Alineadas' : 'Interferencia'}</p>
-    <p class="brain-flanker-row" aria-hidden="true">${arrows.split('').map((ch, i) => `<span class="brain-flanker-char ${i === 2 ? 'is-center' : ''}">${ch}</span>`).join('')}</p>
-    <div class="brain-action-row">
-      <button type="button" onclick="flankerAnswer('left')" class="btn-secondary flex-1 brain-dir-btn">←</button>
-      <button type="button" onclick="flankerAnswer('right')" class="btn-secondary flex-1 brain-dir-btn">→</button>
-    </div>
-    ${renderTrialFlash(s)}
-  </div>`, { arena: true })
-}
-
-window.flankerAnswer = function(dir) {
-  if (brainState._trialBusy) return
-  clearTrialDeadline()
-  const s = brainState.flanker
-  if (s.finished) return
-  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
-  if (!t) return
-  const rt = brainState.trialStart ? Date.now() - brainState.trialStart : null
-  const ok = dir !== '__timeout__' && dir === t.dir
-  logTrial(s.trialLog, { correct: ok, congruent: t.congruent, rt }, isPractice(s))
-  s.flash = ok ? 'ok' : 'bad'
-  if (ok) { s.score++; playTone(523) } else playTone(200)
-  markTrial(ok, rt)
-  brainState.trialStart = null
-  advanceTimedTrial(patchFlankerUI, () => {
-    if (isPractice(s)) {
-      s.practiceIdx = (s.practiceIdx || 0) + 1
-      if (s.practiceIdx >= PRACTICE_TRIALS) {
-        beginScoredBlock(s)
-        s.practiceIdx = 0
-        s.index = 0
-        queueArmTrial()
-        return
-      }
-      queueArmTrial()
-      return
-    }
-    s.index++
-    if (s.index >= s.total) {
-      ensureClinicalLab().completeClinicalReport('flanker', s)
-      return
-    }
-    queueArmTrial()
-  })
-}
-
 function renderSwitchingGame() {
   const s = brainState.switching
   if (s.finished) return brainWrapper(`<div class="text-center">
@@ -1443,91 +1155,6 @@ window.switchAnswer = function(ans) {
     else queueArmTrial()
   })
 }
-
-function renderGoNoGoGame() {
-  const s = brainState.gonogo
-  const lab = ensureClinicalLab()
-  if (s.finished) return brainWrapper(`<div class="text-center">
-    <p class="font-semibold mb-2">Go/No-Go completado</p>
-    ${lab.finishBlock('gonogo', s, s.score, s.total, 'gonogo')}</div>`)
-  if (!s.started) return renderProtocolIntro('gonogo', 'gonogoManualStart()')
-  if (s.waiting) return brainWrapper(`<div class="text-center py-12"><p class="text-muted">Prepárate...</p></div>`)
-  const t = s.trials[s.index]
-  const isGo = t.type === 'go'
-  const label = isGo ? 'GO' : 'NO-GO'
-  return brainWrapper(`<div class="text-center brain-arena">
-    ${renderPracticeBanner(s)}
-    ${brainHud(s.index + 1, s.total, 'Go / No-Go')}
-    <div class="brain-gonogo-signal ${isGo ? 'is-go' : 'is-nogo'}">
-      <span class="brain-gonogo-ring"></span>
-      <span class="brain-gonogo-label">${label}</span>
-    </div>
-    ${isGo
-      ? `<button type="button" onclick="gonogoTap()" class="btn-primary w-full py-4 brain-btn-pulse">¡Tocar!</button>`
-      : `<p class="brain-hint">Aguanta — no toques</p>`}
-    ${renderTrialFlash(s)}
-  </div>`, { arena: true })
-}
-
-window.gonogoTap = function() {
-  const s = brainState.gonogo
-  const t = s.trials[s.index]
-  const ok = t.type === 'go'
-  logTrial(s.trialLog, { correct: ok, type: ok ? 'go_hit' : 'commission' }, isPractice(s))
-  s.flash = ok ? 'ok' : 'bad'
-  if (ok) { s.score++; playTone(523) } else playTone(200)
-  markTrial(ok)
-  gonogoNext()
-}
-
-function gonogoNext() {
-  const s = brainState.gonogo
-  s.index++
-  if (s.index >= s.total) {
-    if (isPractice(s)) {
-      beginScoredBlock(s)
-      s.trials = s.fullTrials
-      s.total = s.fullTrials.length
-      s.index = -1
-      s.score = 0
-      s.flash = null
-      gonogoNext()
-      return
-    }
-    ensureClinicalLab().completeClinicalReport('gonogo', s)
-    return
-  }
-  s.waiting = true; render(true)
-  const waitMs = s.waitMs || 600
-  const nogoMs = s.nogoMs || 1200
-  brainTimers.push(setTimeout(() => {
-    s.waiting = false; render(true)
-    const t = s.trials[s.index]
-    if (t.type === 'nogo') {
-      brainTimers.push(setTimeout(() => {
-        if (s.index < s.total && !s.finished && brainState.exercise === 'gonogo') {
-          logTrial(s.trialLog, { correct: true, type: 'nogo_ok' }, isPractice(s))
-          s.score++; markTrial(true); playTone(523); gonogoNext()
-        }
-      }, nogoMs))
-    }
-  }, waitMs))
-}
-
-window.gonogoManualStart = function() {
-  const s = brainState.gonogo
-  if (s.started) return
-  ensureClinicalLab().prepareClinicalState(s)
-  if (isPractice(s)) {
-    s.trials = s.practiceTrials
-    s.total = PRACTICE_TRIALS
-  }
-  s.started = true
-  s.index = -1
-  gonogoNext()
-}
-
-window.gonogoStart = function() { gonogoManualStart() }
 
 function renderCorsiGame() {
   const c = brainState.corsi
@@ -1679,56 +1306,6 @@ function patchSimonUI() {
   if (!grid) return false
   const label = document.getElementById('simon-label')
   if (label) label.textContent = `Nivel ${s.level}`
-  return true
-}
-
-function patchStroopUI() {
-  const s = brainState.stroop
-  if (!s || s.finished || brainState.protocolBrief === 'stroop') return false
-  const word = document.querySelector('.brain-stroop-word')
-  const grid = document.querySelector('.brain-color-grid')
-  if (!word || !grid) return false
-  const t = stroopTrialMeta(s)
-  if (!t) return false
-  word.textContent = t.word
-  word.style.setProperty('--stroop-ink', t.ink)
-  const tag = document.querySelector('.brain-tag')
-  if (tag) {
-    tag.textContent = t.congruent ? 'Congruente' : 'Conflicto'
-    tag.className = `brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}`
-  }
-  const fill = document.querySelector('.brain-lab-metrics__fill')
-  const val = document.querySelector('.brain-lab-metrics__value')
-  const cur = stroopHudIndex(s)
-  const tot = stroopHudTotal(s)
-  if (fill) fill.style.width = `${Math.round((cur / tot) * 100)}%`
-  if (val) val.textContent = `${cur}/${tot}`
-  syncBrainLabChrome()
-  return true
-}
-
-function patchFlankerUI() {
-  const s = brainState.flanker
-  if (!s || s.finished || brainState.protocolBrief === 'flanker') return false
-  const row = document.querySelector('.brain-flanker-row')
-  if (!row) return false
-  const t = isPractice(s) ? s.practiceTrials?.[s.practiceIdx || 0] : s.trials[s.index]
-  if (!t) return false
-  const arrows = flankerArrows(t)
-  row.innerHTML = arrows.split('').map((ch, i) =>
-    `<span class="brain-flanker-char ${i === 2 ? 'is-center' : ''}">${ch}</span>`).join('')
-  const tag = document.querySelector('.brain-tag')
-  if (tag) {
-    tag.textContent = t.congruent ? 'Alineadas' : 'Interferencia'
-    tag.className = `brain-tag ${t.congruent ? 'brain-tag--ok' : 'brain-tag--warn'}`
-  }
-  const fill = document.querySelector('.brain-lab-metrics__fill')
-  const val = document.querySelector('.brain-lab-metrics__value')
-  const cur = isPractice(s) ? (s.practiceIdx || 0) + 1 : s.index + 1
-  const tot = isPractice(s) ? PRACTICE_TRIALS : s.total
-  if (fill) fill.style.width = `${Math.round((cur / tot) * 100)}%`
-  if (val) val.textContent = `${cur}/${tot}`
-  syncBrainLabChrome()
   return true
 }
 
@@ -2467,6 +2044,41 @@ export function bindBrainGymGlobals() {
     goTrain(brainState.trainSection === 'lab' ? 'lab' : 'program')
   }
 }
+
+initProtocolContext({
+  brainState,
+  render,
+  brainWrapper,
+  brainHud,
+  markTrial,
+  playTone,
+  ensureClinicalLab,
+  brainTimers,
+  brainDelay,
+  clearTrialDeadline,
+  startTrialDeadline,
+  syncBrainLabChrome,
+  getIntensity,
+  renderProtocolIntro,
+  getExerciseLevel,
+})
+buildClinicalProtocolRegistry({ renderDualNBackGame })
+registerFreeLabProtocols({
+  renderDualNBackGame,
+  renderRevSpanGame,
+  renderPasatGame,
+  renderSwitchingGame,
+  renderCorsiGame,
+  renderSymbolsGame,
+  renderLogicGame,
+  renderMathGame,
+  renderMemoryGame,
+  renderSimonGame,
+  renderSequenceGame,
+  renderReactionGame,
+  renderAnagramGame,
+  renderOddOutGame,
+})
 
 wireBrainRuntime({
   renderExercise: renderBrainExercise,

@@ -3,9 +3,25 @@
 @font-face {
   font-family: 'Inter';
   font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../public/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url('../public/fonts/inter-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../public/fonts/inter-latin.woff2') format('woff2');
 }
 
 @font-face {

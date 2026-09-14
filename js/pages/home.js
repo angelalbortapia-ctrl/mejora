@@ -9,6 +9,8 @@ import {
 } from '/js/coaching.js'
 import { homeInsightHTML } from '/js/apis.js'
 import { renderHomeNeuroCard } from '/js/brain-academy.js'
+import { renderAdaptiveMissionCard } from '/js/brain-program.js'
+import { renderBrainProfileCard } from '/js/brain-profile.js'
 import { renderHomeReviewBanner } from '/js/school.js'
 import { getPremiumCoach } from '/js/coach-engine.js'
 
@@ -167,6 +169,8 @@ export function renderHome({ moodPickerHTML, dailyApis, dailyApisLoading }) {
       <div class="m-home-body">
         <div class="m-home-main">
           ${renderHomeReviewBanner()}
+          ${renderAdaptiveMissionCard()}
+          ${renderBrainProfileCard()}
           ${todayListHTML()}
           ${renderHomeNeuroCard()}
         </div>

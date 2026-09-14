@@ -1,7 +1,10 @@
 /** Gimnasia — Inicio y Cuerpo */
 
 import { esc } from '/js/core.js'
-import { getProgramStats, getDomainProgress, getTodaysSession } from '/js/brain-program.js'
+import {
+  getProgramStats, getDomainProgress, getTodaysSession, renderAdaptiveMissionCard,
+} from '/js/brain-program.js'
+import { renderBrainProfileCard } from '/js/brain-profile.js'
 import {
   getBrainRegionProgress, getSchoolStats, getCurrentSchoolWeek, getDueReviews,
 } from '/js/school.js'
@@ -118,6 +121,8 @@ export function renderInicioHub() {
       { val: `${prog.weekSessions}/${prog.weekTarget}`, lbl: 'semana' },
     ],
   })}
+    ${renderAdaptiveMissionCard()}
+    ${renderBrainProfileCard()}
     ${nextSteps}
     ${quickNav()}
     <div class="brain-synapse-theater-wrap">

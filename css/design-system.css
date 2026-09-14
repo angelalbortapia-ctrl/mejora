@@ -1,14 +1,14 @@
 /* ═══ Mejora Design System — arquitectura UI ═══ */
 
 :root {
-  --ds-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ds-duration: 0.28s;
-  --ds-tabs-bg: rgba(255, 255, 255, 0.04);
+  --ds-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-duration: 0.2s;
+  --ds-tabs-bg: rgba(255, 255, 255, 0.03);
   --ds-panel-bg: var(--glass-bg, var(--bg-card));
   --ds-panel-border: var(--glass-border, var(--border));
   --ds-radius: var(--radius-lg);
-  --ds-shadow: 0 12px 40px rgba(0, 0, 0, 0.32);
-  --ds-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--primary-soft);
+  --ds-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
+  --ds-shadow-hover: 0 8px 32px -2px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(139, 92, 246, 0.15);
 }
 
 /* ── Page frame ── */
@@ -84,10 +84,10 @@
 }
 
 .ds-tab.is-active {
-  color: var(--btn-text);
-  background: var(--gradient-hero);
-  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
-  box-shadow: none;
+  color: #e9d5ff;
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.32);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
 }
 
 .ds-tab:active { transform: scale(0.98); }

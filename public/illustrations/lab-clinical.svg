@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Laboratorio clínico">
+  <rect width="400" height="300" fill="#09090b"/>
+  <rect x="80" y="60" width="240" height="180" rx="16" fill="#18181b" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <rect x="110" y="100" width="180" height="8" rx="4" fill="#10b981" opacity="0.7"/>
+  <rect x="110" y="125" width="140" height="8" rx="4" fill="#8b5cf6" opacity="0.5"/>
+  <rect x="110" y="150" width="160" height="8" rx="4" fill="#71717a" opacity="0.4"/>
+  <circle cx="290" cy="180" r="36" fill="none" stroke="#8b5cf6" stroke-width="3" opacity="0.6"/>
+  <path d="M290 155v50M265 180h50" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round"/>
+</svg>

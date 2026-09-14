@@ -1,0 +1,874 @@
+/* ═══════════════════════════════════════════════════════════
+   FORGE Premium UI — Linear / Vercel / Raycast aesthetic
+   Dark zinc-950 · glass surfaces · violet accent · emerald XP
+   ═══════════════════════════════════════════════════════════ */
+
+/* Reafirma tokens premium tras capa legacy (04-legacy-pages redefine :root) */
+body.mejora-forge,
+body.mejora-v3 {
+  --bg: #09090b;
+  --bg-elevated: rgba(24, 24, 27, 0.72);
+  --bg-card: rgba(24, 24, 27, 0.55);
+  --bg-surface: rgba(39, 39, 42, 0.65);
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
+  --primary: #8b5cf6;
+  --primary-hover: #a78bfa;
+  --primary-soft: rgba(139, 92, 246, 0.12);
+  --primary-glow: rgba(139, 92, 246, 0.28);
+  --neon: #8b5cf6;
+  --btn-text: #fafafa;
+  --secondary-bg: rgba(255, 255, 255, 0.04);
+  --input-bg: rgba(24, 24, 27, 0.8);
+  --header-bg: rgba(9, 9, 11, 0.85);
+  --sidebar-bg: #09090b;
+  --glass-bg: rgba(24, 24, 27, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --success: #10b981;
+  --danger: #f87171;
+  --gradient-hero: linear-gradient(135deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.95) 50%, #09090b 100%);
+  --gradient-card: linear-gradient(165deg, rgba(39, 39, 42, 0.65) 0%, rgba(24, 24, 27, 0.8) 100%);
+  --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Glass primitives ── */
+.ds-glass,
+.m-section,
+.m-now,
+.m-adaptive-mission,
+.m-shortcut,
+.brain-neural-card,
+.brain-neural-hero,
+.game-card--lab,
+.brain-clinical-report,
+.brain-protocol-brief,
+.brain-protocol-debrief,
+.brain-lab-header,
+.brain-lab-stage {
+  background: var(--m-glass-bg) !important;
+  backdrop-filter: blur(var(--m-glass-blur));
+  -webkit-backdrop-filter: blur(var(--m-glass-blur));
+  border: 1px solid var(--m-glass-border) !important;
+  box-shadow: var(--m-glass-shadow);
+}
+
+/* ── Metric typography ── */
+.font-metric,
+.brain-clinical-report__score,
+.brain-clinical-report__table td strong,
+.brain-lab-metrics__value,
+.brain-lab-telemetry__item strong,
+.brain-neural-stat__val,
+.m-task-xp,
+.m-progress-pill strong,
+.banner-metric strong {
+  font-family: var(--m-font-metric);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  letter-spacing: -0.02em;
+}
+
+/* ── Global microinteractions ── */
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.ds-tab,
+.ds-subtab,
+.m-task,
+.m-shortcut,
+.m-adaptive-mission__cta,
+.game-card--lab,
+.brain-metric-tip,
+.brain-lab-header__exit {
+  transition: all var(--m-duration) var(--m-ease-premium);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.ds-tab:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ═══ INICIO — command center premium ═══ */
+.page-home--v3 {
+  background: transparent;
+}
+
+.page-home--v3 .m-home-top {
+  border-bottom-color: var(--m-glass-border);
+  padding-bottom: 1rem;
+}
+
+.page-home--v3 .m-home-date {
+  color: var(--m-accent);
+  font-family: var(--m-ui);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 0.6875rem;
+}
+
+.page-home--v3 .m-home-title {
+  font-family: var(--m-display);
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.1;
+  background: linear-gradient(180deg, #fafafa 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.page-home--v3 .m-home-lead {
+  font-family: var(--m-ui);
+  font-size: 0.875rem;
+  color: var(--m-muted);
+  line-height: 1.5;
+}
+
+.page-home--v3 .m-progress-pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  padding: 0.35rem 0.65rem;
+  margin-top: 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--m-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--m-glass-border);
+}
+
+.page-home--v3 .m-progress-pill strong {
+  color: var(--m-success);
+  font-weight: 600;
+}
+
+/* Coach card */
+.page-home--v3 .m-now {
+  border-top: none !important;
+  border-radius: var(--m-radius-lg);
+  padding: 1rem 1.1rem;
+}
+
+.page-home--v3 .m-now:hover {
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  box-shadow: var(--m-glass-shadow), 0 0 0 1px rgba(139, 92, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.page-home--v3 .m-now-label {
+  color: var(--m-muted);
+  font-family: var(--m-ui);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.page-home--v3 .m-now-title {
+  font-family: var(--m-ui);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--m-text);
+}
+
+.page-home--v3 .m-now-insight {
+  color: var(--m-accent);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.page-home--v3 .m-now-cta {
+  color: var(--m-accent);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.page-home--v3 .m-coach-chip {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.22);
+  color: #c4b5fd;
+  font-weight: 500;
+}
+
+/* Sections & tasks */
+.page-home--v3 .m-section {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+}
+
+.page-home--v3 .m-section-head {
+  border-bottom-color: var(--m-glass-border);
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.5rem;
+}
+
+.page-home--v3 .m-section-title {
+  font-family: var(--m-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--m-muted);
+}
+
+.page-home--v3 .m-section-meta {
+  font-family: var(--m-font-metric);
+  color: var(--m-muted);
+  font-size: 0.6875rem;
+}
+
+.page-home--v3 .m-task {
+  padding: 0.65rem 0.6rem;
+  border-radius: 8px;
+}
+
+.page-home--v3 .m-task:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--m-glass-border);
+}
+
+.page-home--v3 .m-task-check {
+  border-radius: 6px;
+  border-color: rgba(255, 255, 255, 0.16);
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.page-home--v3 .m-task.is-done .m-task-check {
+  background: var(--m-success);
+  border-color: var(--m-success);
+  color: #09090b;
+}
+
+.page-home--v3 .m-task-xp {
+  color: var(--m-success);
+  font-size: 0.6875rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: var(--m-success-soft);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.page-home--v3 .m-shortcut:hover {
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  box-shadow: var(--m-glass-shadow);
+  transform: translateY(-1px);
+}
+
+/* Adaptive mission */
+.page-home--v3 .m-adaptive-mission,
+.page-brain-neural .m-adaptive-mission,
+.page-solo-hoy .m-adaptive-mission {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+}
+
+.page-home--v3 .m-adaptive-mission__label,
+.page-brain-neural .m-adaptive-mission__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--m-muted);
+}
+
+.page-home--v3 .m-adaptive-mission__cta,
+.page-brain-neural .m-adaptive-mission__cta {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--m-glass-border);
+  border-radius: 10px;
+}
+
+.page-home--v3 .m-adaptive-mission__cta:hover,
+.page-brain-neural .m-adaptive-mission__cta:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.06);
+  transform: translateY(-1px);
+}
+
+.page-home--v3 .m-adaptive-mission__title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.page-home--v3 .m-adaptive-mission__stat {
+  font-family: var(--m-font-metric);
+  font-size: 0.75rem;
+  color: var(--m-success);
+}
+
+/* Neuro card */
+.page-home--v3 .m-neuro {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: var(--m-glass-bg);
+  backdrop-filter: blur(var(--m-glass-blur));
+  border: 1px solid var(--m-glass-border);
+  box-shadow: var(--m-glass-shadow);
+}
+
+/* ═══ LABORATORIO CLÍNICO — hub & cards ═══ */
+.page-brain-neural.brain-lab,
+.page-brain-neural .brain-lab {
+  --text: var(--m-text);
+  --text-muted: var(--m-muted);
+}
+
+.page-brain-neural .brain-neural-hero {
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  overflow: hidden;
+}
+
+.page-brain-neural .brain-neural-hero__glow {
+  background: radial-gradient(ellipse 70% 80% at 100% 0%, rgba(139, 92, 246, 0.18), transparent 55%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgba(16, 185, 129, 0.08), transparent 50%);
+  opacity: 1;
+}
+
+.page-brain-neural .brain-neural-hero__kicker {
+  font-family: var(--m-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--m-accent);
+}
+
+.page-brain-neural .brain-neural-hero__title {
+  font-family: var(--m-ui);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.page-brain-neural .brain-neural-hero__sub {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--m-muted);
+  max-width: 42rem;
+}
+
+.page-brain-neural .brain-neural-stat {
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--m-glass-border);
+}
+
+.page-brain-neural .brain-neural-stat__val {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--m-text);
+}
+
+.page-brain-neural .brain-neural-stat__lbl {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--m-muted);
+}
+
+.page-brain-neural .ds-tabs {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--m-glass-border);
+  border-radius: 10px;
+  padding: 0.25rem;
+}
+
+.page-brain-neural .ds-tab.is-active {
+  background: rgba(139, 92, 246, 0.18) !important;
+  color: #e9d5ff !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.12);
+}
+
+.page-brain-neural .ds-subtab.is-active {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #e9d5ff;
+}
+
+.page-brain-neural .brain-lab-intro {
+  font-size: 0.8125rem;
+  color: var(--m-muted);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--m-glass-border);
+}
+
+.page-brain-neural .brain-lab-group__head .ds-section-title {
+  font-family: var(--m-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--m-muted);
+  margin: 0;
+}
+
+.page-brain-neural .brain-lab-section-badge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.page-brain-neural .brain-lab-section-badge--clinical {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.page-brain-neural .brain-lab-section-badge--free {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.22);
+}
+
+.page-brain-neural .brain-games-grid {
+  gap: 0.65rem;
+}
+
+@media (min-width: 640px) {
+  .page-brain-neural .brain-games-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-brain-neural .brain-games-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.page-brain-neural .game-card--lab {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  text-align: left;
+}
+
+.page-brain-neural .game-card--lab:hover {
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  box-shadow: var(--m-glass-shadow), 0 0 0 1px rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.page-brain-neural .brain-protocol-card {
+  padding: 0.85rem 0.95rem;
+}
+
+.page-brain-neural .brain-protocol-card__title {
+  font-family: var(--m-ui);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.page-brain-neural .brain-protocol-card__paradigm {
+  font-family: var(--m-font-metric);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+}
+
+.page-brain-neural .brain-protocol-tag {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+.page-brain-neural .brain-protocol-tag--clinical {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.page-brain-neural .brain-protocol-tag--casual {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.page-brain-neural .brain-protocol-card__purpose {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--m-muted);
+}
+
+.page-brain-neural .brain-protocol-card__measures {
+  font-size: 0.6875rem;
+  color: rgba(16, 185, 129, 0.85);
+  font-family: var(--m-font-metric);
+}
+
+.page-brain-neural .brain-protocol-card__history {
+  font-family: var(--m-font-metric);
+  font-size: 0.6875rem;
+  color: var(--m-success);
+}
+
+/* ═══ INFORMES CLÍNICOS ═══ */
+.brain-clinical-report {
+  max-width: 32rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 14px;
+}
+
+.brain-clinical-report__kicker {
+  font-family: var(--m-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--m-muted);
+}
+
+.brain-clinical-badge {
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.brain-clinical-report__score {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--m-text);
+  background: linear-gradient(135deg, #fafafa 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brain-clinical-report__interp {
+  font-size: 0.8125rem;
+  color: var(--m-muted);
+}
+
+.brain-clinical-report__micro {
+  font-size: 0.8125rem;
+  text-align: left;
+  color: var(--m-text);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  line-height: 1.5;
+}
+
+.brain-clinical-report__table {
+  font-size: 0.8125rem;
+  border-top: 1px solid var(--m-glass-border);
+  border-bottom: 1px solid var(--m-glass-border);
+  margin: 0.85rem 0;
+}
+
+.brain-clinical-report__table tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.brain-clinical-report__table tr:last-child {
+  border-bottom: none;
+}
+
+.brain-clinical-report__table th {
+  font-family: var(--m-ui);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--m-muted);
+  padding: 0.55rem 0;
+}
+
+.brain-clinical-report__table td {
+  padding: 0.55rem 0;
+  color: var(--m-text);
+}
+
+.brain-clinical-report__table td strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--m-text);
+}
+
+.brain-clinical-report__hint {
+  font-size: 0.6875rem;
+  opacity: 0.75;
+}
+
+.brain-metric-tip {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--m-muted);
+  transition: all var(--m-duration) var(--m-ease-premium);
+}
+
+.brain-metric-tip:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  color: var(--m-accent);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.brain-clinical-report__trend h4 {
+  font-family: var(--m-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--m-muted);
+  margin: 0 0 0.5rem;
+}
+
+.brain-report-trend__bar {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 4px 4px 0 0;
+  transition: height var(--m-duration) var(--m-ease-premium);
+}
+
+.brain-report-trend__bar span {
+  font-family: var(--m-font-metric);
+  font-size: 0.625rem;
+}
+
+/* ═══ RUNTIME CLÍNICO — dark glass (no parchment) ═══ */
+.page-brain-lab-runtime {
+  --text: var(--m-text);
+  --text-muted: var(--m-muted);
+  --m-text: var(--m-text);
+  --m-muted: var(--m-muted);
+  --bg-card: var(--m-glass-bg);
+  --secondary-bg: rgba(255, 255, 255, 0.04);
+  --border: var(--m-glass-border);
+  --on-surface-text: var(--m-text);
+  --on-surface-muted: var(--m-muted);
+  color: var(--m-text);
+}
+
+.page-brain-lab-runtime .brain-lab-header {
+  border-top: none !important;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.page-brain-lab-runtime .brain-lab-header__domain {
+  color: var(--m-accent);
+}
+
+.page-brain-lab-runtime .brain-lab-header__title {
+  font-family: var(--m-ui);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.page-brain-lab-runtime .brain-lab-telemetry__item em {
+  font-family: var(--m-font-metric);
+  font-size: 0.6875rem;
+  color: var(--m-muted);
+}
+
+.page-brain-lab-runtime .brain-lab-telemetry__item strong {
+  color: var(--m-success);
+}
+
+.page-brain-lab-runtime .brain-lab-stage {
+  border-radius: 12px;
+}
+
+.page-brain-lab-runtime .brain-lab-metrics {
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--m-glass-border);
+}
+
+.page-brain-lab-runtime .brain-lab-metrics__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--m-muted);
+}
+
+.page-brain-lab-runtime .brain-lab-metrics__value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--m-text);
+}
+
+.page-brain-lab-runtime .brain-protocol-brief,
+.page-brain-lab-runtime .brain-protocol-debrief,
+.page-brain-lab-runtime .brain-clinical-report {
+  color: var(--m-text);
+}
+
+.page-brain-lab-runtime .text-main {
+  color: var(--m-text) !important;
+}
+
+/* Primary buttons — violet glow */
+body:not(.theme-rpg) .btn-primary {
+  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #fafafa !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 16px rgba(139, 92, 246, 0.35);
+  font-weight: 600;
+}
+
+body:not(.theme-rpg) .btn-primary:hover {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 6px 24px rgba(139, 92, 246, 0.45);
+}
+
+body:not(.theme-rpg) .btn-secondary {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--m-glass-border) !important;
+  color: var(--m-text) !important;
+}
+
+body:not(.theme-rpg) .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Progress bars */
+body:not(.theme-rpg) .progress-fill {
+  background: linear-gradient(90deg, #10b981, #34d399) !important;
+}
+
+/* Reduced motion */
+.reduce-motion .m-now,
+.reduce-motion .game-card--lab,
+.reduce-motion .m-adaptive-mission__cta,
+.reduce-motion .btn-primary,
+.reduce-motion .btn-secondary {
+  transition: none !important;
+  transform: none !important;
+}
+
+/* ds-03 Lucide icons */
+.ds-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+/* vision-01 — perfil cognitivo */
+.brain-profile {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: var(--m-glass-bg);
+  backdrop-filter: blur(var(--m-glass-blur));
+  border: 1px solid var(--m-glass-border);
+  box-shadow: var(--m-glass-shadow);
+  margin-bottom: 0.5rem;
+}
+
+.brain-profile__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.brain-profile__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--m-muted);
+  margin: 0;
+}
+
+.brain-profile__meta {
+  font-size: 0.6875rem;
+  color: var(--m-muted);
+}
+
+.brain-profile__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.brain-profile__row {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brain-profile__row-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brain-profile__domain-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.brain-profile__domain-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--m-text);
+}
+
+.brain-profile__domain-meta {
+  font-size: 0.6875rem;
+  color: var(--m-muted);
+  margin: 0.1rem 0 0;
+}
+
+.brain-profile__domain-score {
+  margin-left: auto;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--m-success);
+}
+
+.brain-profile__spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  margin-top: 0.45rem;
+}
+
+.brain-profile__spark-bar {
+  flex: 1;
+  min-width: 4px;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+  transition: height var(--m-duration) var(--m-ease-premium);
+}
+
+.brain-profile--empty .brain-profile__empty-body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brain-profile__illus {
+  opacity: 0.9;
+  border-radius: 8px;
+}

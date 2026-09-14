@@ -1,5 +1,5 @@
 const BASE = new URL('.', self.location.href).pathname.replace(/\/$/, '')
-const ASSET_V = 176
+const ASSET_V = 179
 const CACHE = `mejora-v${ASSET_V}`
 
 const ICONS = [

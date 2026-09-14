@@ -10,6 +10,7 @@ import { getNextBestAction } from '/js/analytics.js'
 import { getMissionTone, getMissionChip } from '/js/coaching.js'
 import { pageHero } from '/js/ui.js'
 import { habitChartHTML } from '/js/page-helpers.js'
+import { renderAdaptiveMissionCard } from '/js/brain-program.js'
 
 export function renderPlan(dailyApis) {
   processPlanAwards(checkPlanTask('plan_review'))
@@ -109,6 +110,8 @@ export function renderSoloHoy() {
         <a href="#/" class="btn-ghost text-center no-underline py-3">Vista completa</a>
       </div>
     </div>
+
+    ${renderAdaptiveMissionCard()}
 
     <a href="${action.link}" class="ds-list-item next-action no-underline solo-action">
       <span class="ds-list-icon">${action.icon}</span>

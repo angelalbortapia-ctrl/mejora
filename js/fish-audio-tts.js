@@ -29,17 +29,25 @@ const MODELS_URL = 'https://api.fish.audio/model'
 const TTS_PROXY = '/api/fish/tts'
 const MODELS_PROXY = '/api/fish/model'
 
+function getCloudFishProxyBase() {
+  return (getSettings().fishProxyUrl || '').trim().replace(/\/$/, '')
+}
+
 function useFishProxy() {
   const h = window.location?.hostname || ''
-  return h === 'localhost' || h === '127.0.0.1'
+  if (h === 'localhost' || h === '127.0.0.1') return true
+  return Boolean(getCloudFishProxyBase())
 }
 
 function fishTtsUrl() {
+  const cloud = getCloudFishProxyBase()
+  if (cloud) return `${cloud}/tts`
   return useFishProxy() ? TTS_PROXY : TTS_URL
 }
 
 function fishModelsUrl(query = '') {
-  const base = useFishProxy() ? MODELS_PROXY : MODELS_URL
+  const cloud = getCloudFishProxyBase()
+  const base = cloud ? `${cloud}/model` : (useFishProxy() ? MODELS_PROXY : MODELS_URL)
   return query ? `${base}?${query}` : base
 }
 
@@ -64,12 +72,24 @@ function getApiKey() {
 export function hasFishTts() {
   const voice = getFishVoiceId()
   if (!voice) return false
-  if (useFishProxy()) return !fishProxyUnavailable
+  if (getCloudFishProxyBase() || useFishProxy()) return !fishProxyUnavailable
   return Boolean(getApiKey())
 }
 
 export function hasFishApiKey() {
-  return useFishProxy() || Boolean(getApiKey())
+  return Boolean(getCloudFishProxyBase()) || useFishProxy() || Boolean(getApiKey())
+}
+
+export function setFishProxyUrl(url) {
+  const s = getSettings()
+  s.fishProxyUrl = (url || '').trim().replace(/\/$/, '')
+  saveSettings(s)
+  fishProxyUnavailable = false
+  audioCache.clear()
+}
+
+export function getFishProxyUrl() {
+  return getCloudFishProxyBase()
 }
 
 export function getFishVoiceId() {

@@ -136,10 +136,16 @@ export function renderSettings() {
         </select>
       </div>
       <div class="ds-setting-row ds-setting-row--stack">
+        <span class="ds-setting-label">Proxy Fish (producción estática)</span>
+        <input type="url" class="input-field" placeholder="https://tu-worker.workers.dev/api/fish"
+          value="${esc(s.fishProxyUrl || '')}" onchange="saveFishProxyUrl(this.value)" autocomplete="off">
+        <p class="ds-setting-hint">Cloudflare Worker con <code>FISH_API_KEY</code> en servidor. Local: <code>start-server.command</code> (:5173).</p>
+      </div>
+      <div class="ds-setting-row ds-setting-row--stack">
         <span class="ds-setting-label">Fish Audio API key</span>
         <input type="password" class="input-field" placeholder="Bearer token de fish.audio → API Keys"
           value="${esc(s.fishApiKey || '')}" onchange="saveFishApiKey(this.value)" autocomplete="off">
-        <p class="ds-setting-hint">O en <code>js/fish-config.local.js</code> (no se sube a git).</p>
+        <p class="ds-setting-hint">Solo si no usas proxy. O en <code>js/fish-config.local.js</code> (no se sube a git).</p>
       </div>
       <div class="ds-setting-row ds-setting-row--stack">
         <span class="ds-setting-label">Voz Fish</span>
@@ -497,6 +503,11 @@ export function bindSettingsGlobals(deps = {}) {
     render()
   }
   window.saveFishApiKey = (key) => { setFishApiKey(key); render() }
+  window.saveFishProxyUrl = async (url) => {
+    const { setFishProxyUrl } = await import('/js/fish-audio-tts.js')
+    setFishProxyUrl(url)
+    render()
+  }
   window.saveFishVoiceId = (id) => { setFishVoiceId(id); render() }
   window.setFishModelSetting = (id) => { setFishModel(id); render() }
   window.setFishSpeedSetting = (n) => { setFishSpeed(n); render() }

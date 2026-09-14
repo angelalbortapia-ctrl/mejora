@@ -2,7 +2,9 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   createTrialLog, logTrial, beginScoredBlock, computeMetrics, computeStroopMetrics,
-  computeWisconsinMetrics, saveProtocolResult, getProtocolHistory, interpretVsHistory,
+  computeWisconsinMetrics, computeTrailMetrics, computeANTMetrics, computeGoNoGoMetrics,
+  computeCPTMetrics, saveProtocolResult, getProtocolHistory, interpretVsHistory,
+  generateMicroFeedback, METRIC_GLOSSARY,
   hasSeenProtocolBrief, markProtocolBriefSeen, getClinicalReportExportPayload,
   PRACTICE_TRIALS, isPractice,
 } from '../js/brain-metrics.js'
@@ -159,6 +161,55 @@ describe('brain-clinical — export PDF payload', () => {
     ])
     assert.equal(payload.exerciseName, 'Stroop')
     assert.ok(payload.interpretation)
+  })
+})
+
+describe('brain-clinical — trail, ant, gonogo métricas', () => {
+  it('computeTrailMetrics penaliza errores', () => {
+    const perfect = computeTrailMetrics({ elapsedMs: 45000, errors: 0, variant: 'A' })
+    const flawed = computeTrailMetrics({ elapsedMs: 50000, errors: 3, variant: 'B' })
+    assert.equal(perfect.accuracy, 100)
+    assert.ok(flawed.accuracy < perfect.accuracy)
+    assert.equal(perfect.rows.find(r => r.label === 'Tiempo')?.value, '45.0s')
+  })
+
+  it('computeANTMetrics calcula alert cost', () => {
+    const log = createTrialLog()
+    log.scored = [
+      { correct: true, cue: 'none', rt: 500 },
+      { correct: true, cue: 'center', rt: 620 },
+      { correct: true, cue: 'spatial', rt: 480 },
+    ]
+    const m = computeANTMetrics(log)
+    assert.equal(m.accuracy, 100)
+    assert.ok(m.rows.some(r => r.label.includes('Alerta')))
+  })
+
+  it('computeGoNoGoMetrics cuenta comisiones', () => {
+    const log = createTrialLog()
+    log.scored = [
+      { type: 'go_hit', correct: true },
+      { type: 'commission', correct: false },
+      { type: 'go_hit', correct: true },
+    ]
+    const m = computeGoNoGoMetrics(log, { score: 2, total: 3 })
+    assert.equal(m.rows.find(r => r.label === 'Comisiones')?.value, '1')
+    assert.equal(m.accuracy, 67)
+  })
+})
+
+describe('brain-clinical — micro-feedback NLP', () => {
+  it('generateMicroFeedback detecta mejora de precisión', () => {
+    const text = generateMicroFeedback('stroop', { accuracy: 90 }, [
+      { metrics: { accuracy: 90 } },
+      { metrics: { accuracy: 70 } },
+    ])
+    assert.match(text, /precisión|mejora|salto/i)
+  })
+
+  it('METRIC_GLOSSARY define términos clave', () => {
+    assert.ok(METRIC_GLOSSARY["d′ (d-prime)"])
+    assert.ok(METRIC_GLOSSARY['Falsas alarmas'])
   })
 })
 

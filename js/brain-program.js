@@ -1,4 +1,4 @@
-import { getItem, setItem, getToday, toDateStr } from '/js/core.js'
+import { getItem, setItem, getToday, toDateStr, esc } from '/js/core.js'
 
 /** Basado en: Miyake et al. (2000), Klingberg (2010), meta-análisis CCT 2024 */
 export const COGNITIVE_DOMAINS = {
@@ -419,6 +419,101 @@ export function getProgramStats() {
     weekTarget: 3,
     doneToday: isSessionDoneToday(),
   }
+}
+
+/** Analiza historial clínico (últimas 7 sesiones por dominio) y sugiere misión adaptativa */
+export async function getAdaptiveDailyMission() {
+  const { getProtocolHistory } = await import('/js/brain-metrics.js')
+  const domainScores = {}
+
+  Object.entries(EXERCISES).forEach(([exId, ex]) => {
+    const domain = ex.domain
+    if (!domain) return
+    const hist = getProtocolHistory(exId).slice(0, 7)
+    if (!hist.length) return
+    const accs = hist.map(h => h.metrics?.accuracy).filter(v => typeof v === 'number')
+    if (!accs.length) return
+    const avg = accs.reduce((a, b) => a + b, 0) / accs.length
+    const variance = accs.length > 1
+      ? Math.sqrt(accs.reduce((s, v) => s + (v - avg) ** 2, 0) / accs.length)
+      : 0
+    if (!domainScores[domain]) domainScores[domain] = { scores: [], exercises: [] }
+    domainScores[domain].scores.push(avg)
+    domainScores[domain].exercises.push({ id: exId, avg, variance, name: ex.name, icon: ex.icon })
+  })
+
+  let weakest = null
+  let weakestScore = Infinity
+  Object.entries(domainScores).forEach(([domainId, data]) => {
+    const mean = data.scores.reduce((a, b) => a + b, 0) / data.scores.length
+    const penalty = data.exercises.reduce((s, e) => s + e.variance, 0) / Math.max(1, data.exercises.length)
+    const composite = mean - penalty * 0.15
+    if (composite < weakestScore) {
+      weakestScore = composite
+      const ex = data.exercises.sort((a, b) => a.avg - b.avg)[0]
+      weakest = {
+        domainId,
+        domain: COGNITIVE_DOMAINS[domainId],
+        exerciseId: ex.id,
+        exerciseName: ex.name,
+        icon: ex.icon,
+        avgAccuracy: Math.round(ex.avg),
+        reason: ex.variance > 12
+          ? 'Alta variabilidad — consolidar con práctica repetida'
+          : 'Puntuación más baja de tu perfil reciente',
+      }
+    }
+  })
+
+  if (!weakest) {
+    const fallback = getTodaysSession()[0]
+    return fallback ? {
+      exerciseId: fallback.id,
+      exerciseName: fallback.name,
+      icon: fallback.icon,
+      domain: fallback.domainInfo,
+      reason: 'Sesión guiada del día',
+      avgAccuracy: null,
+    } : null
+  }
+  return weakest
+}
+
+let adaptiveMissionCache = null
+
+export async function refreshAdaptiveMission() {
+  adaptiveMissionCache = await getAdaptiveDailyMission()
+  return adaptiveMissionCache
+}
+
+export function getCachedAdaptiveMission() {
+  return adaptiveMissionCache
+}
+
+export function renderAdaptiveMissionCard() {
+  const m = adaptiveMissionCache
+  if (!m) {
+    return `<section id="adaptive-mission-card" class="m-adaptive-mission m-adaptive-mission--loading span-full" aria-busy="true">
+      <p class="m-adaptive-mission__label">Misión prioritaria</p>
+      <p class="text-sm text-muted">Analizando tu perfil cognitivo…</p>
+    </section>`
+  }
+  const domainLabel = m.domain?.name || m.domain?.short || ''
+  return `<section id="adaptive-mission-card" class="m-adaptive-mission span-full">
+    <div class="m-adaptive-mission__head">
+      <p class="m-adaptive-mission__label">Misión prioritaria del día</p>
+      ${domainLabel ? `<span class="brain-protocol-tag brain-protocol-tag--clinical">${esc(domainLabel)}</span>` : ''}
+    </div>
+    <button type="button" class="m-adaptive-mission__cta" onclick="startBrain('${m.exerciseId}')">
+      <span class="m-adaptive-mission__icon" aria-hidden="true">${m.icon || '🔬'}</span>
+      <span class="m-adaptive-mission__body">
+        <strong class="m-adaptive-mission__title">${esc(m.exerciseName)}</strong>
+        <span class="m-adaptive-mission__reason">${esc(m.reason)}</span>
+        ${m.avgAccuracy != null ? `<span class="m-adaptive-mission__stat">Media reciente: ${m.avgAccuracy}%</span>` : ''}
+      </span>
+      <span class="m-adaptive-mission__arrow" aria-hidden="true">→</span>
+    </button>
+  </section>`
 }
 
 export const PROGRAM_DISCLAIMER =

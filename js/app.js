@@ -288,6 +288,14 @@ function applyRenderChrome(path, prevPath, sameRoute) {
   if (brainState.activeLesson && path === '/gimnasia') {
     requestAnimationFrame(() => initLessonReaderScroll?.())
   }
+  if (path === '/' || path === '/hoy' || path === '/gimnasia') {
+    import('/js/brain-program.js').then(m => {
+      m.refreshAdaptiveMission().then(() => {
+        const slot = document.getElementById('adaptive-mission-card')
+        if (slot) slot.outerHTML = m.renderAdaptiveMissionCard()
+      }).catch(() => {})
+    }).catch(() => {})
+  }
   if (path === '/gimnasia') {
     requestAnimationFrame(() => syncBrainSynapseFx())
   } else if (prevPath === '/gimnasia') {
