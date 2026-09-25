@@ -1,6 +1,6 @@
-import { getItem, setItem, getToday, getSettings, getHabits, getCompletedHabitsCount } from './core.js'
-import { maybeAutoBackup } from './backup.js'
-import { getDailyBundle, formatSunsetLocal } from './apis.js'
+import { getItem, setItem, getToday, getSettings, getHabits, getCompletedHabitsCount } from '/js/core.js'
+import { maybeAutoBackup } from '/js/backup.js'
+import { getDailyBundle, formatSunsetLocal } from '/js/apis.js'
 
 export function canUseNotifications() {
   return 'Notification' in window

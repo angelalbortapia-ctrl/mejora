@@ -2,7 +2,7 @@
 
 import {
   esc, getSettings, saveSettings, getHabits, setItem, needsOnboarding, GOAL_TEMPLATES,
-} from './core.js'
+} from '/js/core.js'
 
 export const TOTAL_ONBOARD_STEPS = 8
 
@@ -60,14 +60,14 @@ function overlayHTML() {
       ${progressHTML()}
       ${stepLabel(0, 'Bienvenida')}
       <h2 class="onboarding-title">Mejora · FORGE</h2>
-      <p class="onboarding-desc">No es otra app de motivación. Es un <strong>sistema diario</strong>: plan claro, ejecutas, ves progreso y ajustas. Oscuro, directo, sin ruido.</p>
+      <p class="onboarding-desc">No es otra app de motivación. Es un <strong>sistema diario</strong>: plan claro, ejecutas, ves progreso y ajustas. Claro, directo, sin ruido.</p>
       <div class="onboarding-visual onboarding-visual--brand"><span class="onboarding-logo-mark" aria-hidden="true">M</span></div>
       <ul class="onboarding-info-list">
         <li><span class="onboarding-info-icon">1</span> Cada día: <strong>4 misiones</strong> + bonus XP</li>
         <li><span class="onboarding-info-icon">2</span> Cuatro habilidades: mente, calma, disciplina, sabiduría</li>
         <li><span class="onboarding-info-icon">3</span> Todo se guarda en tu dispositivo (offline)</li>
       </ul>
-      ${actionsHTML('Empezar la guía', 'onboardNext')}
+      ${actionsHTML('Empezar la guía', 'onboardNext', { secondaryLabel: 'Saltar por ahora', secondaryFn: 'skipOnboarding' })}
     </div></div>`
   }
 

@@ -1,0 +1,549 @@
+/* ═══════════════════════════════════════════════════════════
+   FORGE Linear UI — patrón linear.app
+   Minimalismo · bordes 1px · resplandor oscuro · Inter impecable
+   ═══════════════════════════════════════════════════════════ */
+
+body.mejora-forge,
+body.mejora-v3 {
+  /* Tipografía Linear — tokens Raycast vienen de 01-tokens + 05-premium-ui */
+  --m-display: var(--m-font);
+  --m-type-body: 0.8125rem;
+  --m-type-ui-tracking: -0.011em;
+  --m-type-label-tracking: 0;
+  font-size: var(--m-type-body);
+  letter-spacing: var(--m-type-ui-tracking);
+  font-feature-settings: "cv01", "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Fondo plano — sin auroras ni gradientes decorativos */
+body.mejora-forge::before,
+body.mejora-v3::before {
+  background: none;
+}
+
+body.mejora-forge,
+body.mejora-v3 {
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Tipografía Linear: Inter en todo, pesos contenidos ── */
+body.mejora-forge .m-home-title,
+body.mejora-v3 .m-home-title,
+body.mejora-forge .m-section-title,
+body.mejora-v3 .m-section-title,
+body.mejora-forge .m-now-title,
+body.mejora-v3 .m-now-title,
+body.mejora-forge .brain-neural-hero__title,
+body.mejora-v3 .brain-neural-hero__title,
+body.mejora-forge .logo-text,
+body.mejora-v3 .logo-text,
+body.mejora-forge .font-display,
+body.mejora-v3 .font-display {
+  font-family: var(--m-font) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.022em !important;
+  text-transform: none !important;
+  -webkit-text-fill-color: unset !important;
+  background: none !important;
+  color: var(--m-text) !important;
+}
+
+body.mejora-forge .m-home-title,
+body.mejora-v3 .m-home-title {
+  font-size: clamp(1.375rem, 3.5vw, 1.75rem) !important;
+  line-height: 1.25 !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .m-home-date,
+body.mejora-v3 .m-home-date,
+body.mejora-forge .m-now-label,
+body.mejora-v3 .m-now-label,
+body.mejora-forge .brain-profile__label,
+body.mejora-v3 .brain-profile__label,
+body.mejora-forge .brain-neural-hero__kicker,
+body.mejora-v3 .brain-neural-hero__kicker {
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: var(--m-muted) !important;
+}
+
+body.mejora-forge .m-home-lead,
+body.mejora-v3 .m-home-lead,
+body.mejora-forge .m-now-desc,
+body.mejora-v3 .m-now-desc {
+  font-size: 0.8125rem !important;
+  line-height: 1.5 !important;
+  color: var(--m-muted) !important;
+}
+
+/* Superficies glass — hereda Raycast de 05-premium-ui (no anular blur) */
+
+body.mejora-forge .m-section:hover,
+body.mejora-v3 .m-section:hover,
+body.mejora-forge .m-shortcut:hover,
+body.mejora-v3 .m-shortcut:hover,
+body.mejora-forge .game-card--lab:hover,
+body.mejora-v3 .game-card--lab:hover,
+body.mejora-forge .m-adaptive-mission__cta:hover,
+body.mejora-v3 .m-adaptive-mission__cta:hover {
+  border-color: var(--m-border-strong) !important;
+  background: var(--m-surface-2) !important;
+  box-shadow: var(--shadow-notion-hover, 0 4px 12px rgba(0, 0, 0, 0.08)) !important;
+  transform: none !important;
+}
+
+/* ── Sidebar Linear ── */
+body.mejora-forge .sidebar,
+body.mejora-v3 .sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--m-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+body.mejora-forge .sidebar-link,
+body.mejora-v3 .sidebar-link {
+  border-radius: var(--m-radius) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 0.65rem !important;
+}
+
+body.mejora-forge .sidebar-link:hover,
+body.mejora-v3 .sidebar-link:hover {
+  background: var(--m-surface) !important;
+  border-color: transparent !important;
+}
+
+body.mejora-forge .sidebar-link.active,
+body.mejora-v3 .sidebar-link.active {
+  background: var(--m-surface) !important;
+  border-color: var(--m-border) !important;
+  box-shadow: var(--m-linear-ring) !important;
+  transform: none !important;
+}
+
+body.mejora-forge .sidebar-link.active .sidebar-link-label,
+body.mejora-v3 .sidebar-link.active .sidebar-link-label {
+  color: var(--m-text) !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+}
+
+body.mejora-forge .sidebar-link.active,
+body.mejora-v3 .sidebar-link.active {
+  box-shadow: var(--m-linear-ring) !important;
+}
+
+body.mejora-forge .logo-mark,
+body.mejora-v3 .logo-mark {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  box-shadow: var(--m-linear-ring) !important;
+  border-radius: var(--m-radius) !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  color: var(--m-text) !important;
+  -webkit-text-fill-color: var(--m-text) !important;
+}
+
+body.mejora-forge .logo-text,
+body.mejora-v3 .logo-text {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+/* ── Banner ── */
+body.mejora-forge .app-banner,
+body.mejora-v3 .app-banner {
+  background: var(--header-bg) !important;
+  border-bottom: 1px solid var(--m-border) !important;
+  backdrop-filter: blur(8px) saturate(1.2) !important;
+}
+
+body.mejora-forge .banner-metric,
+body.mejora-v3 .banner-metric {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  box-shadow: none !important;
+  font-size: 0.75rem !important;
+}
+
+/* ── Tabs segmentados (Linear) ── */
+body.mejora-forge .ds-tabs,
+body.mejora-v3 .ds-tabs {
+  gap: 2px !important;
+  padding: 2px !important;
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: var(--m-radius-lg) !important;
+  box-shadow: var(--m-linear-ring) !important;
+}
+
+body.mejora-forge .ds-tab,
+body.mejora-v3 .ds-tab {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 0.45rem 0.75rem !important;
+  border-radius: calc(var(--m-radius-lg) - 2px) !important;
+  color: var(--m-muted) !important;
+}
+
+body.mejora-forge .ds-tab:hover:not(.is-active),
+body.mejora-v3 .ds-tab:hover:not(.is-active) {
+  color: var(--m-text) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+body.mejora-forge .ds-tab.is-active,
+body.mejora-v3 .ds-tab.is-active {
+  color: var(--m-text) !important;
+  background: var(--m-surface-2) !important;
+  border-color: var(--m-border) !important;
+  box-shadow: var(--m-linear-ring) !important;
+}
+
+body.mejora-forge .ds-subtab,
+body.mejora-v3 .ds-subtab {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  padding: 0.35rem 0.65rem !important;
+  border-radius: var(--m-radius) !important;
+  background: transparent !important;
+}
+
+body.mejora-forge .ds-subtab.is-active,
+body.mejora-v3 .ds-subtab.is-active {
+  background: var(--m-surface-2) !important;
+  border-color: var(--m-border-strong) !important;
+  color: var(--m-text) !important;
+  box-shadow: var(--m-linear-ring) !important;
+}
+
+/* ── Botones ── */
+body.mejora-forge .btn-primary,
+body.mejora-v3 .btn-primary {
+  background: var(--m-accent) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  border-radius: var(--m-radius) !important;
+  box-shadow: var(--m-linear-ring), 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  letter-spacing: -0.01em !important;
+}
+
+body.mejora-forge .btn-primary:hover,
+body.mejora-v3 .btn-primary:hover {
+  background: var(--m-accent-hover) !important;
+  box-shadow: var(--m-linear-ring), 0 2px 8px rgba(0, 0, 0, 0.28) !important;
+  transform: none !important;
+}
+
+body.mejora-forge .btn-secondary,
+body.mejora-v3 .btn-secondary {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-text) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  border-radius: var(--m-radius) !important;
+  box-shadow: none !important;
+}
+
+body.mejora-forge .btn-secondary:hover,
+body.mejora-v3 .btn-secondary:hover {
+  background: var(--m-surface-2) !important;
+  border-color: var(--m-border-strong) !important;
+  transform: none !important;
+}
+
+body.mejora-forge .btn-ghost,
+body.mejora-v3 .btn-ghost {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--m-muted) !important;
+}
+
+body.mejora-forge .btn-ghost:hover,
+body.mejora-v3 .btn-ghost:hover {
+  color: var(--m-text) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ── Inputs ── */
+body.mejora-forge .input-field,
+body.mejora-v3 .input-field {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: var(--m-radius) !important;
+  font-size: 0.8125rem !important;
+  color: var(--m-text) !important;
+  box-shadow: var(--m-linear-ring) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+body.mejora-forge .input-field:focus,
+body.mejora-v3 .input-field:focus {
+  outline: none !important;
+  border-color: rgba(94, 106, 210, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(94, 106, 210, 0.35), var(--m-linear-ring) !important;
+}
+
+/* ── Cards genéricas ── */
+body.mejora-forge .card,
+body.mejora-v3 .card {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: var(--m-radius-lg) !important;
+  box-shadow: var(--m-linear-shadow) !important;
+}
+
+body.mejora-forge .card:hover:not(.card-static),
+body.mejora-v3 .card:hover:not(.card-static) {
+  border-color: var(--m-border-strong) !important;
+  box-shadow: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.28) !important;
+  transform: none !important;
+}
+
+/* ── Home ── */
+body.mejora-forge .m-now,
+body.mejora-v3 .m-now {
+  border-top: 1px solid var(--m-border) !important;
+  padding: 1rem !important;
+}
+
+body.mejora-forge .m-now:hover,
+body.mejora-v3 .m-now:hover {
+  border-color: var(--m-border-strong) !important;
+  box-shadow: var(--m-linear-ring), 0 4px 16px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.mejora-forge .m-now-insight,
+body.mejora-v3 .m-now-insight {
+  color: var(--m-muted) !important;
+  font-size: 0.8125rem !important;
+}
+
+body.mejora-forge .m-now-cta,
+body.mejora-v3 .m-now-cta {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 500 !important;
+  font-size: 0.8125rem !important;
+  color: var(--m-accent) !important;
+}
+
+body.mejora-forge .m-task,
+body.mejora-v3 .m-task {
+  border-radius: var(--m-radius) !important;
+  padding: 0.55rem 0.5rem !important;
+}
+
+body.mejora-forge .m-task:hover,
+body.mejora-v3 .m-task:hover {
+  background: var(--m-surface-2) !important;
+}
+
+body.mejora-forge .m-task-label,
+body.mejora-v3 .m-task-label {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .m-task-xp,
+body.mejora-v3 .m-task-xp {
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  color: var(--m-success) !important;
+  background: var(--m-success-soft) !important;
+  border: 1px solid rgba(77, 163, 132, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 0.1rem 0.35rem !important;
+}
+
+body.mejora-forge .m-progress-pill,
+body.mejora-v3 .m-progress-pill {
+  background: var(--m-surface) !important;
+  border: 1px solid var(--m-border) !important;
+  font-size: 0.75rem !important;
+  color: var(--m-muted) !important;
+  box-shadow: none !important;
+}
+
+body.mejora-forge .m-coach-chip,
+body.mejora-v3 .m-coach-chip {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-muted) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 500 !important;
+}
+
+/* ── Laboratorio ── */
+body.mejora-forge .brain-neural-hero__glow,
+body.mejora-v3 .brain-neural-hero__glow {
+  display: none !important;
+}
+
+body.mejora-forge .brain-neural-hero__sub,
+body.mejora-v3 .brain-neural-hero__sub {
+  font-size: 0.8125rem !important;
+  color: var(--m-muted) !important;
+  line-height: 1.5 !important;
+}
+
+body.mejora-forge .brain-neural-stat,
+body.mejora-v3 .brain-neural-stat {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  box-shadow: none !important;
+  border-radius: var(--m-radius) !important;
+}
+
+body.mejora-forge .brain-neural-stat__val,
+body.mejora-v3 .brain-neural-stat__val {
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .brain-protocol-card__title,
+body.mejora-v3 .brain-protocol-card__title {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .brain-protocol-tag,
+body.mejora-v3 .brain-protocol-tag {
+  font-size: 0.625rem !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  padding: 0.15rem 0.4rem !important;
+  border-radius: 4px !important;
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-muted) !important;
+}
+
+body.mejora-forge .brain-protocol-tag--clinical,
+body.mejora-v3 .brain-protocol-tag--clinical {
+  color: var(--m-success) !important;
+  border-color: rgba(77, 163, 132, 0.22) !important;
+  background: var(--m-success-soft) !important;
+}
+
+body.mejora-forge .brain-lab-section-badge,
+body.mejora-v3 .brain-lab-section-badge {
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-muted) !important;
+}
+
+/* ── Informes clínicos ── */
+body.mejora-forge .brain-clinical-report__score,
+body.mejora-v3 .brain-clinical-report__score {
+  font-size: 2rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--m-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--m-text) !important;
+}
+
+body.mejora-forge .brain-clinical-report__table th,
+body.mejora-v3 .brain-clinical-report__table th {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: var(--m-muted) !important;
+}
+
+body.mejora-forge .brain-clinical-report__table td strong,
+body.mejora-v3 .brain-clinical-report__table td strong {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .brain-clinical-report__micro,
+body.mejora-v3 .brain-clinical-report__micro {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-muted) !important;
+  font-size: 0.8125rem !important;
+  border-radius: var(--m-radius) !important;
+}
+
+body.mejora-forge .brain-clinical-badge,
+body.mejora-v3 .brain-clinical-badge {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  color: var(--m-muted) !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+}
+
+body.mejora-forge .brain-report-trend__bar,
+body.mejora-v3 .brain-report-trend__bar {
+  background: var(--m-surface-3) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: 2px 2px 0 0 !important;
+}
+
+/* ── Perfil cognitivo ── */
+body.mejora-forge .brain-profile__domain-score,
+body.mejora-v3 .brain-profile__domain-score {
+  color: var(--m-text) !important;
+  font-weight: 500 !important;
+}
+
+body.mejora-forge .brain-profile__row,
+body.mejora-v3 .brain-profile__row {
+  background: var(--m-surface-2) !important;
+  border: 1px solid var(--m-border) !important;
+  border-radius: var(--m-radius) !important;
+}
+
+/* ── Progress ── */
+body.mejora-forge .progress-track,
+body.mejora-v3 .progress-track {
+  background: var(--m-surface-3) !important;
+  border-radius: 2px !important;
+  height: 3px !important;
+}
+
+body.mejora-forge .progress-fill,
+body.mejora-v3 .progress-fill {
+  background: var(--m-accent) !important;
+  border-radius: 2px !important;
+}
+
+/* ── Sin animaciones de elevación (Linear es estático) ── */
+body.mejora-forge .btn-primary,
+body.mejora-v3 .btn-primary,
+body.mejora-forge .btn-secondary,
+body.mejora-v3 .btn-secondary,
+body.mejora-forge .ds-tab,
+body.mejora-v3 .ds-tab,
+body.mejora-forge .game-card--lab,
+body.mejora-v3 .game-card--lab {
+  transform: none !important;
+}
+
+body.mejora-forge .btn-primary:active,
+body.mejora-v3 .btn-primary:active,
+body.mejora-forge .btn-secondary:active,
+body.mejora-v3 .btn-secondary:active {
+  transform: scale(0.98) !important;
+}
+
+/* RPG theme conserva su identidad */
+body.theme-rpg::before {
+  background: inherit;
+}

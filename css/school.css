@@ -653,13 +653,13 @@
 }
 
 .school-lesson-row-title {
-  font-size: 0.9rem;
+  font-size: clamp(1rem, 2vw, 1.125rem);
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .school-lesson-row-meta {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   color: var(--m-muted, var(--text-muted));
 }
 

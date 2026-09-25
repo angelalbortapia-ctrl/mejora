@@ -4,7 +4,7 @@ body.mejora-v3,
 body.mejora-forge {
   font-family: var(--m-font) !important;
   background: var(--m-bg) !important;
-  color: var(--m-text) !important;
+  color: var(--m-text);
 }
 
 .app-shell { position: relative; z-index: 1; }
@@ -15,7 +15,7 @@ body.mejora-forge {
 .sidebar {
   background: var(--sidebar-bg) !important;
   border-right: 1px solid var(--m-border) !important;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: none !important;
 }
 
 .sidebar-section-label { display: none; }
@@ -65,9 +65,9 @@ body.mejora-forge {
 }
 
 .logo-mark {
-  background: linear-gradient(145deg, var(--m-accent), #8a6910) !important;
-  -webkit-text-fill-color: #0a0c10 !important;
-  color: #0a0c10 !important;
+  background: var(--m-accent) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color: #ffffff !important;
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 4px !important;
@@ -137,13 +137,13 @@ body.mejora-forge {
   font-size: 0.7rem;
   padding: 0.2rem 0.45rem;
   border-radius: 999px;
-  background: rgba(212, 160, 18, 0.12);
-  border: 1px solid rgba(212, 160, 18, 0.25);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.22);
   color: var(--m-muted);
 }
 
-.m-now--gentle { border-color: rgba(129, 140, 248, 0.35); }
-.m-now--success { border-color: rgba(61, 143, 106, 0.35); }
+.m-now--gentle { border-color: rgba(139, 92, 246, 0.35); }
+.m-now--success { border-color: rgba(16, 185, 129, 0.35); }
 
 .theme-picker-grid {
   display: grid;
@@ -220,10 +220,10 @@ body.mejora-forge {
 
 /* ── Bottom nav ── */
 .bottom-nav {
-  background: rgba(10, 12, 16, 0.96) !important;
-  border-top: 1px solid var(--m-border) !important;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px);
+  background: var(--bg-app, #ffffff) !important;
+  border-top: 1px solid var(--border-color, #e1dfdd) !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
 }
 
 .bottom-nav-link {
@@ -1051,5 +1051,129 @@ body.mejora-forge .onboarding-shell {
 }
 
 body.mejora-forge .onboarding-overlay {
-  background: rgba(10, 12, 16, 0.92) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* ── Hábitos v3 (alineado con Inicio) ── */
+.page-mejora--v3 .mejora-tab-panel,
+.page-mejora--v3 .ds-panel--flat { display: none; }
+
+.m-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.m-page-header {
+  padding-top: 0.25rem;
+}
+
+.m-page-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--m-accent);
+}
+
+.m-page-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--m-display);
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--m-text);
+}
+
+.m-page-lead {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--m-muted);
+}
+
+.m-page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.m-habits-layout-v3 {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .m-habits-layout-v3 {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.m-habits-panel {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.m-habits-chart .card,
+.m-habits-chart .home-panel {
+  margin: 0;
+  height: 100%;
+}
+
+.m-habits-grid .habit-card {
+  border-radius: var(--m-radius-lg);
+  border: 1px solid var(--m-border);
+  background: var(--m-surface);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.m-habits-grid .habit-card:hover {
+  border-color: var(--m-border-strong);
+}
+
+.m-habits-grid .habit-card.is-done {
+  border-color: rgba(61, 143, 106, 0.45);
+  background: rgba(61, 143, 106, 0.06);
+}
+
+.m-habit-templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.m-habit-template {
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--cat, var(--m-accent)) 35%, transparent);
+  background: color-mix(in srgb, var(--cat, var(--m-accent)) 12%, transparent);
+  color: var(--m-text);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.m-habit-editor-row {
+  padding: 0.85rem;
+  border-radius: var(--m-radius-lg);
+  border: 1px solid var(--m-border);
+  background: var(--m-surface-2);
+}
+
+@media (min-width: 1100px) {
+  .m-habits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
 }

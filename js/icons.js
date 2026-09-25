@@ -20,11 +20,33 @@ const PATHS = {
   play: '<path d="M8 6l10 6-10 6V6z"/>',
   pause: '<path d="M9 7h2v10H9zM13 7h2v10h-2z"/>',
   wave: '<path d="M2 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
+  activity: '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a2 2 0 0 1-3.86 0l-3.24-8.8A2 2 0 0 0 7.48 12H2"/>',
+  flask: '<path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
+  zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16h8"/><path d="M7 11h12"/><path d="M7 6h3"/>',
 }
 
-export function icon(name, cls = 'mi-icon') {
+function resolveIconOpts(second) {
+  if (typeof second === 'string') return { className: second }
+  if (second && typeof second === 'object') return second
+  return {}
+}
+
+/**
+ * @param {string} name
+ * @param {string | { size?: number, className?: string, stroke?: string }} [opts]
+ */
+export function icon(name, opts = 'mi-icon') {
+  const { size, className = 'mi-icon', stroke = 'currentColor' } = resolveIconOpts(opts)
   const body = PATHS[name] || PATHS.spark
-  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
+  const cls = className || 'mi-icon'
+  const sizeAttrs = size ? ` width="${size}" height="${size}"` : ''
+  return `<svg class="${cls}"${sizeAttrs} viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`
+}
+
+export function hasIcon(name) {
+  return Boolean(PATHS[name])
 }
 
 export function iconBadge(name, label, cls = '') {

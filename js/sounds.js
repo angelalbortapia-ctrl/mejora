@@ -1,6 +1,6 @@
 /** Audio UI — tonos contextuales */
 
-import { getSettings } from './core.js'
+import { getSettings } from '/js/core.js'
 
 let audioCtx = null
 
@@ -33,6 +33,16 @@ export function playClick() {
 export function playSuccess() {
   playTone(660, 0.12)
   setTimeout(() => playTone(880, 0.14), 80)
+}
+
+export function playLevelUp() {
+  if (!getSettings().sound) return
+  ;[523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.1), i * 70))
+}
+
+export function playStreak() {
+  playTone(740, 0.08)
+  setTimeout(() => playTone(988, 0.1), 60)
 }
 
 export function playHabitDone() {

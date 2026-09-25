@@ -1,8 +1,8 @@
 /** Página Enfoque — Pomodoro */
 
-import { getItem } from '../core.js'
-import { pageHero } from '../ui.js'
-import { pomodoro, togglePomodoro as togglePomodoroCore, resetPomodoro as resetPomodoroCore } from '../focus-service.js'
+import { getItem } from '/js/core.js'
+import { pageHero } from '/js/ui.js'
+import { pomodoro, togglePomodoro as togglePomodoroCore, resetPomodoro as resetPomodoroCore } from '/js/focus-service.js'
 
 export function renderEnfoque() {
   const progress = pomodoro.mode === 'work'

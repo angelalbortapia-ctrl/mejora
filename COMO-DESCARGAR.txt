@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════
+  CÓMO DESCARGAR LA VERSIÓN CORRECTA (tema claro)
+═══════════════════════════════════════════════
+
+NO uses "mejora-main.zip" (eso es oscuro, v81).
+
+OPCIÓN A — Link directo de GitHub (recomendado)
+───────────────────────────────────────────────
+
+1. Abre este enlace en Safari o Chrome:
+
+   https://github.com/angelalbortapia-ctrl/mejora/archive/refs/heads/cursor/calma-fish-azure-v126.zip
+
+2. Se descargará un ZIP (puede tardar 1 minuto).
+
+3. Descomprime el ZIP en Descargas.
+
+4. Entra en la carpeta que se llama algo como:
+   mejora-cursor-calma-fish-azure-v126
+
+5. Doble clic en:  ABRE-MEJORA.command
+
+
+OPCIÓN B — Desde la página de GitHub
+───────────────────────────────────────────────
+
+1. Ve a: https://github.com/angelalbortapia-ctrl/mejora
+
+2. Arriba donde dice "main", cámbialo a la rama:
+   cursor/calma-fish-azure-v126
+
+3. Botón verde "Code" → "Download ZIP"
+
+4. Descomprime y doble clic en ABRE-MEJORA.command
+
+
+═══════════════════════════════════════════════

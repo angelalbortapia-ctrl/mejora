@@ -1,7 +1,7 @@
 /** Guías in-app por sección (post-onboarding) */
 
-import { getItem, setItem } from './core.js'
-import { navigate } from './router.js'
+import { getItem, setItem, needsOnboarding } from '/js/core.js'
+import { navigate } from '/js/router.js'
 
 const SECTIONS = {
   rutina: {
@@ -44,9 +44,9 @@ const SECTIONS = {
     route: '/meditacion',
     label: 'Calma',
     steps: [
-      { title: 'Hub de Calma', text: 'Sesiones guiadas, programas multi-día, timer libre y registro de sueño.', highlight: '.med-hero, .page-meditation' },
-      { title: 'Programas', text: 'Rutas de varios días con progreso guardado. Ideal para construir hábito.', highlight: '.med-programs, .med-hub-grid', optional: true },
-      { title: 'Timer libre', text: 'Meditación sin guía con sonidos ambientales opcionales.', highlight: '.med-timer-card', optional: true },
+      { title: 'Hub de Calma', text: 'Sesiones guiadas, programas multi-día, timer libre y registro de sueño.', highlight: '.calma-hero, .calma-viewport' },
+      { title: 'Programas', text: 'Rutas de varios días con progreso guardado. Ideal para construir hábito.', highlight: '.calma-section--programs, .calma-program-card', optional: true },
+      { title: 'Timer libre', text: 'Meditación sin guía con sonidos ambientales opcionales.', highlight: '.calma-quick-btn', optional: true },
     ],
   },
   enfoque: {
@@ -145,6 +145,8 @@ export function startSectionGuide(id, onDone) {
 }
 
 export function maybeAutoSectionGuide(path) {
+  if (needsOnboarding()) return
+  if (document.querySelector('.onboarding-overlay.is-active')) return
   const entry = Object.entries(SECTIONS).find(([, s]) => s.route === path)
   if (!entry) return
   const [id] = entry

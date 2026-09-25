@@ -1,15 +1,16 @@
 /** Página Rutina — respiración, Stroop, reflexión */
 
-import { DIFFICULTIES, getSettings, isRoutineDoneToday, getStats, updateStats } from '../core.js'
-import { getReflectionPrompt } from '../content.js'
-import { pageLead } from '../ui.js'
-import { difficultyPicker, guardDifficulty } from '../page-helpers.js'
-import { playTone } from '../sounds.js'
+import { DIFFICULTIES, getSettings, isRoutineDoneToday, getStats, updateStats } from '/js/core.js'
+import { getReflectionPrompt } from '/js/content.js'
+import { pageLead } from '/js/ui.js'
+import { difficultyPicker, guardDifficulty } from '/js/page-helpers.js'
+import { playTone } from '/js/sounds.js'
 import {
   routineState, ROUTINE_STROOP_INK, genRoutineStroop,
   startRoutine as startRoutineCore, finishRoutine as finishRoutineCore,
   startExpress as startExpressCore, exitRoutine,
-} from '../routine-service.js'
+} from '/js/routine-service.js'
+import { renderMicroJournalHTML, shouldShowMicroJournal } from '/js/modules/mood-tracker.js'
 
 export function renderRoutine() {
   if (!routineState.active && routineState.step !== 4) {
@@ -36,10 +37,12 @@ export function renderRoutine() {
   }
   if (routineState.step === 4) {
     const d = DIFFICULTIES[routineState.difficulty]
+    const journal = shouldShowMicroJournal('routine') ? renderMicroJournalHTML('routine') : ''
     return `<div class="animate-fade-in text-center page-shell page-wide"><div class="card level-up">
       <p class="text-4xl mb-4">🎉</p><h2 class="font-display text-2xl font-bold text-main mb-2">¡${routineState.express ? 'Express completado' : 'Rutina completada'}!</h2>
       <p class="text-muted mb-6">${routineState.express ? '5 minutos bien invertidos' : `Modo ${d?.label || 'Medio'}`}</p>
-      <a href="#/plan" class="btn-primary inline-block no-underline">Ver plan del día</a></div></div>`
+      ${journal}
+      <a href="#/plan" class="btn-primary inline-block no-underline mt-4">Ver plan del día</a></div></div>`
   }
 
   const steps = routineState.express ? ['Respirar', 'Stroop'] : ['Respirar', 'Stroop', 'Reflexionar']

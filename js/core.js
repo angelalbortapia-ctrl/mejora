@@ -1,6 +1,14 @@
-import { enrichMission } from './coaching.js'
+import { enrichMission } from '/js/coaching.js'
+import { appStore, STORE_PREFIX, setStorePersistHook } from '/js/core/store.js'
 
-export const PREFIX = 'mejora_'
+export const PREFIX = STORE_PREFIX
+export { appStore, setStorePersistHook } from '/js/core/store.js'
+
+if (typeof window !== 'undefined') {
+  setStorePersistHook(() => {
+    import('/js/cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
+  })
+}
 export const SKILLS = {
   mental: { name: 'Neurociencia', icon: '🧠', color: '#00d4ff' },
   mindfulness: { name: 'Calma', icon: '🧘', color: '#a78bfa' },
@@ -25,17 +33,11 @@ export const RANKS = [
 ]
 
 export function getItem(key, fallback = null) {
-  try {
-    const raw = localStorage.getItem(PREFIX + key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch { return fallback }
+  return appStore.get(key, fallback)
 }
 
 export function setItem(key, value) {
-  localStorage.setItem(PREFIX + key, JSON.stringify(value))
-  if (typeof window !== 'undefined') {
-    import('./cloud-sync.js').then(m => m.scheduleCloudPush?.()).catch(() => {})
-  }
+  return appStore.set(key, value)
 }
 
 /** Borra todo el progreso local (FORGE desde cero). */
@@ -65,18 +67,11 @@ export function esc(str) {
 }
 
 export function getProgress() {
-  return getItem('progress', {
-    xp: { mental: 0, mindfulness: 0, discipline: 0, wisdom: 0 },
-    achievements: [],
-    records: {},
-    habitData: {},
-    daily: { date: null, ids: [], done: [] },
-    weekly: { week: null, done: 0, target: 5 },
-  })
+  return appStore.getProgress()
 }
 
 export function saveProgress(p) {
-  setItem('progress', p)
+  return appStore.saveProgress(p)
 }
 
 export function xpForLevel(level) {
@@ -246,29 +241,15 @@ export function getMoodInsight() {
 }
 
 export function getStats() {
-  return getItem('stats', {
-    brainSessions: 0, meditationMinutes: 0, reflections: 0,
-    habitsCompleted: 0, routinesCompleted: 0, challengesWon: 0,
-  })
+  return appStore.getStats()
 }
 
 export function updateStats(updates) {
-  const merged = { ...getStats(), ...updates }
-  setItem('stats', merged)
-  return merged
+  return appStore.updateStats(updates)
 }
 
 export function getSettings() {
-  return getItem('settings', {
-    darkMode: false, sound: true, reminderHour: 20, notificationsEnabled: false,
-    habitRemindersEnabled: false, habitReminderHour: 18,
-    sunsetRemindersEnabled: true,
-    defaultDifficulty: 'medio', onboardingComplete: false, userName: '',
-    theme: 'default', country: 'MX', compactSidebar: false, reducedMotion: false, tourComplete: false,
-    autoBackupEnabled: false, lastAutoBackup: null,
-    latitude: null, longitude: null, locationName: '', locationAsked: false,
-    medAmbient: 'rain', medAmbientVolume: 0.45, medVoice: true, medVoiceURI: '',
-  })
+  return appStore.getSettings()
 }
 
 export function needsOnboarding() {
@@ -287,9 +268,55 @@ export function migrateOnboardingFlag() {
 }
 
 export function saveSettings(s) {
-  setItem('settings', s)
-  document.documentElement.classList.toggle('dark', s.darkMode)
+  if (s.darkMode) s.darkMode = false
+  appStore.saveSettings(s)
+  document.documentElement.classList.remove('dark')
   document.documentElement.classList.toggle('reduce-motion', !!s.reducedMotion)
+}
+
+/** Migración — Notion Light: ignora darkMode y temas legacy en localStorage */
+export function migrateNotionLight() {
+  const s = getSettings()
+  const needsThemeReset = s.theme && s.theme !== 'default'
+  if (s.darkMode || needsThemeReset) {
+    s.darkMode = false
+    if (needsThemeReset) s.theme = 'default'
+    appStore.saveSettings(s)
+  }
+  const root = document.documentElement
+  root.dataset.notionLight = '1'
+  root.classList.remove('dark')
+  root.removeAttribute('data-theme')
+  root.style.colorScheme = 'light'
+  document.body?.classList.remove('theme-rpg')
+}
+
+function parseBgLuminance(bg) {
+  const m = String(bg || '').match(/[\d.]+/g)
+  if (!m || m.length < 3) return 255
+  return (+m[0] + +m[1] + +m[2]) / 3
+}
+
+/** Si el body sigue oscuro (caché legacy), inyecta notion-light-force.css */
+export function enforceNotionLightRuntime(assetVersion = 194) {
+  const body = document.body
+  if (!body) return
+  const lum = parseBgLuminance(getComputedStyle(body).backgroundColor)
+  if (lum >= 140) return
+  if (!document.getElementById('notion-light-force-link')) {
+    const link = document.createElement('link')
+    link.id = 'notion-light-force-link'
+    link.rel = 'stylesheet'
+    link.href = `/css/notion-light-force.css?v=${assetVersion}`
+    document.head.appendChild(link)
+  }
+  const root = document.documentElement
+  root.dataset.notionLight = '1'
+  root.classList.remove('dark')
+  root.removeAttribute('data-theme')
+  body.classList.remove('theme-rpg')
+  body.style.setProperty('background-color', '#ffffff', 'important')
+  body.style.setProperty('color', '#37352f', 'important')
 }
 
 const DEFAULT_HABITS = [
@@ -360,6 +387,9 @@ function markHabitComplete(habit) {
   updateStats({ habitsCompleted: getStats().habitsCompleted + 1 })
   checkAchievements('habit')
   syncGoals()
+  import('/js/product-analytics.js').then(m => {
+    m.trackProductEvent(m.EVENTS.HABIT_COMPLETE, { habitId: habit.id })
+  }).catch(() => {})
   return { success: true, xp: habit.xp + bonus, name: habit.name, completed: true }
 }
 
@@ -556,6 +586,11 @@ export const GOAL_TEMPLATES = [
   { title: '60 minutos meditados', metric: 'meditation', target: 60, skill: 'mindfulness', icon: '🧘', days: 30, pitch: 'Una hora de calma acumulada cambia cómo reaccionas bajo presión.' },
   { title: '20 rutinas con reflexión', metric: 'reflections', target: 20, skill: 'wisdom', icon: '📝', days: 45, pitch: 'Veinte mañanas donde paraste a pensar antes de actuar.' },
   { title: '100 hábitos completados', metric: 'habits', target: 100, skill: 'discipline', icon: '✅', days: 60, pitch: 'Sistema sobre motivación — cien pruebas de que funciona.' },
+  { title: '14 días de racha', metric: 'streak', target: 14, skill: 'discipline', icon: '🔥', days: 21, pitch: 'Dos semanas seguidas — el umbral donde el hábito empieza a sentirse normal.' },
+  { title: '200 minutos de calma', metric: 'meditation', target: 200, skill: 'mindfulness', icon: '🌊', days: 60, pitch: 'Tres horas de práctica acumulada — tu sistema nervioso lo nota.' },
+  { title: '50 lecciones de escuela', metric: 'brain', target: 50, skill: 'mental', icon: '🏛️', days: 120, pitch: 'Medio currículo dominado — cerebro con mapa, no solo hacks.' },
+  { title: '30 reflexiones escritas', metric: 'reflections', target: 30, skill: 'wisdom', icon: '📔', days: 45, pitch: 'Un mes de pensar en papel — claridad que no da el scroll.' },
+  { title: '21 días sin romper plan', metric: 'routines', target: 21, skill: 'discipline', icon: '⚔️', days: 30, pitch: 'Tres semanas donde el plan del día no fue opcional.' },
 ]
 
 export function getGoals() {

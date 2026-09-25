@@ -1,18 +1,51 @@
 {
+  "id": "/mejora/",
   "name": "Mejora",
   "short_name": "Mejora",
-  "description": "Disciplina, hábitos, neurociencia y calma bajo presión",
+  "description": "Tu campaña — hábitos, gimnasia cerebral y calma",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "lang": "es",
-  "background_color": "#0a0c10",
-  "theme_color": "#0a0c10",
+  "dir": "ltr",
+  "categories": ["health", "education", "productivity"],
+  "background_color": "#0c1424",
+  "theme_color": "#ffffff",
   "icons": [
     { "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "public/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "public/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "public/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hoy",
+      "short_name": "Hoy",
+      "description": "Plan y misiones del día",
+      "url": "./#/",
+      "icons": [{ "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Hábitos",
+      "short_name": "Hábitos",
+      "description": "Marcar y gestionar hábitos",
+      "url": "./#/mejora",
+      "icons": [{ "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Calma",
+      "short_name": "Calma",
+      "description": "Meditación y respiración",
+      "url": "./#/meditacion",
+      "icons": [{ "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Gimnasia",
+      "short_name": "Gimnasia",
+      "description": "Entrenar y aprender",
+      "url": "./#/gimnasia",
+      "icons": [{ "src": "public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

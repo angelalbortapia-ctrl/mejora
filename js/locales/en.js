@@ -1,0 +1,62 @@
+/** English — UI chrome (educational content remains Spanish) */
+export default {
+  nav: {
+    home: 'Today',
+    habits: 'Habits',
+    brain: 'Brain gym',
+    calm: 'Calm',
+    profile: 'You',
+    plan: 'Daily plan',
+    goals: 'Goals',
+    journey: 'Your history',
+    solo: 'Today only',
+    routine: 'Routine',
+    focus: 'Focus',
+    settings: 'Settings',
+  },
+  navDesc: {
+    home: 'Your day',
+    habits: 'Execute without excuses',
+    brain: 'Learn · train · body',
+    calm: 'Calm under pressure',
+    profile: 'Progress and wins',
+  },
+  common: {
+    share: 'Share',
+    copied: 'Copied to clipboard',
+    shareError: 'Could not share',
+    save: 'Save',
+    cancel: 'Cancel',
+    loading: 'Loading…',
+    language: 'Language',
+    languageHint: 'Affects menus and UI labels. Educational content stays in Spanish.',
+  },
+  settings: {
+    general: 'General',
+    account: 'Account',
+    data: 'Data',
+    interface: 'Interface',
+  },
+  share: {
+    journeyTitle: 'My Mejora progress',
+    streakTitle: 'My Mejora streak',
+    profileTitle: 'My Mejora campaign',
+    achievementTitle: 'Achievement unlocked in Mejora',
+    cta: 'Start your habit campaign →',
+  },
+  analytics: {
+    title: 'In-app activity',
+    subtitle: 'Product events (device only, no third parties)',
+    last7: 'Last 7 days',
+    last30: 'Last 30 days',
+    empty: 'No events yet. Complete a habit or a calm session.',
+  },
+  journey: {
+    shareProgress: 'Share my progress',
+    shareMilestones: 'Share milestones',
+  },
+  profile: {
+    shareRank: 'Share my rank',
+    shareAchievements: 'Share achievements',
+  },
+}

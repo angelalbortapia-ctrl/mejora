@@ -1,8 +1,8 @@
 /** Metas a 30-90 días */
 
-import { GOAL_TEMPLATES, getGoals, addGoal, syncGoals } from '../core.js'
-import { showToast } from '../awards.js'
-import { emptyState, tabBar, pageHero, milestoneBar } from '../ui.js'
+import { GOAL_TEMPLATES, getGoals, addGoal, syncGoals } from '/js/core.js'
+import { showToast } from '/js/awards.js'
+import { emptyState, tabBar, pageHero, milestoneBar } from '/js/ui.js'
 
 let metasTab = 'activas'
 

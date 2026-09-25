@@ -1,8 +1,8 @@
 /** Certificados por facultad — diploma descargable al completar módulo */
 
-import { getItem, setItem, getSettings, esc } from './core.js'
-import { FACULTIES } from './school-curriculum.js?v=81'
-import { LESSONS, getCompletedLessons } from './brain-academy.js?v=81'
+import { getItem, setItem, getSettings, esc } from '/js/core.js'
+import { FACULTIES } from '/js/school-curriculum.js'
+import { LESSONS, getCompletedLessons } from '/js/brain-academy.js'
 
 function getFacultyProgress(facultyId) {
   const faculty = FACULTIES[facultyId]

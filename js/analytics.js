@@ -2,8 +2,8 @@ import {
   getItem, getToday, toDateStr, getStats, getStreak, getHabits, isHabitComplete,
   getGoals, getPlanProgress, ensureDailyPlan, getMood, getCompletedHabitsCount,
   isRoutineDoneToday,
-} from './core.js'
-import { getProgramStats, isSessionDoneToday } from './brain-program.js'
+} from '/js/core.js'
+import { getProgramStats, isSessionDoneToday } from '/js/brain-program.js'
 
 export function getActivityCalendar(days = 35) {
   const log = getItem('activityLog', {})

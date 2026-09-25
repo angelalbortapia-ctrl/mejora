@@ -85,6 +85,16 @@ export const GOAL_COACH = {
     weekly: '¿Cuál hábito te está costando menos? Refuerza ese antes de añadir otro.',
     tip: 'Si fallas tres días, baja la meta a la mitad pero no lo borres.',
   },
+  reflections: {
+    desc: 'Escribir tres líneas al día aclara lo que la cabeza da vueltas sin nombrar.',
+    weekly: '¿Qué pregunta de reflexión te sorprendió esta semana?',
+    tip: 'Si no sabes qué escribir, empieza con “Hoy me costó…” — el resto sale.',
+  },
+  lessons: {
+    desc: 'Cada lección de Escuela es mapa, no trivia.',
+    weekly: '¿Qué concepto neurológico aplicaste en la vida real esta semana?',
+    tip: 'Lee el “apply” al final de cada lección — es el ROI del tiempo.',
+  },
 }
 
 export function getGoalCoach(metric) {
@@ -133,8 +143,8 @@ export const HOME_SHORTCUTS = [
     href: '#/gimnasia',
     icon: '🧠',
     title: 'Escuela',
-    desc: '62 lecciones · 12 semanas',
-    onclick: "brainState.brainView='school';brainState.schoolFaculty=null;brainState.schoolSection='curriculum';brainState.activePaper=null;brainState.activeLesson=null;render(true)",
+    desc: '72 lecciones · 12 semanas',
+    onclick: "goLearn('curriculum')",
   },
   {
     href: '#/meditacion',
@@ -177,6 +187,13 @@ export function getDailyIntention() {
     'Tu energía es finita — inviértela donde rinde.',
     'Disciplina hoy, resultados mañana.',
     'Cinco minutos de enfoque no son tiempo perdido.',
+    'La constancia gana al talento cuando el talento no se entrena.',
+    'Una lección leída hoy es sinapsis mañana.',
+    'Respira antes de responder — tu cíngulo te lo agradecerá.',
+    'No optimices el día entero: optimiza la próxima hora.',
+    'El sueño de hoy es el rendimiento de mañana.',
+    'Menos scroll. Más una cosa que importe.',
+    'Tu cerebro aprende por repetición, no por epifanías.',
   ]
   return intentions[day % intentions.length]
 }
