@@ -4,7 +4,12 @@ cd "$(dirname "$0")" || exit 1
 DIR="$(pwd)"
 PLIST="$HOME/Library/LaunchAgents/com.mejora.local.plist"
 LOG="$DIR/mejora-server.log"
-PYTHON="${PYTHON:-/usr/bin/python3}"
+PYTHON="$(command -v python3 2>/dev/null || echo /usr/bin/python3)"
+if [[ ! -x "$PYTHON" ]]; then
+  echo "ERROR: No encuentro python3. Instala Python 3 primero."
+  read -p "Enter…"
+  exit 1
+fi
 
 cat > "$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>

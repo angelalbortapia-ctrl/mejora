@@ -5,8 +5,12 @@ PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${PORT:-5173}"
 VERSION_FILE="$PROJECT/js/version.js"
 LOG="${TMPDIR:-/tmp}/mejora-server.log"
-PYTHON="${PYTHON:-/usr/bin/python3}"
+PYTHON="${PYTHON:-$(command -v python3 2>/dev/null || echo /usr/bin/python3)}"
 SERVER="$PROJECT/scripts/mejora-dev-server.py"
+
+health_ok() {
+  curl -s --connect-timeout 2 "http://127.0.0.1:${PORT}/health" >/dev/null 2>&1
+}
 
 alert() {
   osascript -e "display alert \"Mejora\" message \"$1\"" 2>/dev/null || echo "$1"
@@ -33,9 +37,9 @@ kill_port() {
 }
 
 start_server() {
-  nohup "$PYTHON" "$SERVER" "$PORT" >>"$LOG" 2>&1 &
-  SERVER_PID=$!
-  disown "$SERVER_PID" 2>/dev/null || true
+  # Proceso separado del grupo de Terminal (sigue vivo al cerrar la ventana en muchos Mac)
+  ( cd "$PROJECT" && nohup "$PYTHON" "$SERVER" "$PORT" >>"$LOG" 2>&1 & )
+  sleep 0.3
   for _ in $(seq 1 50); do
     port_up && return 0
     sleep 0.2
@@ -62,6 +66,18 @@ if [[ ! -f "$PROJECT/css/notion-light-force.css" ]]; then
   exit 1
 fi
 
+if health_ok; then
+  say "Servidor ya activo — abriendo navegador…"
+  open "$URL" 2>/dev/null || true
+  exit 0
+fi
+
+if [[ ! -x "$PYTHON" ]] && ! command -v python3 >/dev/null 2>&1; then
+  alert "No encuentro Python 3. Instala Python desde python.org o Xcode Command Line Tools."
+  read -r -p "Pulsa Enter para salir…"
+  exit 1
+fi
+
 if [[ -d "$PROJECT/.git" ]] && command -v git >/dev/null 2>&1; then
   say "Actualizando archivos (git pull)…"
   git pull --ff-only origin cursor/calma-fish-azure-v126 2>>"$LOG" || \
@@ -69,13 +85,27 @@ if [[ -d "$PROJECT/.git" ]] && command -v git >/dev/null 2>&1; then
     echo "(git pull no disponible — sigo con los archivos locales)"
 fi
 
-say "Cerrando servidores viejos en el puerto ${PORT}…"
-kill_port
-sleep 0.5
+say "Iniciando servidor en segundo plano…"
+if port_up && ! health_ok; then
+  say "Puerto ${PORT} ocupado pero no responde — reiniciando…"
+  kill_port
+  sleep 0.5
+fi
 
-say "Iniciando servidor…"
-if ! start_server; then
-  alert "No pude arrancar el servidor. Abre Terminal, ve a la carpeta Mejora y ejecuta: python3 scripts/mejora-dev-server.py"
+if ! port_up; then
+  if ! start_server; then
+    alert "No pude arrancar el servidor. Revisa ${LOG} o ejecuta iniciar.command para ver el error en pantalla."
+    read -r -p "Pulsa Enter para salir…"
+    exit 1
+  fi
+fi
+
+for _ in $(seq 1 30); do
+  health_ok && break
+  sleep 0.3
+done
+if ! health_ok; then
+  alert "El servidor no respondió. Abre iniciar.command para ver el error."
   read -r -p "Pulsa Enter para salir…"
   exit 1
 fi
@@ -90,12 +120,8 @@ echo ""
 echo "✓ Servidor en segundo plano (puerto ${PORT})."
 echo "  Puedes CERRAR esta ventana de Terminal — Mejora sigue en el navegador."
 echo "  Para apagar el servidor: reinicia el Mac o ejecuta:"
-echo "  lsof -ti:5173 | xargs kill"
+echo "  lsof -ti:5173 | xargs kill  (o detener.command)"
+echo ""
+echo "  Para que siga al cerrar Terminal: instalar-servicio.command (una vez)"
 sleep 2
-# Cierra sola la ventana de Terminal (opcional, solo si se abrió desde .command)
-if [[ "${TERM_PROGRAM:-}" == "Apple_Terminal" ]]; then
-  osascript -e 'tell application "Terminal" to close (every window whose name contains "ABRE-MEJORA") saving no' 2>/dev/null \
-    || osascript -e 'tell application "Terminal" to close front window saving no' 2>/dev/null \
-    || true
-fi
 exit 0
